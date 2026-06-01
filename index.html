@@ -1,11 +1,52 @@
-<!DOCTYPE html><!-- v202605291446-->
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoltExpert — Borne IRVE + Optimisation Énergie</title>
+<title>VoltExpert — Borne IRVE + Optimisation Energie</title>
 <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script>
+function toggleMenu(){
+  var dd=document.getElementById('nav-dropdown');
+  if(!dd)return;
+  if(dd.getAttribute('data-open')==='1'){
+    dd.setAttribute('data-open','0');
+    dd.style.opacity='0';dd.style.pointerEvents='none';dd.style.transform='translateY(-8px)';
+  }else{
+    dd.setAttribute('data-open','1');
+    dd.style.opacity='1';dd.style.pointerEvents='all';dd.style.transform='translateY(0)';
+  }
+}
+function closeMenu(){
+  var dd=document.getElementById('nav-dropdown');
+  if(dd){dd.style.opacity='0';dd.style.pointerEvents='none';dd.style.transform='translateY(-8px)';}
+}
+function showTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(function(t){t.style.display='none';});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.style.background='white';b.style.color='#6b8299';});
+  var target=document.getElementById('tab-'+id);
+  if(target)target.style.display='block';
+  if(btn){btn.style.background='var(--ink)';btn.style.color='white';}
+}
+function toggleFaq(el){
+  var item=el.closest('.faq-item');
+  if(!item)return;
+  var ans=item.querySelector('.faq-a');
+  var arr=item.querySelector('.faq-arr');
+  var isOpen=ans&&ans.style.display==='block';
+  document.querySelectorAll('.faq-a').forEach(function(a){a.style.display='none';});
+  document.querySelectorAll('.faq-arr').forEach(function(a){a.style.transform='';});
+  if(!isOpen&&ans){ans.style.display='block';if(arr)arr.style.transform='rotate(180deg)';}
+}
+function openCRM(e){if(e&&e.preventDefault)e.preventDefault();if(sessionStorage.getItem('crm_auth')==='1'){showCRM();}else{var l=document.getElementById('crm-login');if(l){l.style.display='flex';}}}
+function checkPwd(){var p=document.getElementById('crm-pwd');var err=document.getElementById('crm-pwd-err');if(p&&p.value==='irve2024'){sessionStorage.setItem('crm_auth','1');p.value='';var l=document.getElementById('crm-login');if(l)l.style.display='none';if(err)err.style.display='none';showCRM();}else{if(err)err.style.display='block';}}
+function showCRM(){var panel=document.getElementById('crm-panel');var ov=document.getElementById('crm-overlay');if(panel)panel.style.display='block';if(ov)ov.style.display='block';document.body.style.overflow='hidden';setTimeout(function(){if(typeof crmTab==='function')crmTab('leads');},50);}
+function closeCRM(){var panel=document.getElementById('crm-panel');var ov=document.getElementById('crm-overlay');if(panel)panel.style.display='none';if(ov)ov.style.display='none';document.body.style.overflow='';}
+function closeModal(){var m=document.getElementById('lead-modal');if(m)m.style.display='none';}
+document.addEventListener('click',function(e){if(!e.target.closest||(!e.target.closest('#hamburger-btn')&&!e.target.closest('#nav-dropdown')))closeMenu();});
+</script>
 <style>
+
 :root{
   --ink:#080f1a;--ink2:#0f1c2e;--ink3:#19293d;
   --green:#c8f135;--green2:#a8d420;
@@ -216,6 +257,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
 
 }
 /* HAMBURGER MENU */
+.hamburger *{pointer-events:none;}
 .hamburger{display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--ink2);border:1px solid var(--border);padding:7px 12px;border-radius:8px;transition:all .2s;}
 .hamburger:hover{background:var(--ink3);border-color:var(--muted);}
 .hamburger .bars{display:flex;flex-direction:column;gap:4px;}
@@ -234,10 +276,10 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
 .nd-ico{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:var(--ink3);}
 .nd-txt strong{display:block;font-weight:600;font-size:13px;color:var(--white);line-height:1.2;}
 .nd-txt span{font-size:11px;color:var(--muted);}
+
 </style>
 </head>
 <body>
-
 <!-- NAV -->
 <nav>
   <a href="#" class="logo">
@@ -342,9 +384,9 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     </div>
 
     <div class="tab-btns">
-      <button class="tab-btn active" onclick="showTab('part')">🏠 Particulier</button>
-      <button class="tab-btn" onclick="showTab('copro')">🏢 Copropriété</button>
-      <button class="tab-btn" onclick="showTab('pro')">🏭 Entreprise</button>
+      <button class="tab-btn active" onclick="showTab('part',this)">🏠 Particulier</button>
+      <button class="tab-btn" onclick="showTab('copro',this)">🏢 Copropriété</button>
+      <button class="tab-btn" onclick="showTab('pro',this)">🏭 Entreprise</button>
     </div>
 
     <!-- ══════════ PARTICULIER ══════════ -->
@@ -829,6 +871,15 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
   </div>
 </div>
 <!-- Login CRM -->
+<div id="lead-modal" onclick="if(event.target===this)closeModal()" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
+  <div onclick="event.stopPropagation()" style="background:white;border-radius:12px;width:90%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.3);">
+    <div style="background:var(--ink);color:white;padding:18px 22px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <h3 id="modal-title" style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin:0;">Detail du lead</h3>
+      <button onclick="closeModal()" style="background:rgba(255,255,255,.15);border:none;color:white;font-size:18px;cursor:pointer;width:32px;height:32px;border-radius:50%;">x</button>
+    </div>
+    <div id="modal-body" style="padding:22px;"></div>
+  </div>
+</div>
 <div id="crm-login" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.7);align-items:center;justify-content:center;">
   <div style="background:white;border-radius:12px;padding:32px;width:320px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.3);">
     <div style="font-size:32px;margin-bottom:12px;">🔒</div>
@@ -839,32 +890,19 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     <p id="crm-pwd-err" style="color:#dc3545;font-size:12px;margin-top:8px;display:none;">Mot de passe incorrect</p>
   </div>
 </div>
+<footer style="background:var(--ink);border-top:1px solid var(--border);padding:32px 6vw;">
+  <div style="max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+    <a href="#" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+      <div style="width:36px;height:36px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">&#9889;</div>
+      <span style="font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:18px;color:var(--white);">VoltExpert</span>
+    </a>
+    <p style="font-size:12px;color:rgba(255,255,255,.35);margin:0;">© 2025 VoltExpert — Certifie RGE QualiChargie · IRVE</p>
+  </div>
+</footer>
+<script>
 
-<script charset="utf-8">
 
-window.closeModal = function(){ document.getElementById('lead-modal').style.display='none'; }
 
-// -- HAMBURGER MENU -----------------------------
-window.toggleMenu = function(){
-  var btn = document.getElementById('hamburger-btn');
-  var dd  = document.getElementById('nav-dropdown');
-  var open = dd.classList.contains('open');
-  btn.classList.toggle('open', !open);
-  dd.classList.toggle('open', !open);
-}
-window.closeMenu = function(){
-  document.getElementById('hamburger-btn').classList.remove('open');
-  document.getElementById('nav-dropdown').classList.remove('open');
-}
-// Fermer si clic ailleurs
-document.addEventListener('click', function(e){
-  if(!e.target.closest('#hamburger-btn') && !e.target.closest('#nav-dropdown')) closeMenu();
-});
-// Attacher le bouton hamburger directement (le script est apr s le DOM)
-(function(){
-  var btn = document.getElementById('hamburger-btn');
-  if(btn) btn.addEventListener('click', function(e){ e.stopPropagation(); toggleMenu(); });
-})();
 
 // -- CRM CONFIG ---------------------------------
 var CRM_PWD = 'irve2024';
@@ -940,33 +978,10 @@ window.crmTab = function(tab) {
 }
 
 // -- OUVERTURE CRM -----------------------------
-window.openCRM = function(e) {
-  e.preventDefault();
-  if(sessionStorage.getItem('crm_auth')==='1') { showCRM(); }
-  else { document.getElementById('crm-login').style.display='flex'; }
-}
-window.checkPwd = function() {
-  var pwd = document.getElementById('crm-pwd').value;
-  if(pwd===CRM_PWD) {
-    sessionStorage.setItem('crm_auth','1');
-    document.getElementById('crm-login').style.display='none';
-    document.getElementById('crm-pwd').value='';
-    document.getElementById('crm-pwd-err').style.display='none';
-    showCRM();
-  } else { document.getElementById('crm-pwd-err').style.display='block'; }
-}
-window.showCRM = function() {
-  document.getElementById('crm-panel').style.display='block';
-  document.getElementById('crm-overlay').style.display='block';
-  document.body.style.overflow='hidden';
-  crmTab('leads');
-  renderLeads();
-}
-window.closeCRM = function() {
-  document.getElementById('crm-panel').style.display='none';
-  document.getElementById('crm-overlay').style.display='none';
-  document.body.style.overflow='';
-}
+
+
+
+
 
 // -- HELPER FORMAT -----------------------------
 function fmt(v) { return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -1098,7 +1113,7 @@ window.openDetail = function(id) {
     document.getElementById('lead-modal').style.display='flex';
   });
 }
-window.closeModal = function(){ document.getElementById('lead-modal').style.display='none'; }
+
 window.saveNote = async function(id){
   try { await apiUpdateLead(id, { notes: document.getElementById('note-'+id).value, histo_action: 'Note ajout e' }); alert('Sauvegard '); }
   catch(e) { alert('Erreur: '+e.message); }
@@ -1448,6 +1463,7 @@ window.exporterRapport = async function() {
   var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nom; a.click();
   alert('Rapport CSV t l charg  !\n\nPour obtenir un ZIP avec toutes vos factures, ouvrez les liens Google Drive list s dans le fichier CSV.');
 }
+
 
 </script>
 </body>
