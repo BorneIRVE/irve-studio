@@ -791,8 +791,30 @@ const DEF_CAT={
 };
 
 function loadCat(){try{const s=localStorage.getItem(CAT_KEY);return s?JSON.parse(s):JSON.parse(JSON.stringify(DEF_CAT));}catch(e){return JSON.parse(JSON.stringify(DEF_CAT));}}
-function saveCat(c){localStorage.setItem(CAT_KEY,JSON.stringify(c));CATALOGUE=c;}
+function saveCat(c){localStorage.setItem(CAT_KEY,JSON.stringify(c));CATALOGUE=c;saveCatVercel(c);}
 function getPwd(){return localStorage.getItem(PWD_KEY)||'irve2024';}
+
+// Synchronisation Vercel du catalogue (partagé CRM + configurateur)
+var CAT_VERCEL = 'https://vercel-dun-eta-98.vercel.app/api/catalogue';
+async function saveCatVercel(c){
+  try{
+    await fetch(CAT_VERCEL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getPwd()},body:JSON.stringify(c)});
+  }catch(e){ console.log('Sync catalogue Vercel échouée (cache local OK):',e); }
+}
+async function loadCatFromVercel(){
+  try{
+    var r=await fetch(CAT_VERCEL+'?t='+Date.now(),{cache:'no-store'});
+    if(r.ok){
+      var json=await r.json();
+      if(json.catalogue && json.catalogue.bornes && json.catalogue.bornes.length){
+        CATALOGUE=json.catalogue;
+        localStorage.setItem(CAT_KEY,JSON.stringify(CATALOGUE));
+        return true;
+      }
+    }
+  }catch(e){ console.log('Chargement catalogue Vercel échoué (cache local):',e); }
+  return false;
+}
 
 let CATALOGUE=loadCat();
 
@@ -1303,7 +1325,14 @@ async function loadEntrepriseFromVercel(){
     try{var s=localStorage.getItem('irve_entreprise');if(s)ENTREPRISE=JSON.parse(s);}catch(e2){}
   }
 }
-document.addEventListener('DOMContentLoaded', function(){ loadEntrepriseFromVercel(); });
+document.addEventListener('DOMContentLoaded', function(){
+  loadEntrepriseFromVercel();
+  loadCatFromVercel().then(function(loaded){
+    if(loaded && typeof renderBornesStep==='function'){ try{renderBornesStep();}catch(e){} }
+  });
+  // Ouverture auto du panneau admin via #admin (depuis le CRM)
+  if(window.location.hash==='#admin'){ setTimeout(function(){ if(typeof openAdm==='function') openAdm(); }, 300); }
+});
 
 // ═══════════════════════════════════════════════
 // ENVOI EMAIL VIA VERCEL FUNCTION
