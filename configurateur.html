@@ -1284,6 +1284,25 @@ const VERCEL_API_URL = 'https://vercel-dun-eta-98.vercel.app/api/send-email';
 const MON_EMAIL      = 'votre@email.fr';
 
 // Charger les infos entreprise depuis Vercel au démarrage
+// Charger les infos entreprise depuis Vercel KV
+function loadEntreprise(){
+  try{ var s=localStorage.getItem('irve_entreprise'); if(s) return JSON.parse(s); }catch(e){}
+  return ENTREPRISE;
+}
+async function loadEntrepriseFromVercel(){
+  try{
+    var r=await fetch(VERCEL_API_URL.replace('/api/send-email','/api/config'));
+    if(r.ok){
+      var json=await r.json();
+      if(json.config && json.config.nom){
+        ENTREPRISE=json.config;
+        localStorage.setItem('irve_entreprise',JSON.stringify(ENTREPRISE));
+      }
+    }
+  }catch(e){
+    try{var s=localStorage.getItem('irve_entreprise');if(s)ENTREPRISE=JSON.parse(s);}catch(e2){}
+  }
+}
 document.addEventListener('DOMContentLoaded', function(){ loadEntrepriseFromVercel(); });
 
 // ═══════════════════════════════════════════════

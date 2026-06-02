@@ -643,6 +643,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
       <button onclick="crmTab('leads')" id="ctab-leads" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:var(--ink);color:white;border-right:1px solid #dce8f0;">📋 Leads</button>
       <button onclick="crmTab('finance')" id="ctab-finance" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:white;color:#6b8299;border-right:1px solid #dce8f0;">💰 Finances</button>
       <button onclick="crmTab('depenses')" id="ctab-depenses" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:white;color:#6b8299;border-right:1px solid #dce8f0;">🧾 Dépenses</button>
+      <button onclick="crmTab('planning')" id="ctab-planning" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:white;color:#6b8299;border-right:1px solid #dce8f0;">📅 Planning</button>
       <button onclick="crmTab('rapports')" id="ctab-rapports" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:white;color:#6b8299;">📈 Rapports</button>
     </div>
 
@@ -840,6 +841,50 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
       </div>
     </div>
 
+    <!-- ══ ONGLET PLANNING ══ -->
+    <div id="crm-tab-planning" style="display:none;">
+      <!-- Bandeau abonnement iPhone -->
+      <div style="background:linear-gradient(135deg,#0a1628,#19293d);border-radius:10px;padding:20px;margin-bottom:20px;color:white;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin:0 0 8px;">📲 Synchroniser avec votre iPhone</h3>
+        <p style="font-size:13px;color:rgba(255,255,255,.7);margin:0 0 12px;line-height:1.5;">Ajoutez ce calendrier une seule fois. Votre iPhone se mettra à jour automatiquement à chaque nouvelle installation.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button onclick="copierLienCalendrier()" style="background:var(--green);color:var(--ink);border:none;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;">📋 Copier le lien d'abonnement</button>
+          <button onclick="ouvrirAbonnement()" style="background:rgba(255,255,255,.15);color:white;border:none;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;">📅 Ajouter à mon iPhone</button>
+        </div>
+        <p style="font-size:11px;color:rgba(255,255,255,.45);margin:10px 0 0;">Sur iPhone : Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un abonnement calendrier › collez le lien</p>
+      </div>
+
+      <!-- Formulaire nouvelle installation -->
+      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;padding:20px;margin-bottom:20px;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin-bottom:16px;">➕ Planifier une installation</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Client</label><input type="text" id="pl-nom" placeholder="M. Dupont" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
+          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Téléphone</label><input type="tel" id="pl-tel" placeholder="06 12 34 56 78" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
+          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Lier à un lead</label><select id="pl-lead" onchange="remplirDepuisLead()" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"><option value="">— Aucun —</option></select></div>
+        </div>
+        <div style="margin-bottom:12px;"><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Adresse complète</label><input type="text" id="pl-adresse" placeholder="12 rue de la Paix, 75001 Paris" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Borne à poser</label><input type="text" id="pl-borne" placeholder="Schneider EVlink 7kW" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
+          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Montant (€)</label><input type="text" id="pl-montant" placeholder="1980" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
+        </div>
+        <div style="margin-bottom:12px;"><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Travaux à réaliser</label><textarea id="pl-travaux" placeholder="Pose borne + tableau divisionnaire + 15m câble..." style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;min-height:50px;resize:vertical;"></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Date</label><input type="date" id="pl-date" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
+          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Heure</label><input type="time" id="pl-heure" value="09:00" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
+          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Durée (h)</label><input type="number" id="pl-duree" value="4" min="1" max="12" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
+        </div>
+        <button onclick="ajouterInstallation()" style="background:var(--green);color:var(--ink);border:none;padding:9px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;">✅ Planifier l'installation</button>
+      </div>
+
+      <!-- Liste des installations -->
+      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;overflow:hidden;">
+        <div style="padding:14px 20px;border-bottom:1px solid #dce8f0;">
+          <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin:0;">🗓️ Installations planifiées</h3>
+        </div>
+        <div id="pl-liste"></div>
+      </div>
+    </div>
+
     <!-- ══ ONGLET RAPPORTS ══ -->
     <div id="crm-tab-rapports" style="display:none;">
       <div style="background:white;border-radius:10px;border:1px solid #dce8f0;padding:24px;margin-bottom:20px;">
@@ -966,15 +1011,131 @@ var DEP_CATS = {
 
 // -- NAVIGATION ONGLETS -------------------------
 window.crmTab = function(tab) {
-  ['leads','finance','depenses','rapports'].forEach(function(t) {
-    document.getElementById('crm-tab-'+t).style.display = t===tab ? 'block' : 'none';
+  ['leads','finance','depenses','planning','rapports'].forEach(function(t) {
+    var panel = document.getElementById('crm-tab-'+t);
+    if(panel) panel.style.display = t===tab ? 'block' : 'none';
     var btn = document.getElementById('ctab-'+t);
-    btn.style.background = t===tab ? 'var(--ink)' : 'white';
-    btn.style.color = t===tab ? 'white' : '#6b8299';
+    if(btn){ btn.style.background = t===tab ? 'var(--ink)' : 'white'; btn.style.color = t===tab ? 'white' : '#6b8299'; }
   });
   if(tab==='finance') renderFinance();
   if(tab==='depenses') renderDepenses();
+  if(tab==='planning') renderPlanning();
   if(tab==='rapports') renderRapport();
+}
+
+// ── PLANNING INSTALLATIONS ──────────────────────
+var _planning = [];
+async function apiGetPlanning(){
+  var r = await fetch(VERCEL_URL+'/api/planning?t='+Date.now(), { headers:{'Authorization':'Bearer '+CRM_PWD}, cache:'no-store' });
+  if(!r.ok) return [];
+  return (await r.json()).planning || [];
+}
+async function apiSavePlanning(planning){
+  var r = await fetch(VERCEL_URL+'/api/planning', { method:'POST', headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'}, body:JSON.stringify({planning:planning}) });
+  if(!r.ok) throw new Error('Erreur '+r.status);
+}
+async function renderPlanning(){
+  // Remplir le select des leads
+  try {
+    var leads = await apiGetLeads();
+    var sel = document.getElementById('pl-lead');
+    if(sel && sel.options.length<=1){
+      leads.forEach(function(l){
+        var o=document.createElement('option');
+        o.value=l.id; o.textContent=l.nom+' ('+(l.ville||l.cp||'')+')';
+        o._lead=l; sel.appendChild(o);
+      });
+    }
+  } catch(e){}
+  // Init date
+  var dEl=document.getElementById('pl-date');
+  if(dEl && !dEl.value) dEl.valueAsDate=new Date();
+  // Charger les installations
+  try { _planning = await apiGetPlanning(); } catch(e){ _planning=[]; }
+  var liste=document.getElementById('pl-liste');
+  var aVenir=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))>=new Date(new Date().toDateString());}).sort(function(a,b){return (a.date+a.heure).localeCompare(b.date+b.heure);});
+  var passees=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))<new Date(new Date().toDateString());}).sort(function(a,b){return (b.date+b.heure).localeCompare(a.date+a.heure);});
+  if(!_planning.length){
+    liste.innerHTML='<div style="padding:32px;text-align:center;color:#aaa;"><div style="font-size:28px;margin-bottom:8px;">📅</div>Aucune installation planifiée</div>';
+    return;
+  }
+  var render=function(arr,past){
+    return arr.map(function(p){
+      var d=new Date(p.date+'T'+(p.heure||'09:00'));
+      var dateStr=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+      return '<div style="padding:14px 20px;border-bottom:1px solid #eee;'+(past?'opacity:.55;':'')+'">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">'
+        +'<div style="flex:1;">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="background:'+(past?'#e8ecf0':'#e8fff4')+';color:'+(past?'#6b8299':'#00875a')+';padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">'+dateStr+' · '+(p.heure||'09:00')+'</span></div>'
+        +'<strong style="font-size:14px;color:#0d1b2a;">'+p.nom+'</strong>'
+        +'<div style="font-size:12px;color:#555;margin-top:3px;">📍 '+(p.adresse||'-')+'</div>'
+        +'<div style="font-size:12px;color:#555;">📞 '+(p.tel||'-')+' · 🔌 '+(p.borne||'-')+'</div>'
+        +(p.travaux?'<div style="font-size:12px;color:#888;margin-top:3px;">🔧 '+p.travaux+'</div>':'')
+        +(p.montant?'<div style="font-size:12px;color:#00875a;font-weight:700;margin-top:3px;">'+p.montant+' € TTC</div>':'')
+        +'</div>'
+        +'<button onclick="supprimerInstallation(\''+p.id+'\')" style="background:#ffeaea;color:#dc3545;border:none;padding:5px 9px;border-radius:5px;font-size:11px;cursor:pointer;">🗑</button>'
+        +'</div></div>';
+    }).join('');
+  };
+  var html='';
+  if(aVenir.length) html+='<div style="padding:8px 20px;background:#f5f8fc;font-size:11px;font-weight:700;color:#6b8299;text-transform:uppercase;">À venir ('+aVenir.length+')</div>'+render(aVenir,false);
+  if(passees.length) html+='<div style="padding:8px 20px;background:#f5f8fc;font-size:11px;font-weight:700;color:#6b8299;text-transform:uppercase;">Passées ('+passees.length+')</div>'+render(passees,true);
+  liste.innerHTML=html;
+}
+function remplirDepuisLead(){
+  var sel=document.getElementById('pl-lead');
+  var opt=sel.options[sel.selectedIndex];
+  if(opt && opt._lead){
+    var l=opt._lead;
+    document.getElementById('pl-nom').value=l.nom||'';
+    document.getElementById('pl-tel').value=l.tel||'';
+    document.getElementById('pl-adresse').value=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));
+    document.getElementById('pl-borne').value=l.borne||'';
+    document.getElementById('pl-montant').value=(l.devis||'').replace(/\s/g,'');
+  }
+}
+async function ajouterInstallation(){
+  var nom=document.getElementById('pl-nom').value.trim();
+  var date=document.getElementById('pl-date').value;
+  if(!nom||!date){ alert('Nom du client et date requis'); return; }
+  var inst={
+    id:Date.now().toString(),
+    nom:nom,
+    tel:document.getElementById('pl-tel').value.trim(),
+    adresse:document.getElementById('pl-adresse').value.trim(),
+    borne:document.getElementById('pl-borne').value.trim(),
+    montant:document.getElementById('pl-montant').value.trim(),
+    travaux:document.getElementById('pl-travaux').value.trim(),
+    date:date,
+    heure:document.getElementById('pl-heure').value||'09:00',
+    duree:document.getElementById('pl-duree').value||'4',
+  };
+  try { _planning=await apiGetPlanning(); } catch(e){ _planning=[]; }
+  _planning.push(inst);
+  try {
+    await apiSavePlanning(_planning);
+    ['pl-nom','pl-tel','pl-adresse','pl-borne','pl-montant','pl-travaux'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('pl-lead').selectedIndex=0;
+    renderPlanning();
+    alert('Installation planifiée ! Elle apparaîtra automatiquement sur votre iPhone.');
+  } catch(e){ alert('Erreur: '+e.message); }
+}
+async function supprimerInstallation(id){
+  if(!confirm('Supprimer cette installation ?')) return;
+  _planning=_planning.filter(function(p){return p.id!==id;});
+  try { await apiSavePlanning(_planning); renderPlanning(); } catch(e){ alert('Erreur: '+e.message); }
+}
+function lienCalendrier(){
+  return VERCEL_URL+'/api/calendar.ics';
+}
+function copierLienCalendrier(){
+  var lien=VERCEL_URL+'/api/calendar';
+  navigator.clipboard.writeText(lien).then(function(){ alert('Lien copié !\n\n'+lien+'\n\nCollez-le dans Réglages › Calendrier › Ajouter un abonnement'); }).catch(function(){ prompt('Copiez ce lien:', lien); });
+}
+function ouvrirAbonnement(){
+  // webcal:// force l'ouverture dans l'app Calendrier iOS
+  var lien=VERCEL_URL.replace('https://','webcal://')+'/api/calendar';
+  window.location.href=lien;
 }
 
 // -- OUVERTURE CRM -----------------------------
