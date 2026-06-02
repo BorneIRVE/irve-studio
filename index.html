@@ -23,10 +23,10 @@ function closeMenu(){
 }
 function showTab(id,btn){
   document.querySelectorAll('.tab-content').forEach(function(t){t.style.display='none';});
-  document.querySelectorAll('.tab-btn').forEach(function(b){b.style.background='white';b.style.color='#6b8299';});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
   var target=document.getElementById('tab-'+id);
   if(target)target.style.display='block';
-  if(btn){btn.style.background='var(--ink)';btn.style.color='white';}
+  if(btn)btn.classList.add('active');
 }
 function toggleFaq(el){
   var item=el.closest('.faq-item');
