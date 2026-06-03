@@ -805,7 +805,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
         <div class="field" id="dep-chantier-field"><label class="fl">🏗️ Chantier lié</label><select id="dep-chantier"><option value="">— Frais de fonctionnement —</option></select></div>
         <div class="field"><label class="fl">Description</label><input type="text" id="dep-desc" placeholder="Borne Schneider..."></div>
         <div class="g2"><div class="field"><label class="fl">Fournisseur</label><input type="text" id="dep-fourn" placeholder="Rexel..."></div><div class="field"><label class="fl">Date</label><input type="date" id="dep-date"></div></div>
-        <div class="field"><label class="fl">🔗 Lien facture (Drive)</label><input type="url" id="dep-drive" placeholder="https://drive..."></div>
+        <div class="field"><label class="fl">📎 Facture (PDF/photo)</label><input type="file" id="dep-file" accept="application/pdf,image/*"><div id="dep-up-status" style="font-size:12px;color:#6b8299;margin-top:4px;"></div></div>
         <button onclick="ajouterDepense()" class="btn btn-g" style="width:100%;">✅ Ajouter</button>
       </div>
       <div class="fscroll" id="dep-filters">
@@ -859,6 +859,23 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
 // ═══════════ CRM LOGIQUE ═══════════
 var CRM_PWD='irve2024';
 var VERCEL_URL='https://vercel-dun-eta-98.vercel.app';
+
+// — UPLOAD GOOGLE DRIVE —
+var MOIS_FR=['01-Janvier','02-Fevrier','03-Mars','04-Avril','05-Mai','06-Juin','07-Juillet','08-Aout','09-Septembre','10-Octobre','11-Novembre','12-Decembre'];
+function nettoyerNom(s){return String(s||'').replace(/[^a-zA-Z0-9 \-_]/g,'').replace(/\s+/g,'-').trim();}
+function fileToBase64(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});}
+async function uploadDrive(file,nomFichier,client,dateStr){
+  var d=parseDate(dateStr)||new Date();
+  var annee=d.getFullYear();
+  var mois=MOIS_FR[d.getMonth()];
+  var ext=(file.name.split('.').pop()||'pdf').toLowerCase();
+  var fileName=nettoyerNom(nomFichier)+'.'+ext;
+  var b64=await fileToBase64(file);
+  var r=await fetch(VERCEL_URL+'/api/drive-upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,annee:annee,mois:mois,client:nettoyerNom(client)||'Divers'})});
+  var j=await r.json();
+  if(!r.ok||!j.success)throw new Error(j.error||'Upload échoué');
+  return j.link;
+}
 
 // — API —
 async function apiGetLeads(){var r=await fetch(VERCEL_URL+'/api/get-leads?t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});if(!r.ok)throw new Error('Erreur '+r.status);return (await r.json()).leads||[];}
@@ -1028,7 +1045,9 @@ function openDetail(id){
       '<button onclick="saveNote('+l.id+')" class="btn btn-d" style="width:100%;margin-bottom:14px;">💾 Enregistrer la note</button>'+
       '<label class="fl">Changer le statut</label><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">'+
       Object.keys(STATUTS).map(function(k){var s=STATUTS[k];return '<button onclick="updateStatut('+l.id+',\''+k+'\')" class="chip" style="background:'+(l.statut===k?s.c:s.b)+';color:'+(l.statut===k?'#fff':s.c)+';border:none;cursor:pointer;padding:8px 12px;">'+s.l+'</button>';}).join('')+'</div>'+
-      '<button onclick="demanderLienDevis('+l.id+')" class="btn btn-o" style="width:100%;margin-top:14px;">📎 '+(l.devis_drive?'Modifier':'Ajouter')+' lien devis signé</button>'+
+      '<input type="file" id="up-devis-'+l.id+'" accept="application/pdf,image/*" style="display:none;" onchange="uploadDevisLead('+l.id+',this)">'+
+      '<button onclick="document.getElementById(\'up-devis-'+l.id+'\').click()" class="btn btn-o" style="width:100%;margin-top:14px;">📎 '+(l.devis_drive?'Remplacer':'Uploader')+' le devis signé</button>'+
+      '<div id="up-devis-status-'+l.id+'" style="font-size:12px;color:#6b8299;text-align:center;margin-top:6px;"></div>'+
       (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" style="display:block;text-align:center;color:#00875a;font-weight:700;font-size:13px;margin-top:8px;">📎 Voir le devis</a>':'')+
       '<button onclick="deleteLead('+l.id+')" class="btn" style="width:100%;margin-top:14px;background:#ffeaea;color:#dc3545;">🗑 Supprimer ce lead</button>';
     document.getElementById('lead-modal').style.display='flex';
@@ -1037,7 +1056,21 @@ function openDetail(id){
 async function updateStatut(id,st){try{await apiUpdateLead(id,{statut:st,histo_action:'Statut → '+STATUTS[st].l});closeModal();renderLeads();}catch(e){alert('Erreur: '+e.message);}}
 async function deleteLead(id){if(!confirm('Supprimer ce lead ?'))return;try{await apiUpdateLead(id,{statut:'__delete__'});closeModal();renderLeads();}catch(e){alert('Erreur: '+e.message);}}
 async function saveNote(id){try{await apiUpdateLead(id,{notes:document.getElementById('note-'+id).value,histo_action:'Note modifiée'});alert('Note enregistrée');}catch(e){alert('Erreur: '+e.message);}}
-async function demanderLienDevis(id){var l=prompt('Lien Google Drive du devis signé:');if(!l)return;try{await apiUpdateLead(id,{devis_drive:l,histo_action:'📎 Devis signé ajouté'});openDetail(id);}catch(e){alert('Erreur: '+e.message);}}
+async function uploadDevisLead(id,input){
+  var file=input.files[0];if(!file)return;
+  var st=document.getElementById('up-devis-status-'+id);
+  st.textContent='⏳ Upload en cours...';
+  try{
+    var leads=await apiGetLeads();var l=leads.find(function(x){return x.id===id;});
+    var montant=(l.devis||'').replace(/\s/g,'');
+    // Nom: NomClient-Date-Montant
+    var nom=nettoyerNom(l.nom)+'-'+(l.date||'').replace(/\//g,'-')+'-'+montant+'EUR';
+    var lien=await uploadDrive(file,'Devis-'+nom,l.nom,l.date);
+    await apiUpdateLead(id,{devis_drive:lien,histo_action:'📎 Devis signé uploadé'});
+    st.textContent='✅ Uploadé sur Drive';
+    setTimeout(function(){openDetail(id);},800);
+  }catch(e){st.textContent='❌ '+e.message;}
+}
 async function exportLeads(){var leads;try{leads=await apiGetLeads();}catch(e){alert(e.message);return;}if(!leads.length){alert('Aucun lead');return;}var csv='Nom,Email,Tel,Ville,Type,Devis TTC,Statut,Date\n';leads.forEach(function(l){csv+=[l.nom,l.email,l.tel||'-',l.ville||'-',l.itype,l.devis,l.statut,l.date].join(',')+'\n';});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='leads-'+new Date().toISOString().slice(0,10)+'.csv';a.click();}
 
 // — CHANTIERS —
@@ -1121,16 +1154,27 @@ async function ajouterDepense(){
   if(!desc||!ht||ht<=0){alert('Description et montant requis');return;}
   var dv=document.getElementById('dep-date').value;
   var cat=document.getElementById('dep-cat').value;
+  var fourn=document.getElementById('dep-fourn').value.trim();
+  var dateStr=dv?dv.split('-').reverse().join('/'):new Date().toLocaleDateString('fr-FR');
   var chantierId='',chantierNom='';
-  if(CATS_LIABLES.indexOf(cat)>-1){
-    var chSel=document.getElementById('dep-chantier');
-    chantierId=chSel.value;
-    if(chantierId)chantierNom=chSel.options[chSel.selectedIndex].textContent.split(' (')[0];
+  if(CATS_LIABLES.indexOf(cat)>-1){var chSel=document.getElementById('dep-chantier');chantierId=chSel.value;if(chantierId)chantierNom=chSel.options[chSel.selectedIndex].textContent.split(' (')[0];}
+  // Upload facture si fournie
+  var drive='';
+  var fileInput=document.getElementById('dep-file');
+  if(fileInput&&fileInput.files[0]){
+    var st=document.getElementById('dep-up-status');st.textContent='⏳ Upload facture...';
+    try{
+      var nom='Facture-'+nettoyerNom(fourn||'fournisseur')+'-'+dateStr.replace(/\//g,'-')+'-'+ht+'EUR';
+      // Le dossier client = chantier lié si défini, sinon "Frais-fonctionnement"
+      var dossier=chantierNom||'Frais-fonctionnement';
+      drive=await uploadDrive(fileInput.files[0],nom,dossier,dateStr);
+      st.textContent='✅ Facture uploadée';
+    }catch(e){st.textContent='❌ '+e.message;if(!confirm('Upload facture échoué ('+e.message+'). Ajouter la dépense quand même ?'))return;}
   }
-  var dep={id:Date.now().toString(),cat:cat,desc:desc,ht:ht,date:dv?dv.split('-').reverse().join('/'):new Date().toLocaleDateString('fr-FR'),fourn:document.getElementById('dep-fourn').value.trim(),drive:document.getElementById('dep-drive').value.trim(),chantierId:chantierId,chantierNom:chantierNom};
+  var dep={id:Date.now().toString(),cat:cat,desc:desc,ht:ht,date:dateStr,fourn:fourn,drive:drive,chantierId:chantierId,chantierNom:chantierNom};
   var ex=[];try{ex=await apiGetDepenses();}catch(e){}
   ex.unshift(dep);
-  try{await apiSaveDepenses(ex);_depenses=ex;['dep-ht','dep-desc','dep-fourn','dep-drive'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('dep-chantier').selectedIndex=0;renderDepenses(false);}catch(e){alert('Erreur: '+e.message);}
+  try{await apiSaveDepenses(ex);_depenses=ex;['dep-ht','dep-desc','dep-fourn'].forEach(function(i){document.getElementById(i).value='';});if(fileInput)fileInput.value='';var st2=document.getElementById('dep-up-status');if(st2)st2.textContent='';document.getElementById('dep-chantier').selectedIndex=0;renderDepenses(false);}catch(e){alert('Erreur: '+e.message);}
 }
 async function supprimerDepense(id){if(!confirm('Supprimer ?'))return;try{var ex=await apiGetDepenses();ex=ex.filter(function(d){return d.id!==id;});await apiSaveDepenses(ex);_depenses=ex;renderDepenses(false);}catch(e){alert('Erreur: '+e.message);}}
 
