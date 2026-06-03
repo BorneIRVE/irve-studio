@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -626,11 +626,12 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
 <!-- ══════════ PANNEAU CRM COMPLET ══════════ -->
 <div id="crm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeCRM()"></div>
 
-<div id="crm-panel" style="display:none;position:fixed;inset:0;z-index:1001;background:#eef2f6;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+<div id="crm-panel" style="display:none;position:fixed;inset:0;z-index:1001;background:#eef2f6;flex-direction:column;">
   <style>
+    #crm-panel.show{display:flex !important;}
     #crm-panel *{box-sizing:border-box;}
-    #crm-panel .cw{max-width:1100px;margin:0 auto;padding:14px;}
-    #crm-panel .ch{position:sticky;top:0;z-index:20;background:#0a1628;color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    #crm-panel .cw{max-width:1100px;margin:0 auto;padding:14px;width:100%;box-sizing:border-box;flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;order:2;}
+    #crm-panel .ch{flex-shrink:0;z-index:20;background:#0a1628;color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;gap:10px;order:0;}
     #crm-panel .ch h2{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin:0;}
     #crm-panel .ch .sub{font-size:11px;color:rgba(255,255,255,.55);margin:2px 0 0;}
     #crm-panel .ch-btns{display:flex;gap:6px;align-items:center;flex-shrink:0;}
@@ -647,7 +648,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     #crm-panel .kpi .l{font-size:11px;color:#6b8299;margin-top:4px;}
     #crm-panel .kpi .s{font-size:10px;color:#abb8c4;margin-top:2px;}
     /* Bottom tab bar (mobile) */
-    #crm-panel .tabbar{position:sticky;bottom:0;z-index:20;background:#fff;border-top:1px solid #e2e9f0;display:flex;padding:6px 4px;padding-bottom:max(6px,env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(13,27,42,.06);}
+    #crm-panel .tabbar{flex-shrink:0;z-index:20;background:#fff;border-top:1px solid #e2e9f0;display:flex;padding:6px 4px;padding-bottom:max(6px,env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(13,27,42,.06);order:3;}
     #crm-panel .tabbar button{flex:1;background:none;border:none;cursor:pointer;padding:7px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#9aa9b8;font-family:'Syne',sans-serif;}
     #crm-panel .tabbar button .ic{font-size:19px;line-height:1;}
     #crm-panel .tabbar button.on{color:#0a1628;}
@@ -676,7 +677,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     @media(min-width:768px){
       #crm-panel .cw{padding:24px;}
       #crm-panel .kgrid{grid-template-columns:repeat(4,1fr);}
-      #crm-panel .tabbar{position:sticky;top:0;bottom:auto;justify-content:center;gap:4px;border-top:none;border-bottom:1px solid #e2e9f0;}
+      #crm-panel .tabbar{order:1 !important;justify-content:center;gap:4px;border-top:none;border-bottom:1px solid #e2e9f0;box-shadow:none;}
       #crm-panel .tabbar button{flex:0 0 auto;flex-direction:row;padding:11px 20px;font-size:13px;border-radius:9px;}
       #crm-panel .tabbar button .ic{font-size:15px;}
       #crm-panel .tabbar button.on{background:#0a1628;color:#fff;}
@@ -873,14 +874,15 @@ var VERCEL_URL='https://vercel-dun-eta-98.vercel.app';
 var MOIS_FR=['01-Janvier','02-Fevrier','03-Mars','04-Avril','05-Mai','06-Juin','07-Juillet','08-Aout','09-Septembre','10-Octobre','11-Novembre','12-Decembre'];
 function nettoyerNom(s){return String(s||'').replace(/[^a-zA-Z0-9 \-_]/g,'').replace(/\s+/g,'-').trim();}
 function fileToBase64(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});}
-async function uploadDrive(file,nomFichier,client,dateStr){
+async function uploadDrive(file,nomFichier,client,dateStr,statut){
   var d=parseDate(dateStr)||new Date();
   var annee=d.getFullYear();
-  var mois=MOIS_FR[d.getMonth()];
+  var moisNom=MOIS_FR[d.getMonth()];
+  var statutLabel=statut&&STATUTS[statut]?STATUTS[statut].l:'Nouveau';
   var ext=(file.name.split('.').pop()||'pdf').toLowerCase();
   var fileName=nettoyerNom(nomFichier)+'.'+ext;
   var b64=await fileToBase64(file);
-  var r=await fetch(VERCEL_URL+'/api/drive-upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,annee:annee,mois:mois,client:nettoyerNom(client)||'Divers'})});
+  var r=await fetch(VERCEL_URL+'/api/drive-upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,annee:annee,mois:statutLabel+'/'+moisNom,client:nettoyerNom(client)||'Divers'})});
   var j=await r.json();
   if(!r.ok||!j.success)throw new Error(j.error||'Upload échoué');
   return j.link;
@@ -894,14 +896,14 @@ async function apiSaveDepenses(d){var r=await fetch(VERCEL_URL+'/api/save-depens
 async function apiGetPlanning(){var r=await fetch(VERCEL_URL+'/api/planning?t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});if(!r.ok)return [];return (await r.json()).planning||[];}
 async function apiSavePlanning(p){var r=await fetch(VERCEL_URL+'/api/planning',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({planning:p})});if(!r.ok)throw new Error('Erreur '+r.status);}
 
-var STATUTS={nouveau:{l:'Nouveau',c:'#0066cc',b:'#e8f0ff'},contact:{l:'À contacter',c:'#d97706',b:'#fff4e0'},relance:{l:'Relance',c:'#9b59b6',b:'#f5eeff'},devis:{l:'Devis envoyé',c:'#0a1628',b:'#e8ecf0'},signe:{l:'Signé',c:'#00875a',b:'#e8fff4'},cloture:{l:'Clôturé',c:'#155724',b:'#d4edda'},perdu:{l:'Perdu',c:'#dc3545',b:'#ffeaea'}};
+var STATUTS={nouveau:{l:'Nouveau',c:'#0066cc',b:'#e8f0ff'},relance:{l:'Relance',c:'#9b59b6',b:'#f5eeff'},signe:{l:'Signé',c:'#00875a',b:'#e8fff4'},encours:{l:'En cours',c:'#0066cc',b:'#e8f0ff'},termine:{l:'Terminé - à facturer',c:'#d97706',b:'#fff4e0'},cloture:{l:'Clôturé',c:'#155724',b:'#d4edda'},perdu:{l:'Perdu',c:'#dc3545',b:'#ffeaea'}};
 var DEP_CATS={bornes:{l:'Bornes & matériel',i:'🔌'},outillage:{l:'Outillage',i:'🔧'},consommable:{l:'Consommables',i:'📦'},carburant:{l:'Carburant',i:'⛽'},protection:{l:'EPI',i:'🦺'},'sous-traitance':{l:'Sous-traitance',i:'👷'},admin:{l:'Administratif',i:'📄'},autre:{l:'Autre',i:'📁'}};
 
 // — Helpers —
 function fmt(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0});}
 function fmt2(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function devisHT(l){return (parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.'))||0)/1.055;}
-function encaisse(l){var h=devisHT(l);if(l.statut==='cloture')return h;if(l.statut==='signe')return h*0.3;return 0;}
+function encaisse(l){var h=devisHT(l);if(l.statut==='cloture')return h;if(l.statut==='signe'||l.statut==='encours'||l.statut==='termine')return h*0.3;return 0;}
 function parseDate(s){if(!s)return null;if(s.indexOf('/')>-1){var p=s.split('/');return new Date(p[2],p[1]-1,p[0]);}return new Date(s);}
 
 // — Navigation —
@@ -919,8 +921,31 @@ function crmTab(tab){
 }
 function openCRM(e){if(e&&e.preventDefault)e.preventDefault();if(sessionStorage.getItem('crm_auth')==='1'){showCRM();}else{var l=document.getElementById('crm-login');if(l)l.style.display='flex';}}
 function checkPwd(){var p=document.getElementById('crm-pwd');var er=document.getElementById('crm-pwd-err');if(p&&p.value===CRM_PWD){sessionStorage.setItem('crm_auth','1');p.value='';var l=document.getElementById('crm-login');if(l)l.style.display='none';if(er)er.style.display='none';showCRM();}else{if(er)er.style.display='block';}}
-function showCRM(){var pa=document.getElementById('crm-panel'),o=document.getElementById('crm-overlay');if(pa)pa.style.display='block';if(o)o.style.display='block';document.body.style.overflow='hidden';setTimeout(function(){crmTab('dash');},50);}
-function closeCRM(){var pa=document.getElementById('crm-panel'),o=document.getElementById('crm-overlay');if(pa)pa.style.display='none';if(o)o.style.display='none';document.body.style.overflow='';}
+function showCRM(){var pa=document.getElementById('crm-panel'),o=document.getElementById('crm-overlay');if(pa)pa.classList.add('show');if(o)o.style.display='block';document.body.style.overflow='hidden';verifierChantiersTermines();setTimeout(function(){crmTab('dash');},50);}
+function closeCRM(){var pa=document.getElementById('crm-panel'),o=document.getElementById('crm-overlay');if(pa)pa.classList.remove('show');if(o)o.style.display='none';document.body.style.overflow='';}
+
+// Passe automatiquement les chantiers "en cours" en "terminé" si la date de fin est dépassée
+async function verifierChantiersTermines(){
+  try{
+    var planning=await apiGetPlanning();
+    var leads=await apiGetLeads();
+    var now=new Date();
+    for(var i=0;i<planning.length;i++){
+      var p=planning[i];
+      if(!p.leadId)continue;
+      var lead=leads.find(function(x){return x.id==p.leadId;});
+      if(!lead||lead.statut!=='encours')continue;
+      // Date de fin = date début + durée (en jours, arrondi sup si >8h)
+      var debut=new Date(p.date+'T'+(p.heure||'09:00'));
+      var dureeH=parseFloat(p.duree)||4;
+      var jours=Math.ceil(dureeH/8); // 8h = 1 jour de travail
+      var fin=new Date(debut);fin.setDate(fin.getDate()+Math.max(0,jours-1));fin.setHours(23,59,59);
+      if(now>fin){
+        try{await apiUpdateLead(parseInt(p.leadId),{statut:'termine',histo_action:'✅ Chantier terminé — en attente facturation'});deplacerDossierDrive(lead,'encours','termine');}catch(e){}
+      }
+    }
+  }catch(e){}
+}
 function closeModal(){var m=document.getElementById('lead-modal');if(m)m.style.display='none';}
 
 // — Calcul financier période —
@@ -942,7 +967,7 @@ async function computeFinance(periode){
   var dep=[];try{dep=await apiGetDepenses();}catch(e){}
   var pr=calcPeriode(periode);
   var inP=function(d){var x=parseDate(d);return x&&x>=pr.from&&x<=pr.to;};
-  var fL=leads.filter(function(l){return (l.statut==='signe'||l.statut==='cloture')&&inP(l.date);});
+  var fL=leads.filter(function(l){return ['signe','encours','termine','cloture'].indexOf(l.statut)>-1&&inP(l.date);});
   var fD=dep.filter(function(d){return inP(d.date);});
   var caHT=fL.reduce(function(s,l){return s+devisHT(l);},0);
   var caEnc=fL.reduce(function(s,l){return s+encaisse(l);},0);
@@ -1058,11 +1083,32 @@ function openDetail(id){
       '<button onclick="document.getElementById(\'up-devis-'+l.id+'\').click()" class="btn btn-o" style="width:100%;margin-top:14px;">📎 '+(l.devis_drive?'Remplacer':'Uploader')+' le devis signé</button>'+
       '<div id="up-devis-status-'+l.id+'" style="font-size:12px;color:#6b8299;text-align:center;margin-top:6px;"></div>'+
       (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" style="display:block;text-align:center;color:#00875a;font-weight:700;font-size:13px;margin-top:8px;">📎 Voir le devis</a>':'')+
+      '<div style="margin-top:18px;"><label class="fl">📁 Documents Drive</label><div id="ld-docs-'+l.id+'" style="margin-top:6px;"></div><button onclick="listerDocsClient(\''+l.nom.replace(/'/g,"\\'")+'\',\'ld-docs-'+l.id+'\')" class="btn btn-o" style="width:100%;margin-top:8px;">📁 Charger les documents</button></div>'+
       '<button onclick="deleteLead('+l.id+')" class="btn" style="width:100%;margin-top:14px;background:#ffeaea;color:#dc3545;">🗑 Supprimer ce lead</button>';
     document.getElementById('lead-modal').style.display='flex';
   });
 }
-async function updateStatut(id,st){try{await apiUpdateLead(id,{statut:st,histo_action:'Statut → '+STATUTS[st].l});closeModal();renderLeads();}catch(e){alert('Erreur: '+e.message);}}
+async function updateStatut(id,st){
+  try{
+    var leads=await apiGetLeads();var l=leads.find(function(x){return x.id===id;});
+    var ancienStatut=l?l.statut:null;
+    await apiUpdateLead(id,{statut:st,histo_action:'Statut → '+STATUTS[st].l});
+    // Déplacer le dossier Drive du client vers le nouveau statut
+    if(l&&ancienStatut!==st){deplacerDossierDrive(l,ancienStatut,st);}
+    closeModal();renderLeads();
+  }catch(e){alert('Erreur: '+e.message);}
+}
+// Déplace le dossier Drive du client d'un statut vers un autre (silencieux)
+async function deplacerDossierDrive(lead,ancienStatut,nouveauStatut){
+  try{
+    var d=parseDate(lead.date)||new Date();
+    var annee=d.getFullYear();
+    var moisNom=MOIS_FR[d.getMonth()];
+    var ancienLabel=ancienStatut&&STATUTS[ancienStatut]?STATUTS[ancienStatut].l:'Nouveau';
+    var nouveauLabel=STATUTS[nouveauStatut]?STATUTS[nouveauStatut].l:'Nouveau';
+    await fetch(VERCEL_URL+'/api/drive-move',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({client:nettoyerNom(lead.nom),annee:annee,mois:moisNom,ancienStatut:ancienLabel,nouveauStatut:nouveauLabel})});
+  }catch(e){console.log('Déplacement Drive échoué:',e);}
+}
 async function deleteLead(id){if(!confirm('Supprimer ce lead ?'))return;try{await apiUpdateLead(id,{statut:'__delete__'});closeModal();renderLeads();}catch(e){alert('Erreur: '+e.message);}}
 async function saveNote(id){try{await apiUpdateLead(id,{notes:document.getElementById('note-'+id).value,histo_action:'Note modifiée'});alert('Note enregistrée');}catch(e){alert('Erreur: '+e.message);}}
 async function uploadDevisLead(id,input){
@@ -1074,7 +1120,7 @@ async function uploadDevisLead(id,input){
     var montant=(l.devis||'').replace(/\s/g,'');
     // Nom: NomClient-Date-Montant
     var nom=nettoyerNom(l.nom)+'-'+(l.date||'').replace(/\//g,'-')+'-'+montant+'EUR';
-    var lien=await uploadDrive(file,'Devis-'+nom,l.nom,l.date);
+    var lien=await uploadDrive(file,'Devis-'+nom,l.nom,l.date,l.statut);
     await apiUpdateLead(id,{devis_drive:lien,histo_action:'📎 Devis signé uploadé'});
     st.textContent='✅ Uploadé sur Drive';
     setTimeout(function(){openDetail(id);},800);
@@ -1086,7 +1132,7 @@ async function exportLeads(){var leads;try{leads=await apiGetLeads();}catch(e){a
 async function computeChantiers(){
   var leads=[];try{leads=await apiGetLeads();}catch(e){}
   var dep=[];try{dep=await apiGetDepenses();}catch(e){}
-  var chantiers=leads.filter(function(l){return l.statut==='signe'||l.statut==='cloture';});
+  var chantiers=leads.filter(function(l){return ['signe','encours','termine','cloture'].indexOf(l.statut)>-1;});
   return chantiers.map(function(l){
     var depLiees=dep.filter(function(d){return d.chantierId==l.id;});
     var coutMat=depLiees.reduce(function(s,d){return s+(parseFloat(d.ht)||0);},0);
@@ -1134,7 +1180,8 @@ async function openChantier(id){
     ((l.chantier_photos||[]).map(function(p){return '<a href="'+p.link+'" target="_blank" style="display:block;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid #d7e0e9;background:#f0f4f8;"><img src="'+p.link+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'📷\';this.parentNode.style.cssText+=\';display:flex;align-items:center;justify-content:center;font-size:24px;\'"></a>';}).join(''))+'</div>'+
     '<input type="file" id="ch-photo-input-'+l.id+'" accept="image/*" capture="environment" style="display:none;" onchange="uploadPhotoChantier('+l.id+',this)">'+
     '<button onclick="document.getElementById(\'ch-photo-input-'+l.id+'\').click()" class="btn btn-o" style="width:100%;">📷 Ajouter une photo</button>'+
-    '<div id="ch-photo-status-'+l.id+'" style="font-size:12px;color:#6b8299;text-align:center;margin-top:6px;"></div></div>';
+    '<div id="ch-photo-status-'+l.id+'" style="font-size:12px;color:#6b8299;text-align:center;margin-top:6px;"></div></div>'+
+    '<div style="margin-top:18px;"><label class="fl">📁 Documents Drive du client</label><div id="ch-docs-'+l.id+'" style="margin-top:6px;"></div><button onclick="listerDocsClient(\''+l.nom.replace(/'/g,"\\'")+'\',\'ch-docs-'+l.id+'\')" class="btn btn-o" style="width:100%;margin-top:8px;">📁 Charger les documents</button></div>';
   document.getElementById('lead-modal').style.display='flex';
 }
 async function saveChantierNote(id){
@@ -1149,12 +1196,27 @@ async function uploadPhotoChantier(id,input){
     var photos=l.chantier_photos||[];
     var num=photos.length+1;
     var nom='Photo-'+nettoyerNom(l.nom)+'-'+num;
-    var lien=await uploadDrive(file,nom,l.nom,l.date);
+    var lien=await uploadDrive(file,nom,l.nom,l.date,l.statut);
     photos.push({link:lien,date:new Date().toLocaleDateString('fr-FR')});
     await apiUpdateLead(id,{chantier_photos:photos,histo_action:'📷 Photo ajoutée'});
     st.textContent='✅ Photo ajoutée';
     setTimeout(function(){openChantier(id);},800);
   }catch(e){st.textContent='❌ '+e.message;}
+}
+// Liste les documents Drive d'un client
+async function listerDocsClient(nom,targetId){
+  var el=document.getElementById(targetId);if(!el)return;
+  el.innerHTML='<p style="font-size:12px;color:#6b8299;">⏳ Chargement...</p>';
+  try{
+    var r=await fetch(VERCEL_URL+'/api/drive-list?client='+encodeURIComponent(nettoyerNom(nom))+'&t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});
+    var j=await r.json();
+    if(!r.ok)throw new Error(j.error||'Erreur');
+    if(!j.files||!j.files.length){el.innerHTML='<p style="font-size:12px;color:#9aa9b8;">Aucun document Drive pour ce client.</p>';return;}
+    el.innerHTML=j.files.map(function(f){
+      var ico=f.mimeType&&f.mimeType.indexOf('image')>-1?'🖼️':f.mimeType&&f.mimeType.indexOf('pdf')>-1?'📄':f.mimeType&&f.mimeType.indexOf('word')>-1?'📝':'📎';
+      return '<a href="'+f.webViewLink+'" target="_blank" style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eef2f6;font-size:13px;color:#0d1b2a;text-decoration:none;"><span>'+ico+'</span><span style="flex:1;">'+f.name+'</span><span style="color:#0066cc;">Ouvrir →</span></a>';
+    }).join('');
+  }catch(e){el.innerHTML='<p style="font-size:12px;color:#dc3545;">Erreur: '+e.message+'</p>';}
 }
 var _depFilter='',_depenses=[];
 var CATS_LIABLES=['bornes','sous-traitance']; // catégories liables à un chantier
@@ -1172,7 +1234,7 @@ async function renderDepenses(reload){
   try{
     var leads=await apiGetLeads();var sel=document.getElementById('dep-chantier');
     if(sel&&sel.options.length<=1){
-      leads.filter(function(l){return l.statut==='signe'||l.statut==='cloture';}).forEach(function(l){
+      leads.filter(function(l){return ['signe','encours','termine','cloture'].indexOf(l.statut)>-1;}).forEach(function(l){
         var o=document.createElement('option');o.value=l.id;o.textContent=l.nom+' ('+(l.ville||l.cp||'')+')';sel.appendChild(o);
       });
     }
@@ -1231,10 +1293,22 @@ function remplirDepuisLead(){var sel=document.getElementById('pl-lead');var o=se
 async function ajouterInstallation(){
   var nom=document.getElementById('pl-nom').value.trim(),date=document.getElementById('pl-date').value;
   if(!nom||!date){alert('Nom et date requis');return;}
-  var inst={id:Date.now().toString(),nom:nom,tel:document.getElementById('pl-tel').value.trim(),adresse:document.getElementById('pl-adresse').value.trim(),borne:document.getElementById('pl-borne').value.trim(),montant:document.getElementById('pl-montant').value.trim(),travaux:document.getElementById('pl-travaux').value.trim(),date:date,heure:document.getElementById('pl-heure').value||'09:00',duree:document.getElementById('pl-duree').value||'4'};
+  var leadSel=document.getElementById('pl-lead');
+  var leadId=leadSel?leadSel.value:'';
+  var inst={id:Date.now().toString(),leadId:leadId,nom:nom,tel:document.getElementById('pl-tel').value.trim(),adresse:document.getElementById('pl-adresse').value.trim(),borne:document.getElementById('pl-borne').value.trim(),montant:document.getElementById('pl-montant').value.trim(),travaux:document.getElementById('pl-travaux').value.trim(),date:date,heure:document.getElementById('pl-heure').value||'09:00',duree:document.getElementById('pl-duree').value||'4'};
   try{_planning=await apiGetPlanning();}catch(e){_planning=[];}
   _planning.push(inst);
-  try{await apiSavePlanning(_planning);['pl-nom','pl-tel','pl-adresse','pl-borne','pl-montant','pl-travaux'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('pl-lead').selectedIndex=0;renderPlanning();alert('Installation planifiée ! Elle apparaîtra sur votre iPhone.');}catch(e){alert('Erreur: '+e.message);}
+  try{
+    await apiSavePlanning(_planning);
+    // Passer le lead lié en "En cours" + déplacer le dossier Drive
+    if(leadId){try{
+      var leadsP=await apiGetLeads();var leadP=leadsP.find(function(x){return x.id==leadId;});
+      var ancienP=leadP?leadP.statut:'signe';
+      await apiUpdateLead(parseInt(leadId),{statut:'encours',histo_action:'🔧 Installation planifiée — En cours'});
+      if(leadP&&ancienP!=='encours')deplacerDossierDrive(leadP,ancienP,'encours');
+    }catch(e){}}
+    ['pl-nom','pl-tel','pl-adresse','pl-borne','pl-montant','pl-travaux'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('pl-lead').selectedIndex=0;renderPlanning();alert('Installation planifiée ! Elle apparaîtra sur votre iPhone.');
+  }catch(e){alert('Erreur: '+e.message);}
 }
 async function supprimerInstallation(id){if(!confirm('Supprimer ?'))return;_planning=_planning.filter(function(p){return p.id!==id;});try{await apiSavePlanning(_planning);renderPlanning();}catch(e){alert('Erreur: '+e.message);}}
 function copierLienCalendrier(){var l=VERCEL_URL+'/api/calendar';if(navigator.clipboard)navigator.clipboard.writeText(l).then(function(){alert('Lien copié !\n\n'+l);}).catch(function(){prompt('Copiez:',l);});else prompt('Copiez:',l);}
