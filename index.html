@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoltExpert — Borne IRVE + Optimisation Energie</title>
 <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 function toggleMenu(){
   var dd=document.getElementById('nav-dropdown');
@@ -689,6 +691,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     <button onclick="crmTab('dash')" id="ctab-dash" class="on"><span class="ic">🏠</span>Accueil</button>
     <button onclick="crmTab('planning')" id="ctab-planning"><span class="ic">📅</span>Planning</button>
     <button onclick="crmTab('leads')" id="ctab-leads"><span class="ic">👥</span>Leads</button>
+    <button onclick="crmTab('chantiers')" id="ctab-chantiers"><span class="ic">🏗️</span>Chantiers</button>
     <button onclick="crmTab('argent')" id="ctab-argent"><span class="ic">💶</span>Argent</button>
     <button onclick="crmTab('depenses')" id="ctab-depenses"><span class="ic">🧾</span>Dépenses</button>
   </div>
@@ -748,12 +751,22 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
       <button onclick="exportLeads()" class="btn btn-o" style="width:100%;margin-top:10px;">⬇ Exporter en CSV</button>
     </div>
 
+    <!-- ══ CHANTIERS ══ -->
+    <div class="page" id="crm-tab-chantiers">
+      <div class="kgrid" id="ch-kpis" style="margin-bottom:14px;"></div>
+      <div id="ch-list"></div>
+    </div>
+
     <!-- ══ ARGENT (TVA + charges + bénéfice) ══ -->
     <div class="page" id="crm-tab-argent">
       <div class="fscroll" id="arg-period">
         <div class="fchip on" onclick="setArgPeriode('mois',this)">Ce mois</div>
         <div class="fchip" onclick="setArgPeriode('trimestre',this)">Ce trimestre</div>
         <div class="fchip" onclick="setArgPeriode('annee',this)">Cette année</div>
+        <div class="fchip" onclick="setArgPeriode('perso',this)">📅 Dates perso</div>
+      </div>
+      <div class="card" id="arg-perso-dates" style="display:none;">
+        <div class="g2"><div class="field" style="margin:0;"><label class="fl">Du</label><input type="date" id="arg-from" onchange="renderArgent()"></div><div class="field" style="margin:0;"><label class="fl">Au</label><input type="date" id="arg-to" onchange="renderArgent()"></div></div>
       </div>
       <!-- TVA -->
       <div class="card" id="arg-tva-card">
@@ -780,14 +793,16 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
         <div class="field"><label class="fl">Objectif net mensuel (€)</label><input type="number" id="objectif-salaire" value="1500" oninput="calcObjectif()"></div>
         <div id="arg-objectif"></div>
       </div>
-      <button onclick="exporterRapport()" class="btn btn-d" style="width:100%;">⬇️ Télécharger le rapport complet</button>
+      <button onclick="exporterRapport()" class="btn btn-o" style="width:100%;margin-bottom:8px;">⬇️ Rapport CSV simple</button>
+      <button onclick="exporterZipComptable()" class="btn btn-d" style="width:100%;">📦 Export comptable (.zip + Excel)</button>
     </div>
 
     <!-- ══ DÉPENSES ══ -->
     <div class="page" id="crm-tab-depenses">
       <div class="card">
         <h3 class="card-t">➕ Nouvelle dépense</h3>
-        <div class="g2"><div class="field"><label class="fl">Catégorie</label><select id="dep-cat"><option value="bornes">🔌 Bornes & matériel</option><option value="outillage">🔧 Outillage</option><option value="consommable">📦 Consommables</option><option value="carburant">⛽ Carburant</option><option value="protection">🦺 EPI</option><option value="sous-traitance">👷 Sous-traitance</option><option value="admin">📄 Administratif</option><option value="autre">📁 Autre</option></select></div><div class="field"><label class="fl">Montant HT (€)</label><input type="number" id="dep-ht" placeholder="450" step="0.01"></div></div>
+        <div class="g2"><div class="field"><label class="fl">Catégorie</label><select id="dep-cat" onchange="majChampChantier()"><option value="bornes">🔌 Bornes & matériel</option><option value="sous-traitance">👷 Sous-traitance</option><option value="outillage">🔧 Outillage</option><option value="consommable">📦 Consommables</option><option value="carburant">⛽ Carburant</option><option value="protection">🦺 EPI</option><option value="admin">📄 Administratif</option><option value="autre">📁 Autre</option></select></div><div class="field"><label class="fl">Montant HT (€)</label><input type="number" id="dep-ht" placeholder="450" step="0.01"></div></div>
+        <div class="field" id="dep-chantier-field"><label class="fl">🏗️ Chantier lié</label><select id="dep-chantier"><option value="">— Frais de fonctionnement —</option></select></div>
         <div class="field"><label class="fl">Description</label><input type="text" id="dep-desc" placeholder="Borne Schneider..."></div>
         <div class="g2"><div class="field"><label class="fl">Fournisseur</label><input type="text" id="dep-fourn" placeholder="Rexel..."></div><div class="field"><label class="fl">Date</label><input type="date" id="dep-date"></div></div>
         <div class="field"><label class="fl">🔗 Lien facture (Drive)</label><input type="url" id="dep-drive" placeholder="https://drive..."></div>
@@ -865,13 +880,14 @@ function parseDate(s){if(!s)return null;if(s.indexOf('/')>-1){var p=s.split('/')
 
 // — Navigation —
 function crmTab(tab){
-  ['dash','planning','leads','argent','depenses'].forEach(function(t){
+  ['dash','planning','leads','chantiers','argent','depenses'].forEach(function(t){
     var p=document.getElementById('crm-tab-'+t);if(p)p.classList.toggle('on',t===tab);
     var b=document.getElementById('ctab-'+t);if(b)b.classList.toggle('on',t===tab);
   });
   if(tab==='dash')renderDash();
   if(tab==='planning')renderPlanning();
   if(tab==='leads')renderLeads();
+  if(tab==='chantiers')renderChantiers();
   if(tab==='argent')renderArgent();
   if(tab==='depenses')renderDepenses();
 }
@@ -886,6 +902,12 @@ function calcPeriode(periode){
   var now=new Date(),from,to=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
   if(periode==='mois')from=new Date(now.getFullYear(),now.getMonth(),1);
   else if(periode==='trimestre'){var q=Math.floor(now.getMonth()/3);from=new Date(now.getFullYear(),q*3,1);to=new Date(now.getFullYear(),q*3+3,0,23,59,59);}
+  else if(periode==='perso'){
+    var fv=(document.getElementById('arg-from')||{}).value;
+    var tv=(document.getElementById('arg-to')||{}).value;
+    from=fv?new Date(fv):new Date(now.getFullYear(),0,1);
+    to=tv?new Date(tv+'T23:59:59'):now;
+  }
   else {from=new Date(now.getFullYear(),0,1);to=new Date(now.getFullYear(),11,31,23,59,59);}
   return {from:from,to:to};
 }
@@ -935,7 +957,7 @@ function kpic(v,l,c,s){return '<div class="kpi"><div class="v" style="color:'+(c
 
 // — ARGENT —
 var _argPeriode='mois';
-function setArgPeriode(p,el){_argPeriode=p;document.querySelectorAll('#arg-period .fchip').forEach(function(c){c.classList.remove('on');});if(el)el.classList.add('on');renderArgent();}
+function setArgPeriode(p,el){_argPeriode=p;document.querySelectorAll('#arg-period .fchip').forEach(function(c){c.classList.remove('on');});if(el)el.classList.add('on');var pd=document.getElementById('arg-perso-dates');if(pd)pd.style.display=p==='perso'?'block':'none';renderArgent();}
 async function renderArgent(){
   var f=await computeFinance(_argPeriode);
   window._finData={caEnc:f.caEnc,depTotal:f.depHT};
@@ -1018,25 +1040,97 @@ async function saveNote(id){try{await apiUpdateLead(id,{notes:document.getElemen
 async function demanderLienDevis(id){var l=prompt('Lien Google Drive du devis signé:');if(!l)return;try{await apiUpdateLead(id,{devis_drive:l,histo_action:'📎 Devis signé ajouté'});openDetail(id);}catch(e){alert('Erreur: '+e.message);}}
 async function exportLeads(){var leads;try{leads=await apiGetLeads();}catch(e){alert(e.message);return;}if(!leads.length){alert('Aucun lead');return;}var csv='Nom,Email,Tel,Ville,Type,Devis TTC,Statut,Date\n';leads.forEach(function(l){csv+=[l.nom,l.email,l.tel||'-',l.ville||'-',l.itype,l.devis,l.statut,l.date].join(',')+'\n';});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='leads-'+new Date().toISOString().slice(0,10)+'.csv';a.click();}
 
+// — CHANTIERS —
+async function computeChantiers(){
+  var leads=[];try{leads=await apiGetLeads();}catch(e){}
+  var dep=[];try{dep=await apiGetDepenses();}catch(e){}
+  var chantiers=leads.filter(function(l){return l.statut==='signe'||l.statut==='cloture';});
+  return chantiers.map(function(l){
+    var depLiees=dep.filter(function(d){return d.chantierId==l.id;});
+    var coutMat=depLiees.reduce(function(s,d){return s+(parseFloat(d.ht)||0);},0);
+    var caHT=devisHT(l);
+    var marge=caHT-coutMat;
+    var margePct=caHT>0?(marge/caHT*100):0;
+    return {lead:l,depLiees:depLiees,coutMat:coutMat,caHT:caHT,caTTC:caHT*1.055,marge:marge,margePct:margePct,encaisse:encaisse(l)};
+  });
+}
+async function renderChantiers(){
+  var chs=await computeChantiers();
+  var totCA=chs.reduce(function(s,c){return s+c.caHT;},0);
+  var totMat=chs.reduce(function(s,c){return s+c.coutMat;},0);
+  var totMarge=totCA-totMat;
+  document.getElementById('ch-kpis').innerHTML=
+    kpic(chs.length,'Chantiers','#0066cc')+
+    kpic(fmt(totCA)+'€','CA HT total','#0d1b2a')+
+    kpic(fmt(totMat)+'€','Coût matériel','#dc3545')+
+    kpic(fmt(totMarge)+'€','Marge totale',totMarge>=0?'#00875a':'#dc3545');
+  var list=document.getElementById('ch-list');
+  if(!chs.length){list.innerHTML='<div class="card" style="text-align:center;color:#9aa9b8;padding:32px;"><div style="font-size:30px;">🏗️</div><p>Aucun chantier signé pour le moment</p></div>';return;}
+  list.innerHTML='<div class="card">'+chs.map(function(c){
+    var mc=c.margePct>=40?'#00875a':c.margePct>=20?'#d97706':'#dc3545';
+    return '<div class="row" onclick="openChantier('+c.lead.id+')" style="cursor:pointer;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><strong style="font-size:14px;color:#0d1b2a;">'+c.lead.nom+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">'+(c.lead.ville||c.lead.cp||'')+' · '+(c.lead.borne||'')+'</div><div style="font-size:12px;color:#6b8299;margin-top:2px;">CA '+fmt(c.caHT)+'€ · Matériel '+fmt(c.coutMat)+'€</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:'+mc+';">'+Math.round(c.margePct)+'%</div><div style="font-size:11px;color:#6b8299;">marge</div><div style="font-size:13px;font-weight:700;color:'+mc+';margin-top:2px;">'+fmt(c.marge)+'€</div></div></div></div>';
+  }).join('')+'</div>';
+}
+async function openChantier(id){
+  var chs=await computeChantiers();
+  var c=chs.find(function(x){return x.lead.id===id;});if(!c)return;
+  var l=c.lead;
+  var adr=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));
+  var mc=c.margePct>=40?'#00875a':c.margePct>=20?'#d97706':'#dc3545';
+  document.getElementById('modal-title').textContent='🏗️ '+l.nom;
+  document.getElementById('modal-body').innerHTML=
+    '<div style="font-size:13px;line-height:1.8;color:#0d1b2a;margin-bottom:14px;">📍 '+adr+'<br>📞 '+(l.tel||'-')+'<br>🔌 '+(l.borne||'-')+' ('+l.nb_b+' borne)</div>'+
+    '<div style="background:'+mc+';color:#fff;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;"><div style="font-family:Syne,sans-serif;font-size:32px;font-weight:800;">'+Math.round(c.margePct)+'%</div><div style="font-size:13px;opacity:.85;">marge · '+fmt2(c.marge)+'€</div></div>'+
+    '<div class="g2" style="margin-bottom:8px;"><div class="kpi"><div class="v" style="font-size:16px;color:#0066cc;">'+fmt(c.caHT)+'€</div><div class="l">CA HT</div></div><div class="kpi"><div class="v" style="font-size:16px;color:#00875a;">'+fmt(c.encaisse)+'€</div><div class="l">Encaissé</div></div></div>'+
+    '<div class="g2" style="margin-bottom:14px;"><div class="kpi"><div class="v" style="font-size:16px;color:#dc3545;">'+fmt(c.coutMat)+'€</div><div class="l">Coût matériel/ST</div></div><div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(c.caTTC)+'€</div><div class="l">CA TTC</div></div></div>'+
+    (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" class="btn btn-o" style="display:block;text-align:center;text-decoration:none;margin-bottom:14px;">📎 Voir le devis signé</a>':'')+
+    '<label class="fl">Dépenses liées ('+c.depLiees.length+')</label>'+
+    (c.depLiees.length?'<div style="margin-top:6px;">'+c.depLiees.map(function(d){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f6;font-size:13px;"><span>'+(DEP_CATS[d.cat]||{i:'📁'}).i+' '+d.desc+(d.drive?' <a href="'+d.drive+'" target="_blank" style="color:#00875a;">📎</a>':'')+'</span><strong style="color:#dc3545;">'+fmt2(d.ht)+'€</strong></div>';}).join('')+'</div>':'<p style="font-size:13px;color:#9aa9b8;margin:6px 0 0;">Aucune dépense liée. Ajoutez-en depuis l\'onglet Dépenses (catégorie Bornes ou Sous-traitance).</p>');
+  document.getElementById('lead-modal').style.display='flex';
+}
+
 // — DÉPENSES —
 var _depFilter='',_depenses=[];
+var CATS_LIABLES=['bornes','sous-traitance']; // catégories liables à un chantier
+function majChampChantier(){
+  var cat=document.getElementById('dep-cat').value;
+  var field=document.getElementById('dep-chantier-field');
+  if(field)field.style.display=CATS_LIABLES.indexOf(cat)>-1?'block':'none';
+}
 function setDepFilter(c,el){_depFilter=c;document.querySelectorAll('#dep-filters .fchip').forEach(function(x){x.classList.remove('on');});if(el)el.classList.add('on');renderDepenses(false);}
 async function renderDepenses(reload){
   if(reload!==false){try{_depenses=await apiGetDepenses();}catch(e){_depenses=[];}}
   var de=document.getElementById('dep-date');if(de&&!de.value)de.valueAsDate=new Date();
+  majChampChantier();
+  // Remplir le select chantier (leads signés/clôturés)
+  try{
+    var leads=await apiGetLeads();var sel=document.getElementById('dep-chantier');
+    if(sel&&sel.options.length<=1){
+      leads.filter(function(l){return l.statut==='signe'||l.statut==='cloture';}).forEach(function(l){
+        var o=document.createElement('option');o.value=l.id;o.textContent=l.nom+' ('+(l.ville||l.cp||'')+')';sel.appendChild(o);
+      });
+    }
+  }catch(e){}
   var f=_depFilter?_depenses.filter(function(d){return d.cat===_depFilter;}):_depenses;
   var list=document.getElementById('dep-list');
   if(!f.length){list.innerHTML='<p style="color:#9aa9b8;text-align:center;padding:20px;font-size:13px;">Aucune dépense</p>';return;}
-  list.innerHTML=f.map(function(d){var ht=parseFloat(d.ht)||0,cat=DEP_CATS[d.cat]||{l:d.cat,i:'📁'};return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><strong style="font-size:14px;color:#0d1b2a;">'+d.desc+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">'+cat.i+' '+cat.l+' · '+d.date+(d.fourn?' · '+d.fourn:'')+'</div>'+(d.drive?'<a href="'+d.drive+'" target="_blank" style="font-size:12px;color:#00875a;font-weight:700;">📎 Facture</a>':'')+'</div><div style="text-align:right;flex-shrink:0;"><div style="font-size:14px;font-weight:700;color:#dc3545;">'+fmt2(ht)+'€</div><div style="font-size:10px;color:#9aa9b8;">+'+fmt2(ht*0.2)+'€ TVA</div><button onclick="supprimerDepense(\''+d.id+'\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:14px;margin-top:2px;">🗑</button></div></div></div>';}).join('');
+  list.innerHTML=f.map(function(d){var ht=parseFloat(d.ht)||0,cat=DEP_CATS[d.cat]||{l:d.cat,i:'📁'};var chLabel=d.chantierNom?'🏗️ '+d.chantierNom:'💼 Frais fonctionnement';return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><strong style="font-size:14px;color:#0d1b2a;">'+d.desc+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">'+cat.i+' '+cat.l+' · '+d.date+(d.fourn?' · '+d.fourn:'')+'</div><div style="font-size:11px;color:#9aa9b8;margin-top:1px;">'+chLabel+'</div>'+(d.drive?'<a href="'+d.drive+'" target="_blank" style="font-size:12px;color:#00875a;font-weight:700;">📎 Facture</a>':'')+'</div><div style="text-align:right;flex-shrink:0;"><div style="font-size:14px;font-weight:700;color:#dc3545;">'+fmt2(ht)+'€</div><div style="font-size:10px;color:#9aa9b8;">+'+fmt2(ht*0.2)+'€ TVA</div><button onclick="supprimerDepense(\''+d.id+'\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:14px;margin-top:2px;">🗑</button></div></div></div>';}).join('');
 }
 async function ajouterDepense(){
   var ht=parseFloat(document.getElementById('dep-ht').value),desc=document.getElementById('dep-desc').value.trim();
   if(!desc||!ht||ht<=0){alert('Description et montant requis');return;}
   var dv=document.getElementById('dep-date').value;
-  var dep={id:Date.now().toString(),cat:document.getElementById('dep-cat').value,desc:desc,ht:ht,date:dv?dv.split('-').reverse().join('/'):new Date().toLocaleDateString('fr-FR'),fourn:document.getElementById('dep-fourn').value.trim(),drive:document.getElementById('dep-drive').value.trim()};
+  var cat=document.getElementById('dep-cat').value;
+  var chantierId='',chantierNom='';
+  if(CATS_LIABLES.indexOf(cat)>-1){
+    var chSel=document.getElementById('dep-chantier');
+    chantierId=chSel.value;
+    if(chantierId)chantierNom=chSel.options[chSel.selectedIndex].textContent.split(' (')[0];
+  }
+  var dep={id:Date.now().toString(),cat:cat,desc:desc,ht:ht,date:dv?dv.split('-').reverse().join('/'):new Date().toLocaleDateString('fr-FR'),fourn:document.getElementById('dep-fourn').value.trim(),drive:document.getElementById('dep-drive').value.trim(),chantierId:chantierId,chantierNom:chantierNom};
   var ex=[];try{ex=await apiGetDepenses();}catch(e){}
   ex.unshift(dep);
-  try{await apiSaveDepenses(ex);_depenses=ex;['dep-ht','dep-desc','dep-fourn','dep-drive'].forEach(function(i){document.getElementById(i).value='';});renderDepenses(false);}catch(e){alert('Erreur: '+e.message);}
+  try{await apiSaveDepenses(ex);_depenses=ex;['dep-ht','dep-desc','dep-fourn','dep-drive'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('dep-chantier').selectedIndex=0;renderDepenses(false);}catch(e){alert('Erreur: '+e.message);}
 }
 async function supprimerDepense(id){if(!confirm('Supprimer ?'))return;try{var ex=await apiGetDepenses();ex=ex.filter(function(d){return d.id!==id;});await apiSaveDepenses(ex);_depenses=ex;renderDepenses(false);}catch(e){alert('Erreur: '+e.message);}}
 
@@ -1069,7 +1163,84 @@ async function supprimerInstallation(id){if(!confirm('Supprimer ?'))return;_plan
 function copierLienCalendrier(){var l=VERCEL_URL+'/api/calendar';if(navigator.clipboard)navigator.clipboard.writeText(l).then(function(){alert('Lien copié !\n\n'+l);}).catch(function(){prompt('Copiez:',l);});else prompt('Copiez:',l);}
 function ouvrirAbonnement(){window.location.href=VERCEL_URL.replace('https://','webcal://')+'/api/calendar';}
 
-// — RAPPORT —
+// — EXPORT ZIP COMPTABLE —
+async function exporterZipComptable(){
+  if(typeof XLSX==='undefined'||typeof JSZip==='undefined'){alert('Bibliothèques en cours de chargement, réessayez dans un instant.');return;}
+  var f=await computeFinance(_argPeriode);
+  var chs=await computeChantiers();
+  // Filtrer chantiers sur la période
+  var inP=function(d){var x=parseDate(d);return x&&x>=f.from&&x<=f.to;};
+  var chsP=chs.filter(function(c){return inP(c.lead.date);});
+  var periodeLabel=f.from.toLocaleDateString('fr-FR')+' au '+f.to.toLocaleDateString('fr-FR');
+
+  // === Feuille 1 : Situation entreprise ===
+  var wb=XLSX.utils.book_new();
+  var situation=[
+    ['SITUATION ENTREPRISE'],
+    ['Période',periodeLabel],
+    [''],
+    ['REVENUS'],
+    ['CA HT facturé',f.caHT],
+    ['CA TTC',f.caHT*1.055],
+    ['Encaissé',f.caEnc],
+    [''],
+    ['TVA'],
+    ['TVA collectée (5,5%)',f.tvaCol],
+    ['TVA déductible (20%)',f.tvaDed],
+    [f.tvaNet>=0?'TVA à reverser':'Crédit de TVA',Math.abs(f.tvaNet)],
+    [''],
+    ['CHARGES'],
+    ['Dépenses HT',f.depHT],
+    ['URSSAF ('+f.tUr+'%)',f.benBrut>0?f.benBrut*f.tUr/100:0],
+    ['Retraite ('+f.tRet+'%)',f.benBrut>0?f.benBrut*f.tRet/100:0],
+    ['Total charges sociales',f.charges],
+    [''],
+    ['RÉSULTAT'],
+    ['Bénéfice brut',f.benBrut],
+    ['Bénéfice net',f.benNet],
+  ];
+  var ws1=XLSX.utils.aoa_to_sheet(situation);
+  ws1['!cols']=[{wch:30},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Situation');
+
+  // === Feuille 2 : Chantiers ===
+  var chData=[['Client','Ville','Date','Borne','CA HT','CA TTC','Coût matériel/ST','Marge €','Marge %','Encaissé','Statut','Lien devis']];
+  chsP.forEach(function(c){
+    chData.push([c.lead.nom,c.lead.ville||c.lead.cp||'',c.lead.date,c.lead.borne||'',c.caHT,c.caTTC,c.coutMat,c.marge,Math.round(c.margePct)+'%',c.encaisse,c.lead.statut,c.lead.devis_drive||'']);
+  });
+  var ws2=XLSX.utils.aoa_to_sheet(chData);
+  ws2['!cols']=[{wch:20},{wch:14},{wch:12},{wch:16},{wch:10},{wch:10},{wch:14},{wch:10},{wch:9},{wch:10},{wch:10},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Chantiers');
+
+  // === Feuille 3 : Dépenses ===
+  var depData=[['Date','Catégorie','Description','Fournisseur','Montant HT','TVA 20%','TTC','Chantier lié','Lien facture']];
+  f.fD.forEach(function(d){
+    var ht=parseFloat(d.ht)||0;
+    depData.push([d.date,(DEP_CATS[d.cat]||{l:d.cat}).l,d.desc,d.fourn||'',ht,ht*0.2,ht*1.2,d.chantierNom||'Frais fonctionnement',d.drive||'']);
+  });
+  var ws3=XLSX.utils.aoa_to_sheet(depData);
+  ws3['!cols']=[{wch:12},{wch:18},{wch:25},{wch:15},{wch:12},{wch:10},{wch:10},{wch:22},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,ws3,'Dépenses');
+
+  // Générer le xlsx
+  var xlsxData=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+
+  // === ZIP ===
+  var zip=new JSZip();
+  zip.file('situation-entreprise.xlsx',xlsxData);
+  // Liste des liens Drive (factures + devis) dans un fichier texte
+  var liens='LIENS DES DOCUMENTS (Google Drive)\nPériode: '+periodeLabel+'\n\n=== DEVIS SIGNÉS ===\n';
+  chsP.forEach(function(c){if(c.lead.devis_drive)liens+=c.lead.nom+' ('+c.lead.date+'): '+c.lead.devis_drive+'\n';});
+  liens+='\n=== FACTURES DÉPENSES ===\n';
+  f.fD.forEach(function(d){if(d.drive)liens+=d.date+' - '+d.desc+': '+d.drive+'\n';});
+  zip.file('liens-factures-devis.txt',liens);
+
+  var readme='DOSSIER COMPTABLE - '+periodeLabel+'\n\nContenu:\n- situation-entreprise.xlsx : situation complète (3 onglets: Situation, Chantiers, Dépenses)\n- liens-factures-devis.txt : tous les liens Google Drive des justificatifs\n\nLes factures et devis sont accessibles via les liens Google Drive.\nGénéré le '+new Date().toLocaleString('fr-FR');
+  zip.file('LISEZ-MOI.txt',readme);
+
+  var blob=await zip.generateAsync({type:'blob'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='comptable-'+f.from.toISOString().slice(0,10)+'_'+f.to.toISOString().slice(0,10)+'.zip';a.click();
+}
 async function exporterRapport(){
   var f=await computeFinance(_argPeriode);
   var pl=_argPeriode==='mois'?'Mois en cours':_argPeriode==='trimestre'?'Trimestre':'Année';
