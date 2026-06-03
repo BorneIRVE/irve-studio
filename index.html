@@ -645,17 +645,17 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     #crm-panel .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
     #crm-panel .kpi{background:#fff;border-radius:12px;border:1px solid #e2e9f0;padding:14px;text-align:center;}
     #crm-panel .kpi .v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;}
-    #crm-panel .kpi .l{font-size:11px;color:#6b8299;margin-top:4px;}
-    #crm-panel .kpi .s{font-size:10px;color:#abb8c4;margin-top:2px;}
+    #crm-panel .kpi .l{font-size:11px;color:#455a6e;margin-top:4px;}
+    #crm-panel .kpi .s{font-size:10px;color:#5a6b7d;margin-top:2px;}
     /* Bottom tab bar (mobile) */
     #crm-panel .tabbar{flex-shrink:0;z-index:20;background:#fff;border-top:1px solid #e2e9f0;display:flex;padding:6px 4px;padding-bottom:max(6px,env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(13,27,42,.06);order:3;}
-    #crm-panel .tabbar button{flex:1;background:none;border:none;cursor:pointer;padding:7px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#9aa9b8;font-family:'Syne',sans-serif;}
+    #crm-panel .tabbar button{flex:1;background:none;border:none;cursor:pointer;padding:7px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#5a6b7d;font-family:'Syne',sans-serif;}
     #crm-panel .tabbar button .ic{font-size:19px;line-height:1;}
     #crm-panel .tabbar button.on{color:#0a1628;}
     #crm-panel .tabbar button.on .ic{filter:none;}
     /* Inputs */
     #crm-panel input,#crm-panel select,#crm-panel textarea{width:100%;padding:11px 12px;border:1px solid #d7e0e9;border-radius:9px;font-size:14px;font-family:inherit;background:#fff;color:#0d1b2a;}
-    #crm-panel label.fl{font-size:11px;color:#6b8299;font-weight:700;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;}
+    #crm-panel label.fl{font-size:11px;color:#455a6e;font-weight:700;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;}
     #crm-panel .field{margin-bottom:12px;}
     #crm-panel .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
     #crm-panel .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -672,7 +672,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     /* Filtres scrollables */
     #crm-panel .fscroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;margin-bottom:12px;}
     #crm-panel .fscroll::-webkit-scrollbar{display:none;}
-    #crm-panel .fchip{flex-shrink:0;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #d7e0e9;background:#fff;color:#6b8299;cursor:pointer;white-space:nowrap;}
+    #crm-panel .fchip{flex-shrink:0;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #d7e0e9;background:#fff;color:#455a6e;cursor:pointer;white-space:nowrap;}
     #crm-panel .fchip.on{background:#0a1628;color:#fff;border-color:#0a1628;}
     @media(min-width:768px){
       #crm-panel .cw{padding:24px;}
@@ -700,7 +700,6 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
   <div class="tabbar" id="crm-tabbar">
     <button onclick="crmTab('dash')" id="ctab-dash" class="on"><span class="ic">🏠</span>Accueil</button>
     <button onclick="crmTab('planning')" id="ctab-planning"><span class="ic">📅</span>Planning</button>
-    <button onclick="crmTab('leads')" id="ctab-leads"><span class="ic">👥</span>Leads</button>
     <button onclick="crmTab('chantiers')" id="ctab-chantiers"><span class="ic">🏗️</span>Chantiers</button>
     <button onclick="crmTab('argent')" id="ctab-argent"><span class="ic">💶</span>Argent</button>
     <button onclick="crmTab('depenses')" id="ctab-depenses"><span class="ic">🧾</span>Dépenses</button>
@@ -745,26 +744,23 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     </div>
 
     <!-- ══ LEADS ══ -->
-    <div class="page" id="crm-tab-leads">
-      <div class="fscroll" id="lead-filters">
-        <div class="fchip on" onclick="setLeadFilter('',this)">Tous</div>
-        <div class="fchip" onclick="setLeadFilter('nouveau',this)">🔵 Nouveau</div>
-        <div class="fchip" onclick="setLeadFilter('contact',this)">📞 À contacter</div>
-        <div class="fchip" onclick="setLeadFilter('relance',this)">🔄 Relance</div>
-        <div class="fchip" onclick="setLeadFilter('devis',this)">📄 Devis</div>
-        <div class="fchip" onclick="setLeadFilter('signe',this)">✅ Signé</div>
-        <div class="fchip" onclick="setLeadFilter('cloture',this)">🏁 Clôturé</div>
-        <div class="fchip" onclick="setLeadFilter('perdu',this)">❌ Perdu</div>
-      </div>
-      <div class="field"><input type="search" id="crm-search" oninput="renderLeads()" placeholder="🔍 Rechercher un client..."></div>
-      <div id="leads-list"></div>
-      <button onclick="exportLeads()" class="btn btn-o" style="width:100%;margin-top:10px;">⬇ Exporter en CSV</button>
-    </div>
-
-    <!-- ══ CHANTIERS ══ -->
+    <!-- ══ CHANTIERS (fusion Prospects + Chantiers actifs) ══ -->
     <div class="page" id="crm-tab-chantiers">
+      <!-- Bascule des 2 vues -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;background:#dde6ef;border-radius:10px;padding:4px;">
+        <button id="vue-prospects" onclick="setVueChantier('prospects',this)" class="vue-btn" style="flex:1;padding:10px;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;background:#fff;color:#0d1b2a;">👥 Prospects</button>
+        <button id="vue-chantiers" onclick="setVueChantier('chantiers',this)" class="vue-btn" style="flex:1;padding:10px;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#455a6e;">🏗️ Chantiers actifs</button>
+      </div>
+
+      <!-- Filtre multi-états -->
+      <div class="fscroll" id="ch-filters"></div>
+      <div class="field"><input type="search" id="crm-search" oninput="renderChantiers()" placeholder="🔍 Rechercher un client..."></div>
+
+      <!-- KPIs (vue chantiers actifs) -->
       <div class="kgrid" id="ch-kpis" style="margin-bottom:14px;"></div>
+      <!-- Liste -->
       <div id="ch-list"></div>
+      <button onclick="exportLeads()" class="btn btn-o" style="width:100%;margin-top:10px;">⬇ Exporter en CSV</button>
     </div>
 
     <!-- ══ ARGENT (TVA + charges + bénéfice) ══ -->
@@ -780,13 +776,13 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
       </div>
       <!-- TVA -->
       <div class="card" id="arg-tva-card">
-        <h3 class="card-t">🧮 TVA <span id="arg-tva-period" style="font-weight:400;color:#9aa9b8;font-size:12px;"></span></h3>
+        <h3 class="card-t">🧮 TVA <span id="arg-tva-period" style="font-weight:400;color:#5a6b7d;font-size:12px;"></span></h3>
         <div id="arg-tva-big" style="text-align:center;padding:8px 0 14px;"></div>
         <div class="g2">
           <div class="kpi"><div class="v" id="arg-tva-col" style="color:#0066cc;">—</div><div class="l">Collectée (5,5%)</div></div>
           <div class="kpi"><div class="v" id="arg-tva-ded" style="color:#00875a;">—</div><div class="l">Déductible (20%)</div></div>
         </div>
-        <div style="margin-top:10px;padding:11px;background:#f5f8fc;border-radius:9px;font-size:12px;color:#6b8299;line-height:1.5;" id="arg-tva-info"></div>
+        <div style="margin-top:10px;padding:11px;background:#f5f8fc;border-radius:9px;font-size:12px;color:#455a6e;line-height:1.5;" id="arg-tva-info"></div>
       </div>
       <!-- Charges + bénéfice -->
       <div class="card">
@@ -815,7 +811,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
         <div class="field" id="dep-chantier-field"><label class="fl">🏗️ Chantier lié</label><select id="dep-chantier"><option value="">— Frais de fonctionnement —</option></select></div>
         <div class="field"><label class="fl">Description</label><input type="text" id="dep-desc" placeholder="Borne Schneider..."></div>
         <div class="g2"><div class="field"><label class="fl">Fournisseur</label><input type="text" id="dep-fourn" placeholder="Rexel..."></div><div class="field"><label class="fl">Date</label><input type="date" id="dep-date"></div></div>
-        <div class="field"><label class="fl">📎 Facture (PDF/photo)</label><input type="file" id="dep-file" accept="application/pdf,image/*"><div id="dep-up-status" style="font-size:12px;color:#6b8299;margin-top:4px;"></div></div>
+        <div class="field"><label class="fl">📎 Facture (PDF/photo)</label><input type="file" id="dep-file" accept="application/pdf,image/*"><div id="dep-up-status" style="font-size:12px;color:#455a6e;margin-top:4px;"></div></div>
         <button onclick="ajouterDepense()" class="btn btn-g" style="width:100%;">✅ Ajouter</button>
       </div>
       <div class="fscroll" id="dep-filters">
@@ -887,6 +883,20 @@ async function uploadDrive(file,nomFichier,client,dateStr,statut){
   if(!r.ok||!j.success)throw new Error(j.error||'Upload échoué');
   return j.link;
 }
+// Upload frais de fonctionnement : Frais-fonctionnement / Année / Mois (à la racine, hors statuts)
+async function uploadFraisFonctionnement(file,nomFichier,dateStr){
+  var d=parseDate(dateStr)||new Date();
+  var annee=d.getFullYear();
+  var moisNom=MOIS_FR[d.getMonth()];
+  var ext=(file.name.split('.').pop()||'pdf').toLowerCase();
+  var fileName=nettoyerNom(nomFichier)+'.'+ext;
+  var b64=await fileToBase64(file);
+  // chemin: client='Frais-fonctionnement', mois envoyé tel quel sans statut
+  var r=await fetch(VERCEL_URL+'/api/drive?action=upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,fraisFonctionnement:true,annee:annee,mois:moisNom})});
+  var j=await r.json();
+  if(!r.ok||!j.success)throw new Error(j.error||'Upload échoué');
+  return j.link;
+}
 
 // — API —
 async function apiGetLeads(){var r=await fetch(VERCEL_URL+'/api/get-leads?t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});if(!r.ok)throw new Error('Erreur '+r.status);return (await r.json()).leads||[];}
@@ -908,13 +918,12 @@ function parseDate(s){if(!s)return null;if(s.indexOf('/')>-1){var p=s.split('/')
 
 // — Navigation —
 function crmTab(tab){
-  ['dash','planning','leads','chantiers','argent','depenses'].forEach(function(t){
+  ['dash','planning','chantiers','argent','depenses'].forEach(function(t){
     var p=document.getElementById('crm-tab-'+t);if(p)p.classList.toggle('on',t===tab);
     var b=document.getElementById('ctab-'+t);if(b)b.classList.toggle('on',t===tab);
   });
   if(tab==='dash')renderDash();
   if(tab==='planning')renderPlanning();
-  if(tab==='leads')renderLeads();
   if(tab==='chantiers')renderChantiers();
   if(tab==='argent')renderArgent();
   if(tab==='depenses')renderDepenses();
@@ -987,7 +996,7 @@ async function renderDash(){
   // Prochaine déclaration TVA (trimestre suivant, le 12 du mois)
   var now=new Date();var q=Math.floor(now.getMonth()/3);var nextDecl=new Date(now.getFullYear(),q*3+3,12);
   document.getElementById('dash-kpis').innerHTML=
-    kpic((Math.abs(f.tvaNet)<0.5?'':(f.tvaNet>=0?'-':'+'))+fmt(Math.abs(f.tvaNet))+'€',f.tvaNet>=0?'TVA à payer (mois)':'Crédit TVA (mois)',Math.abs(f.tvaNet)<0.5?'#6b8299':(f.tvaNet>=0?'#dc3545':'#00875a'))+
+    kpic((Math.abs(f.tvaNet)<0.5?'':(f.tvaNet>=0?'-':'+'))+fmt(Math.abs(f.tvaNet))+'€',f.tvaNet>=0?'TVA à payer (mois)':'Crédit TVA (mois)',Math.abs(f.tvaNet)<0.5?'#455a6e':(f.tvaNet>=0?'#dc3545':'#00875a'))+
     kpic(fmt(f.benNet)+'€','Bénéfice net (mois)',f.benNet>=0?'#00875a':'#dc3545')+
     kpic(fmt(f.caEnc)+'€','Encaissé (mois)','#0066cc')+
     kpic(nextDecl.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}),'Prochaine déclaration','#d97706');
@@ -995,13 +1004,13 @@ async function renderDash(){
   var pl=[];try{pl=await apiGetPlanning();}catch(e){}
   var aVenir=pl.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))>=new Date(new Date().toDateString());}).sort(function(a,b){return (a.date+a.heure).localeCompare(b.date+b.heure);}).slice(0,3);
   var dc=document.getElementById('dash-chantiers');
-  if(!aVenir.length)dc.innerHTML='<p style="color:#9aa9b8;font-size:13px;margin:0;">Aucun chantier planifié. <a onclick="crmTab(\'planning\')" style="color:#0066cc;cursor:pointer;font-weight:700;">Planifier</a></p>';
-  else dc.innerHTML=aVenir.map(function(p){var d=new Date(p.date+'T'+(p.heure||'09:00'));return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:center;"><div><strong style="font-size:14px;color:#0d1b2a;">'+p.nom+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">📍 '+(p.adresse||'-')+'</div></div><span class="chip" style="background:#e8fff4;color:#00875a;">'+d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' · '+(p.heure||'09:00')+'</span></div></div>';}).join('');
+  if(!aVenir.length)dc.innerHTML='<p style="color:#5a6b7d;font-size:13px;margin:0;">Aucun chantier planifié. <a onclick="crmTab(\'planning\')" style="color:#0066cc;cursor:pointer;font-weight:700;">Planifier</a></p>';
+  else dc.innerHTML=aVenir.map(function(p){var d=new Date(p.date+'T'+(p.heure||'09:00'));return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:center;"><div><strong style="font-size:14px;color:#0d1b2a;">'+p.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">📍 '+(p.adresse||'-')+'</div></div><span class="chip" style="background:#e8fff4;color:#00875a;">'+d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' · '+(p.heure||'09:00')+'</span></div></div>';}).join('');
   // Leads à suivre (nouveau, contact, relance)
   var suivi=f.leads.filter(function(l){return ['nouveau','contact','relance','devis'].indexOf(l.statut)>-1;}).slice(0,4);
   var dl=document.getElementById('dash-leads');
-  if(!suivi.length)dl.innerHTML='<p style="color:#9aa9b8;font-size:13px;margin:0;">Aucun lead en attente.</p>';
-  else dl.innerHTML=suivi.map(function(l){var s=STATUTS[l.statut]||STATUTS.nouveau;return '<div class="row" onclick="openDetail('+l.id+')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><div><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">'+(l.ville||l.cp||'')+' · '+fmt(devisHT(l))+'€ HT</div></div><span class="chip" style="background:'+s.b+';color:'+s.c+';">'+s.l+'</span></div>';}).join('');
+  if(!suivi.length)dl.innerHTML='<p style="color:#5a6b7d;font-size:13px;margin:0;">Aucun lead en attente.</p>';
+  else dl.innerHTML=suivi.map(function(l){var s=STATUTS[l.statut]||STATUTS.nouveau;return '<div class="row" onclick="openDetail('+l.id+')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><div><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">'+(l.ville||l.cp||'')+' · '+fmt(devisHT(l))+'€ HT</div></div><span class="chip" style="background:'+s.b+';color:'+s.c+';">'+s.l+'</span></div>';}).join('');
   document.getElementById('crm-subtitle').textContent='Tableau de bord · '+now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
 }
 function kpic(v,l,c,s){return '<div class="kpi"><div class="v" style="color:'+(c||'#0d1b2a')+';">'+v+'</div><div class="l">'+l+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'</div>';}
@@ -1011,16 +1020,16 @@ var _argPeriode='mois';
 function setArgPeriode(p,el){_argPeriode=p;document.querySelectorAll('#arg-period .fchip').forEach(function(c){c.classList.remove('on');});if(el)el.classList.add('on');var pd=document.getElementById('arg-perso-dates');if(pd)pd.style.display=p==='perso'?'block':'none';renderArgent();}
 async function renderArgent(){
   var f=await computeFinance(_argPeriode);
-  window._finData={caEnc:f.caEnc,depTotal:f.depHT};
+  window._finData={caEnc:f.caEnc,depTotal:f.depHT,benNet:f.benNet};
   var plabel=_argPeriode==='mois'?'(ce mois)':_argPeriode==='trimestre'?'(ce trimestre)':'(cette année)';
   document.getElementById('arg-tva-period').textContent=plabel;
   // Gros chiffre TVA
   var big=document.getElementById('arg-tva-big');
   if(f.tvaNet>=0){
-    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#dc3545;">'+fmt2(f.tvaNet)+' €</div><div style="font-size:13px;color:#6b8299;margin-top:2px;">à reverser à l\'État</div>';
+    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#dc3545;">'+fmt2(f.tvaNet)+' €</div><div style="font-size:13px;color:#455a6e;margin-top:2px;">à reverser à l\'État</div>';
     document.getElementById('arg-tva-info').innerHTML='Vous collectez '+fmt2(f.tvaCol)+'€ de TVA (5,5%) et déduisez '+fmt2(f.tvaDed)+'€ (20% sur achats). Solde à payer : <strong>'+fmt2(f.tvaNet)+'€</strong>.';
   }else{
-    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#00875a;">+'+fmt2(Math.abs(f.tvaNet))+' €</div><div style="font-size:13px;color:#6b8299;margin-top:2px;">crédit de TVA en votre faveur</div>';
+    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#00875a;">+'+fmt2(Math.abs(f.tvaNet))+' €</div><div style="font-size:13px;color:#455a6e;margin-top:2px;">crédit de TVA en votre faveur</div>';
     document.getElementById('arg-tva-info').innerHTML='Vous déduisez plus de TVA ('+fmt2(f.tvaDed)+'€) que vous n\'en collectez ('+fmt2(f.tvaCol)+'€). L\'État vous doit <strong>'+fmt2(Math.abs(f.tvaNet))+'€</strong> (remboursable ou reportable).';
   }
   document.getElementById('arg-tva-col').textContent=fmt(f.tvaCol)+'€';
@@ -1034,39 +1043,23 @@ async function renderArgent(){
   calcObjectif();
 }
 function calcObjectif(){
-  if(!window._finData)window._finData={caEnc:0,depTotal:0};
-  var caEnc=window._finData.caEnc||0,depTotal=window._finData.depTotal||0;
-  var tUr=parseFloat((document.getElementById('taux-urssaf')||{}).value)||22;
-  var tRet=parseFloat((document.getElementById('taux-retraite')||{}).value)||8;
+  if(!window._finData)window._finData={benNet:0};
+  var benNet=window._finData.benNet||0; // bénéfice net = salaire net réellement disponible
   var obj=parseFloat((document.getElementById('objectif-salaire')||{}).value)||1500;
-  var tc=(tUr+tRet)/100;
-  var caNec=obj/(1-tc)+depTotal;
-  var reste=Math.max(0,caNec-caEnc);
-  var av=caNec>0?Math.min(100,Math.round(caEnc/caNec*100)):100;
+  var reste=Math.max(0,obj-benNet);
+  var av=obj>0?Math.min(100,Math.round(benNet/obj*100)):100;
   var el=document.getElementById('arg-objectif');if(!el)return;
   el.innerHTML='<div class="g2" style="margin-bottom:10px;">'+
-    '<div class="kpi"><div class="v" style="font-size:16px;color:#0066cc;">'+fmt(caNec)+'€</div><div class="l">CA HT nécessaire</div></div>'+
-    '<div class="kpi"><div class="v" style="font-size:16px;color:'+(reste>0?'#dc3545':'#00875a')+';">'+(reste>0?fmt(reste)+'€':'Atteint ✅')+'</div><div class="l">Reste à facturer</div></div></div>'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:#00875a;">'+fmt(benNet)+'€</div><div class="l">Salaire net actuel</div></div>'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:'+(reste>0?'#dc3545':'#00875a')+';">'+(reste>0?fmt(reste)+'€':'Atteint ✅')+'</div><div class="l">Reste pour l\'objectif</div></div></div>'+
     '<div style="background:#eef2f6;border-radius:10px;height:10px;overflow:hidden;"><div style="width:'+av+'%;height:100%;background:'+(av>=100?'#00875a':av>=50?'#d97706':'#dc3545')+';transition:width .5s;"></div></div>'+
-    '<div style="text-align:center;font-size:12px;color:#6b8299;margin-top:6px;font-weight:700;">'+av+'% de l\'objectif</div>';
+    '<div style="text-align:center;font-size:12px;color:#4a5d70;margin-top:6px;font-weight:700;">'+av+'% de votre objectif net</div>';
 }
 
 // — LEADS —
 var _leadFilter='';
 function setLeadFilter(s,el){_leadFilter=s;document.querySelectorAll('#lead-filters .fchip').forEach(function(c){c.classList.remove('on');});if(el)el.classList.add('on');renderLeads();}
-async function renderLeads(){
-  var leads;try{leads=await apiGetLeads();}catch(e){document.getElementById('leads-list').innerHTML='<p style="color:#dc3545;padding:20px;text-align:center;">Erreur: '+e.message+'</p>';return;}
-  var search=((document.getElementById('crm-search')||{}).value||'').toLowerCase();
-  var f=leads.filter(function(l){
-    if(_leadFilter&&l.statut!==_leadFilter)return false;
-    if(search&&!((l.nom||'')+(l.email||'')+(l.ville||'')).toLowerCase().includes(search))return false;
-    return true;
-  });
-  document.getElementById('crm-subtitle').textContent=leads.length+' lead'+(leads.length>1?'s':'');
-  var list=document.getElementById('leads-list');
-  if(!f.length){list.innerHTML='<div class="card" style="text-align:center;color:#9aa9b8;padding:32px;"><div style="font-size:30px;">📭</div><p>Aucun lead</p></div>';return;}
-  list.innerHTML='<div class="card">'+f.map(function(l){var s=STATUTS[l.statut]||STATUTS.nouveau;var enc=encaisse(l);return '<div class="row" onclick="openDetail('+l.id+')" style="cursor:pointer;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;min-width:0;"><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#6b8299;margin-top:3px;">📞 '+(l.tel||'-')+'</div><div style="font-size:12px;color:#6b8299;">📍 '+(l.ville||l.cp||'-')+'</div><div style="font-size:13px;color:#0d1b2a;font-weight:700;margin-top:4px;">'+fmt(devisHT(l))+'€ HT'+(enc>0?' · <span style="color:#00875a;">'+fmt(enc)+'€ encaissé</span>':'')+'</div></div><span class="chip" style="background:'+s.b+';color:'+s.c+';flex-shrink:0;">'+s.l+'</span></div></div>';}).join('')+'</div>';
-}
+async function renderLeads(){ return renderChantiers(); }
 function openDetail(id){
   apiGetLeads().then(function(leads){
     var l=leads.find(function(x){return x.id===id;});if(!l)return;
@@ -1081,7 +1074,7 @@ function openDetail(id){
       Object.keys(STATUTS).map(function(k){var s=STATUTS[k];return '<button onclick="updateStatut('+l.id+',\''+k+'\')" class="chip" style="background:'+(l.statut===k?s.c:s.b)+';color:'+(l.statut===k?'#fff':s.c)+';border:none;cursor:pointer;padding:8px 12px;">'+s.l+'</button>';}).join('')+'</div>'+
       '<input type="file" id="up-devis-'+l.id+'" accept="application/pdf,image/*" style="display:none;" onchange="uploadDevisLead('+l.id+',this)">'+
       '<button onclick="document.getElementById(\'up-devis-'+l.id+'\').click()" class="btn btn-o" style="width:100%;margin-top:14px;">📎 '+(l.devis_drive?'Remplacer':'Uploader')+' le devis signé</button>'+
-      '<div id="up-devis-status-'+l.id+'" style="font-size:12px;color:#6b8299;text-align:center;margin-top:6px;"></div>'+
+      '<div id="up-devis-status-'+l.id+'" style="font-size:12px;color:#455a6e;text-align:center;margin-top:6px;"></div>'+
       (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" style="display:block;text-align:center;color:#00875a;font-weight:700;font-size:13px;margin-top:8px;">📎 Voir le devis</a>':'')+
       '<div style="margin-top:18px;"><label class="fl">📁 Documents Drive</label><div id="ld-docs-'+l.id+'" style="margin-top:6px;"></div><button onclick="listerDocsClient(\''+l.nom.replace(/'/g,"\\'")+'\',\'ld-docs-'+l.id+'\')" class="btn btn-o" style="width:100%;margin-top:8px;">📁 Charger les documents</button></div>'+
       '<button onclick="deleteLead('+l.id+')" class="btn" style="width:100%;margin-top:14px;background:#ffeaea;color:#dc3545;">🗑 Supprimer ce lead</button>';
@@ -1144,8 +1137,7 @@ async function exportLeads(){var leads;try{leads=await apiGetLeads();}catch(e){a
 async function computeChantiers(){
   var leads=[];try{leads=await apiGetLeads();}catch(e){}
   var dep=[];try{dep=await apiGetDepenses();}catch(e){}
-  var chantiers=leads.filter(function(l){return ['signe','encours','termine','cloture'].indexOf(l.statut)>-1;});
-  return chantiers.map(function(l){
+  return leads.map(function(l){
     var depLiees=dep.filter(function(d){return d.chantierId==l.id;});
     var coutMat=depLiees.reduce(function(s,d){return s+(parseFloat(d.ht)||0);},0);
     var caHT=devisHT(l);
@@ -1154,22 +1146,73 @@ async function computeChantiers(){
     return {lead:l,depLiees:depLiees,coutMat:coutMat,caHT:caHT,caTTC:caHT*1.055,marge:marge,margePct:margePct,encaisse:encaisse(l)};
   });
 }
+var _vueChantier='prospects';
+var _chFilters=[]; // statuts cochés pour le filtre multi-états
+var PROSPECT_STATUTS=['nouveau','relance','perdu'];
+var ACTIF_STATUTS=['signe','encours','termine','cloture'];
+function setVueChantier(v,el){
+  _vueChantier=v;_chFilters=[];
+  document.querySelectorAll('.vue-btn').forEach(function(b){b.style.background='transparent';b.style.color='#455a6e';});
+  if(el){el.style.background='#fff';el.style.color='#0d1b2a';}
+  renderChantiers();
+}
+function toggleChFilter(st,el){
+  var i=_chFilters.indexOf(st);
+  if(i>-1){_chFilters.splice(i,1);el.classList.remove('on');}
+  else{_chFilters.push(st);el.classList.add('on');}
+  renderChantiers();
+}
+function menuStatut(id,statutActuel){
+  return '<select onclick="event.stopPropagation()" onchange="changerStatutListe('+id+',this.value)" style="font-size:12px;padding:5px 8px;border:1px solid #d7e0e9;border-radius:6px;background:'+(STATUTS[statutActuel]?STATUTS[statutActuel].b:'#fff')+';color:'+(STATUTS[statutActuel]?STATUTS[statutActuel].c:'#0d1b2a')+';font-weight:700;">'+
+    Object.keys(STATUTS).map(function(k){return '<option value="'+k+'"'+(k===statutActuel?' selected':'')+'>'+STATUTS[k].l+'</option>';}).join('')+'</select>';
+}
+async function changerStatutListe(id,st){
+  try{
+    var leads=await apiGetLeads();var l=leads.find(function(x){return x.id===id;});
+    var ancien=l?l.statut:null;
+    await apiUpdateLead(id,{statut:st,histo_action:'Statut → '+STATUTS[st].l});
+    if(l&&ancien!==st)deplacerDossierDrive(l,ancien,st);
+    renderChantiers();
+  }catch(e){alert('Erreur: '+e.message);}
+}
 async function renderChantiers(){
-  var chs=await computeChantiers();
-  var totCA=chs.reduce(function(s,c){return s+c.caHT;},0);
-  var totMat=chs.reduce(function(s,c){return s+c.coutMat;},0);
-  var totMarge=totCA-totMat;
-  document.getElementById('ch-kpis').innerHTML=
-    kpic(chs.length,'Chantiers','#0066cc')+
-    kpic(fmt(totCA)+'€','CA HT total','#0d1b2a')+
-    kpic(fmt(totMat)+'€','Coût matériel','#dc3545')+
-    kpic(fmt(totMarge)+'€','Marge totale',totMarge>=0?'#00875a':'#dc3545');
+  // Construire les filtres selon la vue
+  var statutsVue=_vueChantier==='prospects'?PROSPECT_STATUTS:ACTIF_STATUTS;
+  var fc=document.getElementById('ch-filters');
+  fc.innerHTML=statutsVue.map(function(st){return '<div class="fchip'+(_chFilters.indexOf(st)>-1?' on':'')+'" onclick="toggleChFilter(\''+st+'\',this)">'+STATUTS[st].l+'</div>';}).join('');
+
+  var chs=await computeChantiers(); // tous les leads avec calculs
+  var search=((document.getElementById('crm-search')||{}).value||'').toLowerCase();
+  var kpisEl=document.getElementById('ch-kpis');
   var list=document.getElementById('ch-list');
-  if(!chs.length){list.innerHTML='<div class="card" style="text-align:center;color:#9aa9b8;padding:32px;"><div style="font-size:30px;">🏗️</div><p>Aucun chantier signé pour le moment</p></div>';return;}
-  list.innerHTML='<div class="card">'+chs.map(function(c){
-    var mc=c.margePct>=40?'#00875a':c.margePct>=20?'#d97706':'#dc3545';
-    return '<div class="row" onclick="openChantier('+c.lead.id+')" style="cursor:pointer;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><strong style="font-size:14px;color:#0d1b2a;">'+c.lead.nom+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">'+(c.lead.ville||c.lead.cp||'')+' · '+(c.lead.borne||'')+'</div><div style="font-size:12px;color:#6b8299;margin-top:2px;">CA '+fmt(c.caHT)+'€ · Matériel '+fmt(c.coutMat)+'€</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:'+mc+';">'+Math.round(c.margePct)+'%</div><div style="font-size:11px;color:#6b8299;">marge</div><div style="font-size:13px;font-weight:700;color:'+mc+';margin-top:2px;">'+fmt(c.marge)+'€</div></div></div></div>';
-  }).join('')+'</div>';
+
+  // Filtrer par vue
+  var data=chs.filter(function(c){return statutsVue.indexOf(c.lead.statut)>-1;});
+  // Filtrer par états cochés
+  if(_chFilters.length)data=data.filter(function(c){return _chFilters.indexOf(c.lead.statut)>-1;});
+  // Recherche
+  if(search)data=data.filter(function(c){return ((c.lead.nom||'')+(c.lead.ville||'')+(c.lead.email||'')).toLowerCase().includes(search);});
+
+  if(_vueChantier==='chantiers'){
+    // Vue chantiers actifs : KPIs + marges
+    var totCA=data.reduce(function(s,c){return s+c.caHT;},0);
+    var totMat=data.reduce(function(s,c){return s+c.coutMat;},0);
+    kpisEl.style.display='grid';
+    kpisEl.innerHTML=kpic(data.length,'Chantiers','#0066cc')+kpic(fmt(totCA)+'€','CA HT','#0d1b2a')+kpic(fmt(totMat)+'€','Coût mat/ST','#dc3545')+kpic(fmt(totCA-totMat)+'€','Marge',totCA-totMat>=0?'#00875a':'#dc3545');
+    if(!data.length){list.innerHTML='<div class="card" style="text-align:center;color:#5a6b7d;padding:32px;"><div style="font-size:30px;">🏗️</div><p>Aucun chantier actif</p></div>';return;}
+    list.innerHTML='<div class="card">'+data.map(function(c){
+      var mc=c.margePct>=40?'#00875a':c.margePct>=20?'#d97706':'#dc3545';
+      return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;cursor:pointer;" onclick="openChantier('+c.lead.id+')"><strong style="font-size:14px;color:#0d1b2a;">'+c.lead.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">'+(c.lead.ville||c.lead.cp||'')+' · '+(c.lead.borne||'')+'</div><div style="font-size:12px;color:#455a6e;margin-top:2px;">CA '+fmt(c.caHT)+'€ · Matériel '+fmt(c.coutMat)+'€</div><div style="margin-top:6px;">'+menuStatut(c.lead.id,c.lead.statut)+'</div></div><div style="text-align:right;flex-shrink:0;cursor:pointer;" onclick="openChantier('+c.lead.id+')"><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:'+mc+';">'+Math.round(c.margePct)+'%</div><div style="font-size:11px;color:#455a6e;">marge</div><div style="font-size:13px;font-weight:700;color:'+mc+';margin-top:2px;">'+fmt(c.marge)+'€</div></div></div></div>';
+    }).join('')+'</div>';
+  }else{
+    // Vue prospects : liste simple avec menu statut
+    kpisEl.style.display='none';
+    if(!data.length){list.innerHTML='<div class="card" style="text-align:center;color:#5a6b7d;padding:32px;"><div style="font-size:30px;">👥</div><p>Aucun prospect</p></div>';return;}
+    list.innerHTML='<div class="card">'+data.map(function(c){
+      var l=c.lead;
+      return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;cursor:pointer;" onclick="openDetail('+l.id+')"><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">📞 '+(l.tel||'-')+'</div><div style="font-size:12px;color:#455a6e;">📍 '+(l.ville||l.cp||'-')+'</div><div style="font-size:13px;color:#0d1b2a;font-weight:700;margin-top:3px;">'+fmt(devisHT(l))+'€ HT</div><div style="margin-top:6px;">'+menuStatut(l.id,l.statut)+'</div></div></div></div>';
+    }).join('')+'</div>';
+  }
 }
 async function openChantier(id){
   var chs=await computeChantiers();
@@ -1185,14 +1228,14 @@ async function openChantier(id){
     '<div class="g2" style="margin-bottom:14px;"><div class="kpi"><div class="v" style="font-size:16px;color:#dc3545;">'+fmt(c.coutMat)+'€</div><div class="l">Coût matériel/ST</div></div><div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(c.caTTC)+'€</div><div class="l">CA TTC</div></div></div>'+
     (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" class="btn btn-o" style="display:block;text-align:center;text-decoration:none;margin-bottom:14px;">📎 Voir le devis signé</a>':'')+
     '<label class="fl">Dépenses liées ('+c.depLiees.length+')</label>'+
-    (c.depLiees.length?'<div style="margin-top:6px;">'+c.depLiees.map(function(d){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f6;font-size:13px;"><span>'+(DEP_CATS[d.cat]||{i:'📁'}).i+' '+d.desc+(d.drive?' <a href="'+d.drive+'" target="_blank" style="color:#00875a;">📎</a>':'')+'</span><strong style="color:#dc3545;">'+fmt2(d.ht)+'€</strong></div>';}).join('')+'</div>':'<p style="font-size:13px;color:#9aa9b8;margin:6px 0 0;">Aucune dépense liée. Ajoutez-en depuis l\'onglet Dépenses (catégorie Bornes ou Sous-traitance).</p>')+
+    (c.depLiees.length?'<div style="margin-top:6px;">'+c.depLiees.map(function(d){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f6;font-size:13px;"><span>'+(DEP_CATS[d.cat]||{i:'📁'}).i+' '+d.desc+(d.drive?' <a href="'+d.drive+'" target="_blank" style="color:#00875a;">📎</a>':'')+'</span><strong style="color:#dc3545;">'+fmt2(d.ht)+'€</strong></div>';}).join('')+'</div>':'<p style="font-size:13px;color:#5a6b7d;margin:6px 0 0;">Aucune dépense liée. Ajoutez-en depuis l\'onglet Dépenses (catégorie Bornes ou Sous-traitance).</p>')+
     '<div style="margin-top:18px;"><label class="fl">📝 Notes de chantier</label><textarea id="ch-note-'+l.id+'" placeholder="Compteur Linky n°..., disjoncteur à changer, code portail..." style="min-height:70px;">'+(l.chantier_notes||'')+'</textarea><button onclick="saveChantierNote('+l.id+')" class="btn btn-d" style="width:100%;margin-top:6px;">💾 Enregistrer la note</button></div>'+
     '<div style="margin-top:18px;"><label class="fl">📷 Photos du chantier</label>'+
     '<div id="ch-photos-'+l.id+'" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;">'+
     ((l.chantier_photos||[]).map(function(p){return '<a href="'+p.link+'" target="_blank" style="display:block;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid #d7e0e9;background:#f0f4f8;"><img src="'+p.link+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'📷\';this.parentNode.style.cssText+=\';display:flex;align-items:center;justify-content:center;font-size:24px;\'"></a>';}).join(''))+'</div>'+
     '<input type="file" id="ch-photo-input-'+l.id+'" accept="image/*" capture="environment" style="display:none;" onchange="uploadPhotoChantier('+l.id+',this)">'+
     '<button onclick="document.getElementById(\'ch-photo-input-'+l.id+'\').click()" class="btn btn-o" style="width:100%;">📷 Ajouter une photo</button>'+
-    '<div id="ch-photo-status-'+l.id+'" style="font-size:12px;color:#6b8299;text-align:center;margin-top:6px;"></div></div>'+
+    '<div id="ch-photo-status-'+l.id+'" style="font-size:12px;color:#455a6e;text-align:center;margin-top:6px;"></div></div>'+
     '<div style="margin-top:18px;"><label class="fl">📁 Documents Drive du client</label><div id="ch-docs-'+l.id+'" style="margin-top:6px;"></div><button onclick="listerDocsClient(\''+l.nom.replace(/'/g,"\\'")+'\',\'ch-docs-'+l.id+'\')" class="btn btn-o" style="width:100%;margin-top:8px;">📁 Charger les documents</button></div>';
   document.getElementById('lead-modal').style.display='flex';
 }
@@ -1218,12 +1261,12 @@ async function uploadPhotoChantier(id,input){
 // Liste les documents Drive d'un client
 async function listerDocsClient(nom,targetId){
   var el=document.getElementById(targetId);if(!el)return;
-  el.innerHTML='<p style="font-size:12px;color:#6b8299;">⏳ Chargement...</p>';
+  el.innerHTML='<p style="font-size:12px;color:#455a6e;">⏳ Chargement...</p>';
   try{
     var r=await fetch(VERCEL_URL+'/api/drive?action=list&client='+encodeURIComponent(nettoyerNom(nom))+'&t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});
     var j=await r.json();
     if(!r.ok)throw new Error(j.error||'Erreur');
-    if(!j.files||!j.files.length){el.innerHTML='<p style="font-size:12px;color:#9aa9b8;">Aucun document Drive pour ce client.</p>';return;}
+    if(!j.files||!j.files.length){el.innerHTML='<p style="font-size:12px;color:#5a6b7d;">Aucun document Drive pour ce client.</p>';return;}
     el.innerHTML=j.files.map(function(f){
       var ico=f.mimeType&&f.mimeType.indexOf('image')>-1?'🖼️':f.mimeType&&f.mimeType.indexOf('pdf')>-1?'📄':f.mimeType&&f.mimeType.indexOf('word')>-1?'📝':'📎';
       return '<a href="'+f.webViewLink+'" target="_blank" style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eef2f6;font-size:13px;color:#0d1b2a;text-decoration:none;"><span>'+ico+'</span><span style="flex:1;">'+f.name+'</span><span style="color:#0066cc;">Ouvrir →</span></a>';
@@ -1253,8 +1296,8 @@ async function renderDepenses(reload){
   }catch(e){}
   var f=_depFilter?_depenses.filter(function(d){return d.cat===_depFilter;}):_depenses;
   var list=document.getElementById('dep-list');
-  if(!f.length){list.innerHTML='<p style="color:#9aa9b8;text-align:center;padding:20px;font-size:13px;">Aucune dépense</p>';return;}
-  list.innerHTML=f.map(function(d){var ht=parseFloat(d.ht)||0,cat=DEP_CATS[d.cat]||{l:d.cat,i:'📁'};var chLabel=d.chantierNom?'🏗️ '+d.chantierNom:'💼 Frais fonctionnement';return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><strong style="font-size:14px;color:#0d1b2a;">'+d.desc+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">'+cat.i+' '+cat.l+' · '+d.date+(d.fourn?' · '+d.fourn:'')+'</div><div style="font-size:11px;color:#9aa9b8;margin-top:1px;">'+chLabel+'</div>'+(d.drive?'<a href="'+d.drive+'" target="_blank" style="font-size:12px;color:#00875a;font-weight:700;">📎 Facture</a>':'')+'</div><div style="text-align:right;flex-shrink:0;"><div style="font-size:14px;font-weight:700;color:#dc3545;">'+fmt2(ht)+'€</div><div style="font-size:10px;color:#9aa9b8;">+'+fmt2(ht*0.2)+'€ TVA</div><button onclick="supprimerDepense(\''+d.id+'\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:14px;margin-top:2px;">🗑</button></div></div></div>';}).join('');
+  if(!f.length){list.innerHTML='<p style="color:#5a6b7d;text-align:center;padding:20px;font-size:13px;">Aucune dépense</p>';return;}
+  list.innerHTML=f.map(function(d){var ht=parseFloat(d.ht)||0,cat=DEP_CATS[d.cat]||{l:d.cat,i:'📁'};var chLabel=d.chantierNom?'🏗️ '+d.chantierNom:'💼 Frais fonctionnement';return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><strong style="font-size:14px;color:#0d1b2a;">'+d.desc+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">'+cat.i+' '+cat.l+' · '+d.date+(d.fourn?' · '+d.fourn:'')+'</div><div style="font-size:11px;color:#5a6b7d;margin-top:1px;">'+chLabel+'</div>'+(d.drive?'<a href="'+d.drive+'" target="_blank" style="font-size:12px;color:#00875a;font-weight:700;">📎 Facture</a>':'')+'</div><div style="text-align:right;flex-shrink:0;"><div style="font-size:14px;font-weight:700;color:#dc3545;">'+fmt2(ht)+'€</div><div style="font-size:10px;color:#5a6b7d;">+'+fmt2(ht*0.2)+'€ TVA</div><button onclick="supprimerDepense(\''+d.id+'\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:14px;margin-top:2px;">🗑</button></div></div></div>';}).join('');
 }
 async function ajouterDepense(){
   var ht=parseFloat(document.getElementById('dep-ht').value),desc=document.getElementById('dep-desc').value.trim();
@@ -1272,9 +1315,13 @@ async function ajouterDepense(){
     var st=document.getElementById('dep-up-status');st.textContent='⏳ Upload facture...';
     try{
       var nom='Facture-'+nettoyerNom(fourn||'fournisseur')+'-'+dateStr.replace(/\//g,'-')+'-'+ht+'EUR';
-      // Le dossier client = chantier lié si défini, sinon "Frais-fonctionnement"
-      var dossier=chantierNom||'Frais-fonctionnement';
-      drive=await uploadDrive(fileInput.files[0],nom,dossier,dateStr);
+      if(chantierNom){
+        // Facture liée à un chantier -> dossier du chantier (avec statut)
+        drive=await uploadDrive(fileInput.files[0],nom,chantierNom,dateStr);
+      }else{
+        // Frais de fonctionnement -> Frais-fonctionnement / Année / Mois (à la racine)
+        drive=await uploadFraisFonctionnement(fileInput.files[0],nom,dateStr);
+      }
       st.textContent='✅ Facture uploadée';
     }catch(e){st.textContent='❌ '+e.message;if(!confirm('Upload facture échoué ('+e.message+'). Ajouter la dépense quand même ?'))return;}
   }
@@ -1294,11 +1341,11 @@ async function renderPlanning(){
   var liste=document.getElementById('pl-liste');
   var aVenir=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))>=new Date(new Date().toDateString());}).sort(function(a,b){return (a.date+a.heure).localeCompare(b.date+b.heure);});
   var passees=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))<new Date(new Date().toDateString());}).sort(function(a,b){return (b.date+b.heure).localeCompare(a.date+a.heure);});
-  if(!_planning.length){liste.innerHTML='<p style="color:#9aa9b8;text-align:center;padding:20px;font-size:13px;">Aucune installation planifiée</p>';return;}
-  var rd=function(arr,past){return arr.map(function(p){var d=new Date(p.date+'T'+(p.heure||'09:00'));return '<div class="row" style="'+(past?'opacity:.55;':'')+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><span class="chip" style="background:'+(past?'#eef2f6':'#e8fff4')+';color:'+(past?'#6b8299':'#00875a')+';margin-bottom:5px;">'+d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' · '+(p.heure||'09:00')+'</span><div><strong style="font-size:14px;color:#0d1b2a;">'+p.nom+'</strong></div><div style="font-size:12px;color:#6b8299;margin-top:2px;">📍 '+(p.adresse||'-')+'</div><div style="font-size:12px;color:#6b8299;">📞 '+(p.tel||'-')+' · 🔌 '+(p.borne||'-')+'</div>'+(p.travaux?'<div style="font-size:12px;color:#9aa9b8;margin-top:2px;">🔧 '+p.travaux+'</div>':'')+(p.montant?'<div style="font-size:13px;color:#00875a;font-weight:700;margin-top:2px;">'+p.montant+'€ TTC</div>':'')+'</div><button onclick="supprimerInstallation(\''+p.id+'\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:15px;">🗑</button></div></div>';}).join('');};
+  if(!_planning.length){liste.innerHTML='<p style="color:#5a6b7d;text-align:center;padding:20px;font-size:13px;">Aucune installation planifiée</p>';return;}
+  var rd=function(arr,past){return arr.map(function(p){var d=new Date(p.date+'T'+(p.heure||'09:00'));return '<div class="row" style="'+(past?'opacity:.55;':'')+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><span class="chip" style="background:'+(past?'#eef2f6':'#e8fff4')+';color:'+(past?'#455a6e':'#00875a')+';margin-bottom:5px;">'+d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' · '+(p.heure||'09:00')+'</span><div><strong style="font-size:14px;color:#0d1b2a;">'+p.nom+'</strong></div><div style="font-size:12px;color:#455a6e;margin-top:2px;">📍 '+(p.adresse||'-')+'</div><div style="font-size:12px;color:#455a6e;">📞 '+(p.tel||'-')+' · 🔌 '+(p.borne||'-')+'</div>'+(p.travaux?'<div style="font-size:12px;color:#5a6b7d;margin-top:2px;">🔧 '+p.travaux+'</div>':'')+(p.montant?'<div style="font-size:13px;color:#00875a;font-weight:700;margin-top:2px;">'+p.montant+'€ TTC</div>':'')+'</div><button onclick="supprimerInstallation(\''+p.id+'\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:15px;">🗑</button></div></div>';}).join('');};
   var h='';
-  if(aVenir.length)h+='<div style="font-size:11px;font-weight:700;color:#6b8299;text-transform:uppercase;margin:4px 0 6px;">À venir ('+aVenir.length+')</div>'+rd(aVenir,false);
-  if(passees.length)h+='<div style="font-size:11px;font-weight:700;color:#6b8299;text-transform:uppercase;margin:14px 0 6px;">Passées ('+passees.length+')</div>'+rd(passees,true);
+  if(aVenir.length)h+='<div style="font-size:11px;font-weight:700;color:#455a6e;text-transform:uppercase;margin:4px 0 6px;">À venir ('+aVenir.length+')</div>'+rd(aVenir,false);
+  if(passees.length)h+='<div style="font-size:11px;font-weight:700;color:#455a6e;text-transform:uppercase;margin:14px 0 6px;">Passées ('+passees.length+')</div>'+rd(passees,true);
   liste.innerHTML=h;
 }
 function remplirDepuisLead(){var sel=document.getElementById('pl-lead');var o=sel.options[sel.selectedIndex];if(o&&o._lead){var l=o._lead;document.getElementById('pl-nom').value=l.nom||'';document.getElementById('pl-tel').value=l.tel||'';document.getElementById('pl-adresse').value=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));document.getElementById('pl-borne').value=l.borne||'';document.getElementById('pl-montant').value=(l.devis||'').replace(/\s/g,'');}}
