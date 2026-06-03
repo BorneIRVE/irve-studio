@@ -1094,11 +1094,18 @@ async function updateStatut(id,st){
     var ancienStatut=l?l.statut:null;
     await apiUpdateLead(id,{statut:st,histo_action:'Statut → '+STATUTS[st].l});
     // Déplacer le dossier Drive du client vers le nouveau statut
-    if(l&&ancienStatut!==st){deplacerDossierDrive(l,ancienStatut,st);}
+    if(l&&ancienStatut!==st){
+      var res=await deplacerDossierDrive(l,ancienStatut,st);
+      if(res){
+        if(res.moved)alert('✅ Statut changé et dossier déplacé sur Drive vers "'+STATUTS[st].l+'"');
+        else if(res.reason==='dossier client introuvable')alert('✅ Statut changé.\n\nℹ️ Aucun dossier Drive trouvé pour ce client (normal s\'il n\'a pas encore de documents uploadés).');
+        // sinon (déjà bon statut, etc.) : silencieux
+      }
+    }
     closeModal();renderLeads();
   }catch(e){alert('Erreur: '+e.message);}
 }
-// Déplace le dossier Drive du client d'un statut vers un autre (silencieux)
+// Déplace le dossier Drive du client d'un statut vers un autre
 async function deplacerDossierDrive(lead,ancienStatut,nouveauStatut){
   try{
     var d=parseDate(lead.date)||new Date();
@@ -1106,8 +1113,13 @@ async function deplacerDossierDrive(lead,ancienStatut,nouveauStatut){
     var moisNom=MOIS_FR[d.getMonth()];
     var ancienLabel=ancienStatut&&STATUTS[ancienStatut]?STATUTS[ancienStatut].l:'Nouveau';
     var nouveauLabel=STATUTS[nouveauStatut]?STATUTS[nouveauStatut].l:'Nouveau';
-    await fetch(VERCEL_URL+'/api/drive-move',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({client:nettoyerNom(lead.nom),annee:annee,mois:moisNom,ancienStatut:ancienLabel,nouveauStatut:nouveauLabel})});
-  }catch(e){console.log('Déplacement Drive échoué:',e);}
+    var r=await fetch(VERCEL_URL+'/api/drive-move',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({client:nettoyerNom(lead.nom),annee:annee,mois:moisNom,ancienStatut:ancienLabel,nouveauStatut:nouveauLabel})});
+    var j=await r.json();
+    if(!r.ok)console.log('Déplacement Drive erreur:',j.error);
+    else if(j.moved)console.log('Dossier déplacé:',ancienLabel,'->',nouveauLabel);
+    else console.log('Dossier non déplacé:',j.reason);
+    return j;
+  }catch(e){console.log('Déplacement Drive échoué:',e);return null;}
 }
 async function deleteLead(id){if(!confirm('Supprimer ce lead ?'))return;try{await apiUpdateLead(id,{statut:'__delete__'});closeModal();renderLeads();}catch(e){alert('Erreur: '+e.message);}}
 async function saveNote(id){try{await apiUpdateLead(id,{notes:document.getElementById('note-'+id).value,histo_action:'Note modifiée'});alert('Note enregistrée');}catch(e){alert('Erreur: '+e.message);}}
