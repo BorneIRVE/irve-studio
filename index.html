@@ -2,7 +2,16 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VoltExpert">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0a1628">
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+</script>
 <title>VoltExpert — Borne IRVE + Optimisation Energie</title>
 <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -1118,11 +1127,35 @@ async function openChantier(id){
     '<div class="g2" style="margin-bottom:14px;"><div class="kpi"><div class="v" style="font-size:16px;color:#dc3545;">'+fmt(c.coutMat)+'€</div><div class="l">Coût matériel/ST</div></div><div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(c.caTTC)+'€</div><div class="l">CA TTC</div></div></div>'+
     (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" class="btn btn-o" style="display:block;text-align:center;text-decoration:none;margin-bottom:14px;">📎 Voir le devis signé</a>':'')+
     '<label class="fl">Dépenses liées ('+c.depLiees.length+')</label>'+
-    (c.depLiees.length?'<div style="margin-top:6px;">'+c.depLiees.map(function(d){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f6;font-size:13px;"><span>'+(DEP_CATS[d.cat]||{i:'📁'}).i+' '+d.desc+(d.drive?' <a href="'+d.drive+'" target="_blank" style="color:#00875a;">📎</a>':'')+'</span><strong style="color:#dc3545;">'+fmt2(d.ht)+'€</strong></div>';}).join('')+'</div>':'<p style="font-size:13px;color:#9aa9b8;margin:6px 0 0;">Aucune dépense liée. Ajoutez-en depuis l\'onglet Dépenses (catégorie Bornes ou Sous-traitance).</p>');
+    (c.depLiees.length?'<div style="margin-top:6px;">'+c.depLiees.map(function(d){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f6;font-size:13px;"><span>'+(DEP_CATS[d.cat]||{i:'📁'}).i+' '+d.desc+(d.drive?' <a href="'+d.drive+'" target="_blank" style="color:#00875a;">📎</a>':'')+'</span><strong style="color:#dc3545;">'+fmt2(d.ht)+'€</strong></div>';}).join('')+'</div>':'<p style="font-size:13px;color:#9aa9b8;margin:6px 0 0;">Aucune dépense liée. Ajoutez-en depuis l\'onglet Dépenses (catégorie Bornes ou Sous-traitance).</p>')+
+    '<div style="margin-top:18px;"><label class="fl">📝 Notes de chantier</label><textarea id="ch-note-'+l.id+'" placeholder="Compteur Linky n°..., disjoncteur à changer, code portail..." style="min-height:70px;">'+(l.chantier_notes||'')+'</textarea><button onclick="saveChantierNote('+l.id+')" class="btn btn-d" style="width:100%;margin-top:6px;">💾 Enregistrer la note</button></div>'+
+    '<div style="margin-top:18px;"><label class="fl">📷 Photos du chantier</label>'+
+    '<div id="ch-photos-'+l.id+'" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;">'+
+    ((l.chantier_photos||[]).map(function(p){return '<a href="'+p.link+'" target="_blank" style="display:block;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid #d7e0e9;background:#f0f4f8;"><img src="'+p.link+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'📷\';this.parentNode.style.cssText+=\';display:flex;align-items:center;justify-content:center;font-size:24px;\'"></a>';}).join(''))+'</div>'+
+    '<input type="file" id="ch-photo-input-'+l.id+'" accept="image/*" capture="environment" style="display:none;" onchange="uploadPhotoChantier('+l.id+',this)">'+
+    '<button onclick="document.getElementById(\'ch-photo-input-'+l.id+'\').click()" class="btn btn-o" style="width:100%;">📷 Ajouter une photo</button>'+
+    '<div id="ch-photo-status-'+l.id+'" style="font-size:12px;color:#6b8299;text-align:center;margin-top:6px;"></div></div>';
   document.getElementById('lead-modal').style.display='flex';
 }
-
-// — DÉPENSES —
+async function saveChantierNote(id){
+  var note=document.getElementById('ch-note-'+id).value;
+  try{await apiUpdateLead(id,{chantier_notes:note,histo_action:'📝 Note chantier modifiée'});var st=document.getElementById('ch-photo-status-'+id);alert('Note enregistrée');}catch(e){alert('Erreur: '+e.message);}
+}
+async function uploadPhotoChantier(id,input){
+  var file=input.files[0];if(!file)return;
+  var st=document.getElementById('ch-photo-status-'+id);st.textContent='⏳ Upload photo...';
+  try{
+    var leads=await apiGetLeads();var l=leads.find(function(x){return x.id===id;});
+    var photos=l.chantier_photos||[];
+    var num=photos.length+1;
+    var nom='Photo-'+nettoyerNom(l.nom)+'-'+num;
+    var lien=await uploadDrive(file,nom,l.nom,l.date);
+    photos.push({link:lien,date:new Date().toLocaleDateString('fr-FR')});
+    await apiUpdateLead(id,{chantier_photos:photos,histo_action:'📷 Photo ajoutée'});
+    st.textContent='✅ Photo ajoutée';
+    setTimeout(function(){openChantier(id);},800);
+  }catch(e){st.textContent='❌ '+e.message;}
+}
 var _depFilter='',_depenses=[];
 var CATS_LIABLES=['bornes','sous-traitance']; // catégories liables à un chantier
 function majChampChantier(){
