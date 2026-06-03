@@ -645,7 +645,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     #crm-panel .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
     #crm-panel .kpi{background:#fff;border-radius:12px;border:1px solid #e2e9f0;padding:14px;text-align:center;}
     #crm-panel .kpi .v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;}
-    #crm-panel .kpi .l{font-size:11px;color:#455a6e;margin-top:4px;}
+    #crm-panel .kpi .l{font-size:11.5px;color:#2d3e4f;margin-top:5px;font-weight:600;}
     #crm-panel .kpi .s{font-size:10px;color:#5a6b7d;margin-top:2px;}
     /* Bottom tab bar (mobile) */
     #crm-panel .tabbar{flex-shrink:0;z-index:20;background:#fff;border-top:1px solid #e2e9f0;display:flex;padding:6px 4px;padding-bottom:max(6px,env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(13,27,42,.06);order:3;}
@@ -1060,26 +1060,71 @@ function calcObjectif(){
 var _leadFilter='';
 function setLeadFilter(s,el){_leadFilter=s;document.querySelectorAll('#lead-filters .fchip').forEach(function(c){c.classList.remove('on');});if(el)el.classList.add('on');renderLeads();}
 async function renderLeads(){ return renderChantiers(); }
-function openDetail(id){
-  apiGetLeads().then(function(leads){
-    var l=leads.find(function(x){return x.id===id;});if(!l)return;
-    document.getElementById('modal-title').textContent='👤 '+l.nom;
-    var adr=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));
-    document.getElementById('modal-body').innerHTML=
-      '<div style="font-size:13px;line-height:1.9;color:#0d1b2a;margin-bottom:14px;">📧 '+l.email+'<br>📞 '+(l.tel||'-')+'<br>📍 '+adr+'<br>🔌 '+(l.borne||'-')+' ('+l.nb_b+' borne)<br>💶 <strong>'+l.devis+'€ TTC</strong></div>'+
-      (l.msg?'<div style="background:#f5f9ff;border-left:3px solid #0066cc;padding:10px;border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px;">💬 '+l.msg+'</div>':'')+
-      '<label class="fl">Notes</label><textarea id="note-'+l.id+'" style="min-height:60px;margin-bottom:8px;">'+(l.notes||'')+'</textarea>'+
-      '<button onclick="saveNote('+l.id+')" class="btn btn-d" style="width:100%;margin-bottom:14px;">💾 Enregistrer la note</button>'+
-      '<label class="fl">Changer le statut</label><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">'+
-      Object.keys(STATUTS).map(function(k){var s=STATUTS[k];return '<button onclick="updateStatut('+l.id+',\''+k+'\')" class="chip" style="background:'+(l.statut===k?s.c:s.b)+';color:'+(l.statut===k?'#fff':s.c)+';border:none;cursor:pointer;padding:8px 12px;">'+s.l+'</button>';}).join('')+'</div>'+
-      '<input type="file" id="up-devis-'+l.id+'" accept="application/pdf,image/*" style="display:none;" onchange="uploadDevisLead('+l.id+',this)">'+
-      '<button onclick="document.getElementById(\'up-devis-'+l.id+'\').click()" class="btn btn-o" style="width:100%;margin-top:14px;">📎 '+(l.devis_drive?'Remplacer':'Uploader')+' le devis signé</button>'+
-      '<div id="up-devis-status-'+l.id+'" style="font-size:12px;color:#455a6e;text-align:center;margin-top:6px;"></div>'+
-      (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" style="display:block;text-align:center;color:#00875a;font-weight:700;font-size:13px;margin-top:8px;">📎 Voir le devis</a>':'')+
-      '<div style="margin-top:18px;"><label class="fl">📁 Documents Drive</label><div id="ld-docs-'+l.id+'" style="margin-top:6px;"></div><button onclick="listerDocsClient(\''+l.nom.replace(/'/g,"\\'")+'\',\'ld-docs-'+l.id+'\')" class="btn btn-o" style="width:100%;margin-top:8px;">📁 Charger les documents</button></div>'+
-      '<button onclick="deleteLead('+l.id+')" class="btn" style="width:100%;margin-top:14px;background:#ffeaea;color:#dc3545;">🗑 Supprimer ce lead</button>';
-    document.getElementById('lead-modal').style.display='flex';
-  });
+function openDetail(id){ openFiche(id); }
+async function openChantier(id){ openFiche(id); }
+async function openFiche(id){
+  var chs=await computeChantiers();
+  var c=chs.find(function(x){return x.lead.id===id;});if(!c)return;
+  var l=c.lead;
+  var s=STATUTS[l.statut]||STATUTS.nouveau;
+  var adr=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));
+  var mc=c.margePct>=40?'#00875a':c.margePct>=20?'#d97706':'#dc3545';
+  var estActif=ACTIF_STATUTS.indexOf(l.statut)>-1;
+  document.getElementById('modal-title').textContent=l.nom;
+
+  var html='';
+  // — Bandeau statut —
+  html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><span class="chip" style="background:'+s.b+';color:'+s.c+';font-size:12px;">'+s.l+'</span>'+
+    '<select onchange="updateStatut('+l.id+',this.value)" style="flex:1;font-size:13px;padding:8px 10px;border:1px solid #d7e0e9;border-radius:8px;font-weight:700;color:#0d1b2a;">'+
+    Object.keys(STATUTS).map(function(k){return '<option value="'+k+'"'+(k===l.statut?' selected':'')+'>'+STATUTS[k].l+'</option>';}).join('')+'</select></div>';
+
+  // — Coordonnées (carte claire) —
+  html+='<div style="background:#f7fafc;border:1px solid #e2e9f0;border-radius:12px;padding:14px;margin-bottom:14px;font-size:14px;line-height:1.9;color:#0d1b2a;">'+
+    (l.email?'<div>✉️ <a href="mailto:'+l.email+'" style="color:#0066cc;text-decoration:none;">'+l.email+'</a></div>':'')+
+    '<div>📞 <a href="tel:'+(l.tel||'')+'" style="color:#0066cc;text-decoration:none;">'+(l.tel||'-')+'</a></div>'+
+    '<div>📍 '+adr+'</div>'+
+    '<div>🔌 '+(l.borne||'-')+' · '+(l.nb_b||1)+' borne(s)</div></div>';
+
+  if(l.msg)html+='<div style="background:#f5f9ff;border-left:3px solid #0066cc;padding:11px;border-radius:0 8px 8px 0;margin-bottom:14px;font-size:13px;color:#0d1b2a;">💬 '+l.msg+'</div>';
+
+  // — Bloc finances : marge si chantier actif avec coûts, sinon montant du devis —
+  if(estActif && c.coutMat>0){
+    html+='<div style="background:'+mc+';color:#fff;border-radius:14px;padding:18px;text-align:center;margin-bottom:12px;"><div style="font-family:Syne,sans-serif;font-size:36px;font-weight:800;line-height:1;">'+Math.round(c.margePct)+'%</div><div style="font-size:13px;opacity:.9;margin-top:4px;">de marge · '+fmt(c.marge)+'€</div></div>';
+  }else{
+    html+='<div style="background:linear-gradient(135deg,#0a1628,#1a2c44);color:#fff;border-radius:14px;padding:18px;text-align:center;margin-bottom:12px;"><div style="font-family:Syne,sans-serif;font-size:30px;font-weight:800;line-height:1;">'+l.devis+'€</div><div style="font-size:13px;opacity:.85;margin-top:4px;">montant du devis TTC</div></div>';
+  }
+  html+='<div class="g2" style="margin-bottom:8px;"><div class="kpi"><div class="v" style="font-size:17px;color:#0066cc;">'+fmt(c.caHT)+'€</div><div class="l">CA HT</div></div><div class="kpi"><div class="v" style="font-size:17px;color:#0d1b2a;">'+fmt(c.caTTC)+'€</div><div class="l">CA TTC</div></div></div>';
+  html+='<div class="g2" style="margin-bottom:16px;"><div class="kpi"><div class="v" style="font-size:17px;color:#00875a;">'+fmt(c.encaisse)+'€</div><div class="l">Encaissé</div></div><div class="kpi"><div class="v" style="font-size:17px;color:#dc3545;">'+fmt(c.coutMat)+'€</div><div class="l">Coût matériel/ST</div></div></div>';
+
+  // — Devis signé —
+  html+='<input type="file" id="up-devis-'+l.id+'" accept="application/pdf,image/*" style="display:none;" onchange="uploadDevisLead('+l.id+',this)">'+
+    '<button onclick="document.getElementById(\'up-devis-'+l.id+'\').click()" class="btn btn-o" style="width:100%;">📎 '+(l.devis_drive?'Remplacer':'Uploader')+' le devis signé</button>'+
+    '<div id="up-devis-status-'+l.id+'" style="font-size:12px;color:#455a6e;text-align:center;margin-top:6px;"></div>'+
+    (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" style="display:block;text-align:center;color:#00875a;font-weight:700;font-size:13px;margin-top:8px;">📎 Voir le devis signé</a>':'');
+
+  // — Dépenses liées —
+  html+='<div style="margin-top:18px;"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#0d1b2a;margin-bottom:8px;">🧾 Dépenses liées ('+c.depLiees.length+')</div>'+
+    (c.depLiees.length?c.depLiees.map(function(d){return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eef2f6;font-size:13px;color:#0d1b2a;"><span>'+(DEP_CATS[d.cat]||{i:'📁'}).i+' '+d.desc+(d.drive?' <a href="'+d.drive+'" target="_blank" style="color:#00875a;">📎</a>':'')+'</span><strong style="color:#dc3545;">'+fmt2(d.ht)+'€</strong></div>';}).join(''):'<p style="font-size:13px;color:#5a6b7d;margin:0;">Aucune dépense liée (catégories Bornes ou Sous-traitance).</p>')+'</div>';
+
+  // — Notes —
+  html+='<div style="margin-top:18px;"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#0d1b2a;margin-bottom:8px;">📝 Notes</div><textarea id="ch-note-'+l.id+'" placeholder="Compteur Linky, code portail, points d\'attention..." style="min-height:64px;">'+(l.chantier_notes||l.notes||'')+'</textarea><button onclick="saveChantierNote('+l.id+')" class="btn btn-d" style="width:100%;margin-top:6px;">💾 Enregistrer la note</button></div>';
+
+  // — Photos —
+  html+='<div style="margin-top:18px;"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#0d1b2a;margin-bottom:8px;">📷 Photos du chantier</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'+
+    ((l.chantier_photos||[]).map(function(p){return '<a href="'+p.link+'" target="_blank" style="display:block;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid #d7e0e9;background:#f0f4f8;"><img src="'+p.link+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'📷\';this.parentNode.style.cssText+=\';display:flex;align-items:center;justify-content:center;font-size:24px;\'"></a>';}).join(''))+'</div>'+
+    '<input type="file" id="ch-photo-input-'+l.id+'" accept="image/*" capture="environment" style="display:none;" onchange="uploadPhotoChantier('+l.id+',this)">'+
+    '<button onclick="document.getElementById(\'ch-photo-input-'+l.id+'\').click()" class="btn btn-o" style="width:100%;">📷 Ajouter une photo</button>'+
+    '<div id="ch-photo-status-'+l.id+'" style="font-size:12px;color:#455a6e;text-align:center;margin-top:6px;"></div></div>';
+
+  // — Documents Drive —
+  html+='<div style="margin-top:18px;"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#0d1b2a;margin-bottom:8px;">📁 Documents Drive</div><div id="ch-docs-'+l.id+'"></div><button onclick="listerDocsClient(\''+l.nom.replace(/'/g,"\\'")+'\',\'ch-docs-'+l.id+'\')" class="btn btn-o" style="width:100%;margin-top:8px;">📁 Charger les documents</button></div>';
+
+  // — Suppression —
+  html+='<button onclick="deleteLead('+l.id+')" class="btn" style="width:100%;margin-top:20px;background:#ffeaea;color:#dc3545;">🗑 Supprimer</button>';
+
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('lead-modal').style.display='flex';
 }
 async function updateStatut(id,st){
   try{
@@ -1213,31 +1258,6 @@ async function renderChantiers(){
       return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;cursor:pointer;" onclick="openDetail('+l.id+')"><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">📞 '+(l.tel||'-')+'</div><div style="font-size:12px;color:#455a6e;">📍 '+(l.ville||l.cp||'-')+'</div><div style="font-size:13px;color:#0d1b2a;font-weight:700;margin-top:3px;">'+fmt(devisHT(l))+'€ HT</div><div style="margin-top:6px;">'+menuStatut(l.id,l.statut)+'</div></div></div></div>';
     }).join('')+'</div>';
   }
-}
-async function openChantier(id){
-  var chs=await computeChantiers();
-  var c=chs.find(function(x){return x.lead.id===id;});if(!c)return;
-  var l=c.lead;
-  var adr=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));
-  var mc=c.margePct>=40?'#00875a':c.margePct>=20?'#d97706':'#dc3545';
-  document.getElementById('modal-title').textContent='🏗️ '+l.nom;
-  document.getElementById('modal-body').innerHTML=
-    '<div style="font-size:13px;line-height:1.8;color:#0d1b2a;margin-bottom:14px;">📍 '+adr+'<br>📞 '+(l.tel||'-')+'<br>🔌 '+(l.borne||'-')+' ('+l.nb_b+' borne)</div>'+
-    '<div style="background:'+mc+';color:#fff;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;"><div style="font-family:Syne,sans-serif;font-size:32px;font-weight:800;">'+Math.round(c.margePct)+'%</div><div style="font-size:13px;opacity:.85;">marge · '+fmt2(c.marge)+'€</div></div>'+
-    '<div class="g2" style="margin-bottom:8px;"><div class="kpi"><div class="v" style="font-size:16px;color:#0066cc;">'+fmt(c.caHT)+'€</div><div class="l">CA HT</div></div><div class="kpi"><div class="v" style="font-size:16px;color:#00875a;">'+fmt(c.encaisse)+'€</div><div class="l">Encaissé</div></div></div>'+
-    '<div class="g2" style="margin-bottom:14px;"><div class="kpi"><div class="v" style="font-size:16px;color:#dc3545;">'+fmt(c.coutMat)+'€</div><div class="l">Coût matériel/ST</div></div><div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(c.caTTC)+'€</div><div class="l">CA TTC</div></div></div>'+
-    (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" class="btn btn-o" style="display:block;text-align:center;text-decoration:none;margin-bottom:14px;">📎 Voir le devis signé</a>':'')+
-    '<label class="fl">Dépenses liées ('+c.depLiees.length+')</label>'+
-    (c.depLiees.length?'<div style="margin-top:6px;">'+c.depLiees.map(function(d){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f6;font-size:13px;"><span>'+(DEP_CATS[d.cat]||{i:'📁'}).i+' '+d.desc+(d.drive?' <a href="'+d.drive+'" target="_blank" style="color:#00875a;">📎</a>':'')+'</span><strong style="color:#dc3545;">'+fmt2(d.ht)+'€</strong></div>';}).join('')+'</div>':'<p style="font-size:13px;color:#5a6b7d;margin:6px 0 0;">Aucune dépense liée. Ajoutez-en depuis l\'onglet Dépenses (catégorie Bornes ou Sous-traitance).</p>')+
-    '<div style="margin-top:18px;"><label class="fl">📝 Notes de chantier</label><textarea id="ch-note-'+l.id+'" placeholder="Compteur Linky n°..., disjoncteur à changer, code portail..." style="min-height:70px;">'+(l.chantier_notes||'')+'</textarea><button onclick="saveChantierNote('+l.id+')" class="btn btn-d" style="width:100%;margin-top:6px;">💾 Enregistrer la note</button></div>'+
-    '<div style="margin-top:18px;"><label class="fl">📷 Photos du chantier</label>'+
-    '<div id="ch-photos-'+l.id+'" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;">'+
-    ((l.chantier_photos||[]).map(function(p){return '<a href="'+p.link+'" target="_blank" style="display:block;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid #d7e0e9;background:#f0f4f8;"><img src="'+p.link+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'📷\';this.parentNode.style.cssText+=\';display:flex;align-items:center;justify-content:center;font-size:24px;\'"></a>';}).join(''))+'</div>'+
-    '<input type="file" id="ch-photo-input-'+l.id+'" accept="image/*" capture="environment" style="display:none;" onchange="uploadPhotoChantier('+l.id+',this)">'+
-    '<button onclick="document.getElementById(\'ch-photo-input-'+l.id+'\').click()" class="btn btn-o" style="width:100%;">📷 Ajouter une photo</button>'+
-    '<div id="ch-photo-status-'+l.id+'" style="font-size:12px;color:#455a6e;text-align:center;margin-top:6px;"></div></div>'+
-    '<div style="margin-top:18px;"><label class="fl">📁 Documents Drive du client</label><div id="ch-docs-'+l.id+'" style="margin-top:6px;"></div><button onclick="listerDocsClient(\''+l.nom.replace(/'/g,"\\'")+'\',\'ch-docs-'+l.id+'\')" class="btn btn-o" style="width:100%;margin-top:8px;">📁 Charger les documents</button></div>';
-  document.getElementById('lead-modal').style.display='flex';
 }
 async function saveChantierNote(id){
   var note=document.getElementById('ch-note-'+id).value;
