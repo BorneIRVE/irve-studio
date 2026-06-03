@@ -701,7 +701,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     <button onclick="crmTab('dash')" id="ctab-dash" class="on"><span class="ic">🏠</span>Accueil</button>
     <button onclick="crmTab('planning')" id="ctab-planning"><span class="ic">📅</span>Planning</button>
     <button onclick="crmTab('chantiers')" id="ctab-chantiers"><span class="ic">🏗️</span>Chantiers</button>
-    <button onclick="crmTab('argent')" id="ctab-argent"><span class="ic">💶</span>Argent</button>
+    <button onclick="crmTab('argent')" id="ctab-argent"><span class="ic">💶</span>Finance</button>
     <button onclick="crmTab('depenses')" id="ctab-depenses"><span class="ic">🧾</span>Dépenses</button>
   </div>
 
@@ -766,39 +766,44 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     <!-- ══ ARGENT (TVA + charges + bénéfice) ══ -->
     <div class="page" id="crm-tab-argent">
       <div class="fscroll" id="arg-period">
-        <div class="fchip on" onclick="setArgPeriode('mois',this)">Ce mois</div>
+        <div class="fchip" onclick="setArgPeriode('mois',this)">Ce mois</div>
         <div class="fchip" onclick="setArgPeriode('trimestre',this)">Ce trimestre</div>
-        <div class="fchip" onclick="setArgPeriode('annee',this)">Cette année</div>
+        <div class="fchip on" onclick="setArgPeriode('annee',this)">Cette année</div>
         <div class="fchip" onclick="setArgPeriode('perso',this)">📅 Dates perso</div>
       </div>
       <div class="card" id="arg-perso-dates" style="display:none;">
         <div class="g2"><div class="field" style="margin:0;"><label class="fl">Du</label><input type="date" id="arg-from" onchange="renderArgent()"></div><div class="field" style="margin:0;"><label class="fl">Au</label><input type="date" id="arg-to" onchange="renderArgent()"></div></div>
       </div>
+
+      <!-- Situation entreprise -->
+      <div class="card">
+        <h3 class="card-t">🏢 Situation de l'entreprise</h3>
+        <div id="arg-situation"></div>
+      </div>
+
       <!-- TVA -->
       <div class="card" id="arg-tva-card">
-        <h3 class="card-t">🧮 TVA <span id="arg-tva-period" style="font-weight:400;color:#5a6b7d;font-size:12px;"></span></h3>
+        <h3 class="card-t">🧮 TVA <span id="arg-tva-period" style="font-weight:400;color:#455a6e;font-size:12px;"></span></h3>
         <div id="arg-tva-big" style="text-align:center;padding:8px 0 14px;"></div>
         <div class="g2">
           <div class="kpi"><div class="v" id="arg-tva-col" style="color:#0066cc;">—</div><div class="l">Collectée (5,5%)</div></div>
           <div class="kpi"><div class="v" id="arg-tva-ded" style="color:#00875a;">—</div><div class="l">Déductible (20%)</div></div>
         </div>
-        <div style="margin-top:10px;padding:11px;background:#f5f8fc;border-radius:9px;font-size:12px;color:#455a6e;line-height:1.5;" id="arg-tva-info"></div>
+        <div style="margin-top:10px;padding:11px;background:#f5f8fc;border-radius:9px;font-size:12px;color:#2d3e4f;line-height:1.5;" id="arg-tva-info"></div>
       </div>
-      <!-- Charges + bénéfice -->
+
+      <!-- Simulateur de rémunération EURL à l'IS -->
       <div class="card">
-        <h3 class="card-t">📊 Charges & bénéfice</h3>
-        <div class="g2" style="margin-bottom:10px;">
-          <div class="field" style="margin:0;"><label class="fl">URSSAF %</label><input type="number" id="taux-urssaf" value="22" oninput="renderArgent()"></div>
-          <div class="field" style="margin:0;"><label class="fl">Retraite %</label><input type="number" id="taux-retraite" value="8" oninput="renderArgent()"></div>
+        <h3 class="card-t">💼 Simulateur de rémunération (EURL à l'IS)</h3>
+        <div class="field"><label class="fl">Salaire net mensuel souhaité (€)</label><input type="number" id="sim-salaire" value="2000" oninput="renderArgent()"></div>
+        <div class="g2">
+          <div class="field" style="margin:0;"><label class="fl">Dividendes à verser (€/an)</label><input type="number" id="sim-dividendes" value="0" oninput="renderArgent()"></div>
+          <div class="field" style="margin:0;"><label class="fl">Capital social (€)</label><input type="number" id="sim-capital" value="1000" oninput="renderArgent()"></div>
         </div>
-        <div class="kgrid" id="arg-kpis"></div>
+        <div id="arg-simulateur"></div>
+        <div style="margin-top:10px;padding:10px;background:#fff8e8;border-radius:9px;font-size:11px;color:#7a5c00;line-height:1.5;">⚠️ Estimation indicative pour piloter votre activité. Les taux réels dépendent de votre situation. Votre expert-comptable reste la référence pour vos déclarations.</div>
       </div>
-      <!-- Objectif -->
-      <div class="card">
-        <h3 class="card-t">🎯 Objectif salaire</h3>
-        <div class="field"><label class="fl">Objectif net mensuel (€)</label><input type="number" id="objectif-salaire" value="1500" oninput="calcObjectif()"></div>
-        <div id="arg-objectif"></div>
-      </div>
+
       <button onclick="exporterRapport()" class="btn btn-o" style="width:100%;margin-bottom:8px;">⬇️ Rapport CSV simple</button>
       <button onclick="exporterZipComptable()" class="btn btn-d" style="width:100%;">📦 Export comptable (.zip + Excel)</button>
     </div>
@@ -1015,45 +1020,100 @@ async function renderDash(){
 }
 function kpic(v,l,c,s){return '<div class="kpi"><div class="v" style="color:'+(c||'#0d1b2a')+';">'+v+'</div><div class="l">'+l+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'</div>';}
 
-// — ARGENT —
-var _argPeriode='mois';
+// — FINANCE —
+var _argPeriode='annee';
 function setArgPeriode(p,el){_argPeriode=p;document.querySelectorAll('#arg-period .fchip').forEach(function(c){c.classList.remove('on');});if(el)el.classList.add('on');var pd=document.getElementById('arg-perso-dates');if(pd)pd.style.display=p==='perso'?'block':'none';renderArgent();}
 async function renderArgent(){
   var f=await computeFinance(_argPeriode);
-  window._finData={caEnc:f.caEnc,depTotal:f.depHT,benNet:f.benNet};
-  var plabel=_argPeriode==='mois'?'(ce mois)':_argPeriode==='trimestre'?'(ce trimestre)':'(cette année)';
+  var plabel=_argPeriode==='mois'?'(ce mois)':_argPeriode==='trimestre'?'(ce trimestre)':_argPeriode==='annee'?'(cette année)':'(période)';
+
+  // — Situation de l'entreprise —
+  var resAvantRem=f.caEnc-f.depHT; // résultat avant rémunération
+  document.getElementById('arg-situation').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(f.caEnc)+'€</div><div class="l">Encaissé (CA HT)</div></div>'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(f.depHT)+'€</div><div class="l">Dépenses HT</div></div>'+
+    '</div>'+
+    '<div style="background:linear-gradient(135deg,#0a1628,#1a2c44);color:#fff;border-radius:12px;padding:16px;text-align:center;margin-top:10px;"><div style="font-size:12px;opacity:.8;">Résultat avant rémunération '+plabel+'</div><div style="font-family:Syne,sans-serif;font-size:30px;font-weight:800;margin-top:2px;color:'+(resAvantRem>=0?'#c8f135':'#ff7a7a')+';">'+fmt(resAvantRem)+'€</div></div>';
+
+  // — TVA (conservée) —
   document.getElementById('arg-tva-period').textContent=plabel;
-  // Gros chiffre TVA
   var big=document.getElementById('arg-tva-big');
   if(f.tvaNet>=0){
-    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#dc3545;">'+fmt2(f.tvaNet)+' €</div><div style="font-size:13px;color:#455a6e;margin-top:2px;">à reverser à l\'État</div>';
+    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#dc3545;">'+fmt2(f.tvaNet)+' €</div><div style="font-size:13px;color:#2d3e4f;margin-top:2px;">à reverser à l\'État</div>';
     document.getElementById('arg-tva-info').innerHTML='Vous collectez '+fmt2(f.tvaCol)+'€ de TVA (5,5%) et déduisez '+fmt2(f.tvaDed)+'€ (20% sur achats). Solde à payer : <strong>'+fmt2(f.tvaNet)+'€</strong>.';
   }else{
-    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#00875a;">+'+fmt2(Math.abs(f.tvaNet))+' €</div><div style="font-size:13px;color:#455a6e;margin-top:2px;">crédit de TVA en votre faveur</div>';
-    document.getElementById('arg-tva-info').innerHTML='Vous déduisez plus de TVA ('+fmt2(f.tvaDed)+'€) que vous n\'en collectez ('+fmt2(f.tvaCol)+'€). L\'État vous doit <strong>'+fmt2(Math.abs(f.tvaNet))+'€</strong> (remboursable ou reportable).';
+    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#00875a;">+'+fmt2(Math.abs(f.tvaNet))+' €</div><div style="font-size:13px;color:#2d3e4f;margin-top:2px;">crédit de TVA en votre faveur</div>';
+    document.getElementById('arg-tva-info').innerHTML='Vous déduisez plus de TVA ('+fmt2(f.tvaDed)+'€) que vous n\'en collectez ('+fmt2(f.tvaCol)+'€). L\'État vous doit <strong>'+fmt2(Math.abs(f.tvaNet))+'€</strong>.';
   }
   document.getElementById('arg-tva-col').textContent=fmt(f.tvaCol)+'€';
   document.getElementById('arg-tva-ded').textContent=fmt(f.tvaDed)+'€';
-  // KPIs charges/bénéfice
-  document.getElementById('arg-kpis').innerHTML=
-    kpic(fmt(f.caEnc)+'€','Encaissé','#0066cc')+
-    kpic(fmt(f.depHT)+'€','Dépenses HT','#dc3545')+
-    kpic(fmt(f.charges)+'€','Charges à provisionner','#d97706','URSSAF + retraite')+
-    kpic(fmt(f.benNet)+'€','Bénéfice net',f.benNet>=0?'#00875a':'#dc3545');
-  calcObjectif();
+
+  // — Simulateur EURL à l'IS —
+  calcSimulateurIS(resAvantRem);
 }
-function calcObjectif(){
-  if(!window._finData)window._finData={benNet:0};
-  var benNet=window._finData.benNet||0; // bénéfice net = salaire net réellement disponible
-  var obj=parseFloat((document.getElementById('objectif-salaire')||{}).value)||1500;
-  var reste=Math.max(0,obj-benNet);
-  var av=obj>0?Math.min(100,Math.round(benNet/obj*100)):100;
-  var el=document.getElementById('arg-objectif');if(!el)return;
-  el.innerHTML='<div class="g2" style="margin-bottom:10px;">'+
-    '<div class="kpi"><div class="v" style="font-size:16px;color:#00875a;">'+fmt(benNet)+'€</div><div class="l">Salaire net actuel</div></div>'+
-    '<div class="kpi"><div class="v" style="font-size:16px;color:'+(reste>0?'#dc3545':'#00875a')+';">'+(reste>0?fmt(reste)+'€':'Atteint ✅')+'</div><div class="l">Reste pour l\'objectif</div></div></div>'+
-    '<div style="background:#eef2f6;border-radius:10px;height:10px;overflow:hidden;"><div style="width:'+av+'%;height:100%;background:'+(av>=100?'#00875a':av>=50?'#d97706':'#dc3545')+';transition:width .5s;"></div></div>'+
-    '<div style="text-align:center;font-size:12px;color:#4a5d70;margin-top:6px;font-weight:700;">'+av+'% de votre objectif net</div>';
+
+// Simulateur de rémunération EURL à l'IS
+function calcSimulateurIS(resultatAvantRem){
+  var el=document.getElementById('arg-simulateur');if(!el)return;
+  // Période : le résultat est sur la période choisie. La rému est mensuelle -> annualiser pour cohérence.
+  var moisPeriode=_argPeriode==='mois'?1:_argPeriode==='trimestre'?3:12;
+  var salaireNetMensuel=parseFloat((document.getElementById('sim-salaire')||{}).value)||0;
+  var dividendes=parseFloat((document.getElementById('sim-dividendes')||{}).value)||0;
+  var capital=parseFloat((document.getElementById('sim-capital')||{}).value)||1000;
+
+  // Tout ramené à la période affichée
+  var salaireNetPeriode=salaireNetMensuel*moisPeriode;
+  // Cotisations TNS : ~45% du net (gérant majoritaire EURL). Coût total employeur = net + cotisations.
+  var cotisationsTNS=salaireNetPeriode*0.45;
+  var coutRemuneration=salaireNetPeriode+cotisationsTNS;
+
+  // Résultat imposable après déduction de la rémunération et des cotisations
+  var resultatImposable=resultatAvantRem-coutRemuneration;
+  if(resultatImposable<0)resultatImposable=0;
+
+  // IS : 15% jusqu'à 42 500€ (proratisé sur la période), 25% au-delà
+  var seuilIS=42500*(moisPeriode/12);
+  var is=0;
+  if(resultatImposable<=seuilIS){is=resultatImposable*0.15;}
+  else{is=seuilIS*0.15+(resultatImposable-seuilIS)*0.25;}
+
+  // Bénéfice net après IS (reste dans l'entreprise si pas distribué)
+  var beneficeNetIS=resultatImposable-is;
+
+  // Dividendes : flat tax 30%. Part > 10% du capital social soumise à cotisations TNS (~45%)
+  var seuilDiv=capital*0.10;
+  var divSoumisCotis=Math.max(0,dividendes-seuilDiv);
+  var cotisDiv=divSoumisCotis*0.45;
+  var flatTax=dividendes*0.30;
+  var dividendesNet=dividendes-flatTax-cotisDiv;
+
+  var resteEntreprise=beneficeNetIS-dividendes;
+
+  function ligne(label,valeur,couleur,gras){return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eef2f6;font-size:13.5px;'+(gras?'font-weight:800;':'')+'color:#0d1b2a;"><span>'+label+'</span><span style="color:'+(couleur||'#0d1b2a')+';font-weight:700;">'+valeur+'</span></div>';}
+
+  el.innerHTML=
+    '<div style="background:#f7fafc;border:1px solid #e2e9f0;border-radius:12px;padding:14px;margin-top:8px;">'+
+    ligne('Résultat avant rémunération',fmt(resultatAvantRem)+'€','#0d1b2a')+
+    ligne('− Votre salaire net','−'+fmt(salaireNetPeriode)+'€','#0066cc')+
+    ligne('− Cotisations sociales (TNS ~45%)','−'+fmt(cotisationsTNS)+'€','#d97706')+
+    ligne('= Résultat imposable',fmt(resultatImposable)+'€','#0d1b2a',true)+
+    ligne('− Impôt société (IS 15%/25%)','−'+fmt(is)+'€','#dc3545')+
+    ligne('= Bénéfice net après IS',fmt(beneficeNetIS)+'€','#00875a',true)+
+    '</div>'+
+    // Ce que touche le gérant
+    '<div style="background:linear-gradient(135deg,#00875a,#00a86b);color:#fff;border-radius:12px;padding:16px;text-align:center;margin-top:12px;"><div style="font-size:12px;opacity:.9;">Votre salaire net dans la poche '+(moisPeriode>1?'('+fmt(salaireNetPeriode)+'€ sur la période)':'(ce mois)')+'</div><div style="font-family:Syne,sans-serif;font-size:28px;font-weight:800;margin-top:2px;">'+fmt(salaireNetMensuel)+'€ <span style="font-size:14px;font-weight:400;">/mois</span></div></div>'+
+    // Dividendes si demandés
+    (dividendes>0?
+      '<div style="background:#f7fafc;border:1px solid #e2e9f0;border-radius:12px;padding:14px;margin-top:12px;">'+
+      '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:800;color:#0d1b2a;margin-bottom:6px;">💰 Dividendes</div>'+
+      ligne('Dividendes bruts',fmt(dividendes)+'€','#0d1b2a')+
+      ligne('− Flat tax (30%)','−'+fmt(flatTax)+'€','#dc3545')+
+      (cotisDiv>0?ligne('− Cotisations (part > 10% capital)','−'+fmt(cotisDiv)+'€','#d97706'):'')+
+      ligne('= Dividendes nets perçus',fmt(dividendesNet)+'€','#00875a',true)+
+      '</div>':'')+
+    // Reste dans l'entreprise
+    '<div style="background:'+(resteEntreprise>=0?'#e8fff4':'#ffeaea')+';border-radius:12px;padding:16px;text-align:center;margin-top:12px;"><div style="font-size:12px;color:#2d3e4f;">Reste dans l\'entreprise (trésorerie)</div><div style="font-family:Syne,sans-serif;font-size:26px;font-weight:800;margin-top:2px;color:'+(resteEntreprise>=0?'#00875a':'#dc3545')+';">'+fmt(resteEntreprise)+'€</div></div>';
 }
 
 // — LEADS —
@@ -1093,8 +1153,11 @@ async function openFiche(id){
   }else{
     html+='<div style="background:linear-gradient(135deg,#0a1628,#1a2c44);color:#fff;border-radius:14px;padding:18px;text-align:center;margin-bottom:12px;"><div style="font-family:Syne,sans-serif;font-size:30px;font-weight:800;line-height:1;">'+l.devis+'€</div><div style="font-size:13px;opacity:.85;margin-top:4px;">montant du devis TTC</div></div>';
   }
-  html+='<div class="g2" style="margin-bottom:8px;"><div class="kpi"><div class="v" style="font-size:17px;color:#0066cc;">'+fmt(c.caHT)+'€</div><div class="l">CA HT</div></div><div class="kpi"><div class="v" style="font-size:17px;color:#0d1b2a;">'+fmt(c.caTTC)+'€</div><div class="l">CA TTC</div></div></div>';
-  html+='<div class="g2" style="margin-bottom:16px;"><div class="kpi"><div class="v" style="font-size:17px;color:#00875a;">'+fmt(c.encaisse)+'€</div><div class="l">Encaissé</div></div><div class="kpi"><div class="v" style="font-size:17px;color:#dc3545;">'+fmt(c.coutMat)+'€</div><div class="l">Coût matériel/ST</div></div></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(c.caHT)+'€</div><div class="l">CA HT</div></div>'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(c.caTTC)+'€</div><div class="l">CA TTC</div></div>'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(c.encaisse)+'€</div><div class="l">Encaissé</div></div>'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:#0d1b2a;">'+fmt(c.coutMat)+'€</div><div class="l">Coût mat/ST</div></div></div>';
 
   // — Devis signé —
   html+='<input type="file" id="up-devis-'+l.id+'" accept="application/pdf,image/*" style="display:none;" onchange="uploadDevisLead('+l.id+',this)">'+
@@ -1131,16 +1194,8 @@ async function updateStatut(id,st){
     var leads=await apiGetLeads();var l=leads.find(function(x){return x.id===id;});
     var ancienStatut=l?l.statut:null;
     await apiUpdateLead(id,{statut:st,histo_action:'Statut → '+STATUTS[st].l});
-    // Déplacer le dossier Drive du client vers le nouveau statut
-    if(l&&ancienStatut!==st){
-      var res=await deplacerDossierDrive(l,ancienStatut,st);
-      if(res){
-        if(res.moved)alert('✅ Statut changé et dossier déplacé sur Drive vers "'+STATUTS[st].l+'"');
-        else if(res.reason==='dossier client introuvable')alert('✅ Statut changé.\n\nℹ️ Aucun dossier Drive trouvé pour ce client (normal s\'il n\'a pas encore de documents uploadés).');
-        // sinon (déjà bon statut, etc.) : silencieux
-      }
-    }
-    closeModal();renderLeads();
+    if(l&&ancienStatut!==st)deplacerDossierDrive(l,ancienStatut,st);
+    closeModal();renderChantiers();
   }catch(e){alert('Erreur: '+e.message);}
 }
 // Déplace le dossier Drive du client d'un statut vers un autre
@@ -1167,13 +1222,14 @@ async function uploadDevisLead(id,input){
   st.textContent='⏳ Upload en cours...';
   try{
     var leads=await apiGetLeads();var l=leads.find(function(x){return x.id===id;});
-    var montant=(l.devis||'').replace(/\s/g,'');
-    // Nom: NomClient-Date-Montant
-    var nom=nettoyerNom(l.nom)+'-'+(l.date||'').replace(/\//g,'-')+'-'+montant+'EUR';
-    var lien=await uploadDrive(file,'Devis-'+nom,l.nom,l.date,l.statut);
+    var montantTTC=Math.round(parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.'))||0);
+    var dateStr=(l.date||new Date().toLocaleDateString('fr-FR')).replace(/\//g,'-');
+    // Même format que le configurateur + "-Signe"
+    var nom='Devis-'+nettoyerNom(l.nom)+'-'+dateStr+'-'+montantTTC+'EUR-Signe';
+    var lien=await uploadDrive(file,nom,l.nom,l.date,l.statut);
     await apiUpdateLead(id,{devis_drive:lien,histo_action:'📎 Devis signé uploadé'});
     st.textContent='✅ Uploadé sur Drive';
-    setTimeout(function(){openDetail(id);},800);
+    setTimeout(function(){openFiche(id);},800);
   }catch(e){st.textContent='❌ '+e.message;}
 }
 async function exportLeads(){var leads;try{leads=await apiGetLeads();}catch(e){alert(e.message);return;}if(!leads.length){alert('Aucun lead');return;}var csv='Nom,Email,Tel,Ville,Type,Devis TTC,Statut,Date\n';leads.forEach(function(l){csv+=[l.nom,l.email,l.tel||'-',l.ville||'-',l.itype,l.devis,l.statut,l.date].join(',')+'\n';});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='leads-'+new Date().toISOString().slice(0,10)+'.csv';a.click();}
