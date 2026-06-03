@@ -38,11 +38,6 @@ function toggleFaq(el){
   document.querySelectorAll('.faq-arr').forEach(function(a){a.style.transform='';});
   if(!isOpen&&ans){ans.style.display='block';if(arr)arr.style.transform='rotate(180deg)';}
 }
-function openCRM(e){if(e&&e.preventDefault)e.preventDefault();if(sessionStorage.getItem('crm_auth')==='1'){showCRM();}else{var l=document.getElementById('crm-login');if(l){l.style.display='flex';}}}
-function checkPwd(){var p=document.getElementById('crm-pwd');var err=document.getElementById('crm-pwd-err');if(p&&p.value==='irve2024'){sessionStorage.setItem('crm_auth','1');p.value='';var l=document.getElementById('crm-login');if(l)l.style.display='none';if(err)err.style.display='none';showCRM();}else{if(err)err.style.display='block';}}
-function showCRM(){var panel=document.getElementById('crm-panel');var ov=document.getElementById('crm-overlay');if(panel)panel.style.display='block';if(ov)ov.style.display='block';document.body.style.overflow='hidden';setTimeout(function(){if(typeof crmTab==='function')crmTab('leads');},50);}
-function closeCRM(){var panel=document.getElementById('crm-panel');var ov=document.getElementById('crm-overlay');if(panel)panel.style.display='none';if(ov)ov.style.display='none';document.body.style.overflow='';}
-function closeModal(){var m=document.getElementById('lead-modal');if(m)m.style.display='none';}
 document.addEventListener('click',function(e){if(!e.target.closest||(!e.target.closest('#hamburger-btn')&&!e.target.closest('#nav-dropdown')))closeMenu();});
 </script>
 <style>
@@ -620,302 +615,202 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
 <!-- ══════════ PANNEAU CRM COMPLET ══════════ -->
 <div id="crm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;backdrop-filter:blur(4px);" onclick="if(event.target===this)closeCRM()"></div>
 
-<div id="crm-panel" style="display:none;position:fixed;inset:0;z-index:1001;background:#f0f4f8;overflow-y:auto;">
-  <div style="max-width:1300px;margin:0 auto;padding:24px;">
+<div id="crm-panel" style="display:none;position:fixed;inset:0;z-index:1001;background:#eef2f6;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <style>
+    #crm-panel *{box-sizing:border-box;}
+    #crm-panel .cw{max-width:1100px;margin:0 auto;padding:14px;}
+    #crm-panel .ch{position:sticky;top:0;z-index:20;background:#0a1628;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    #crm-panel .ch h2{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin:0;}
+    #crm-panel .ch .sub{font-size:11px;color:rgba(255,255,255,.55);margin:2px 0 0;}
+    #crm-panel .ch-btns{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+    #crm-panel .ch-btns a,#crm-panel .ch-btns button{padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;border:none;cursor:pointer;white-space:nowrap;}
+    #crm-panel .bsec{background:rgba(255,255,255,.12);color:#fff;}
+    #crm-panel .bgreen{background:#c8f135;color:#0a1628;}
+    /* Carte */
+    #crm-panel .card{background:#fff;border-radius:14px;border:1px solid #e2e9f0;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(13,27,42,.04);}
+    #crm-panel .card-t{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#0d1b2a;margin:0 0 12px;display:flex;align-items:center;gap:7px;}
+    /* KPI grid */
+    #crm-panel .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    #crm-panel .kpi{background:#fff;border-radius:12px;border:1px solid #e2e9f0;padding:14px;text-align:center;}
+    #crm-panel .kpi .v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;}
+    #crm-panel .kpi .l{font-size:11px;color:#6b8299;margin-top:4px;}
+    #crm-panel .kpi .s{font-size:10px;color:#abb8c4;margin-top:2px;}
+    /* Bottom tab bar (mobile) */
+    #crm-panel .tabbar{position:sticky;bottom:0;z-index:20;background:#fff;border-top:1px solid #e2e9f0;display:flex;padding:6px 4px;padding-bottom:max(6px,env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(13,27,42,.06);}
+    #crm-panel .tabbar button{flex:1;background:none;border:none;cursor:pointer;padding:7px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#9aa9b8;font-family:'Syne',sans-serif;}
+    #crm-panel .tabbar button .ic{font-size:19px;line-height:1;}
+    #crm-panel .tabbar button.on{color:#0a1628;}
+    #crm-panel .tabbar button.on .ic{filter:none;}
+    /* Inputs */
+    #crm-panel input,#crm-panel select,#crm-panel textarea{width:100%;padding:11px 12px;border:1px solid #d7e0e9;border-radius:9px;font-size:14px;font-family:inherit;background:#fff;color:#0d1b2a;}
+    #crm-panel label.fl{font-size:11px;color:#6b8299;font-weight:700;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;}
+    #crm-panel .field{margin-bottom:12px;}
+    #crm-panel .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    #crm-panel .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+    #crm-panel .btn{padding:12px 18px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:'Syne',sans-serif;}
+    #crm-panel .btn-g{background:#c8f135;color:#0a1628;}
+    #crm-panel .btn-d{background:#0a1628;color:#fff;}
+    #crm-panel .btn-o{background:#f0f4f8;color:#0a1628;border:1px solid #d7e0e9;}
+    /* Listes */
+    #crm-panel .row{padding:13px 0;border-bottom:1px solid #eef2f6;}
+    #crm-panel .row:last-child{border-bottom:none;}
+    #crm-panel .chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    #crm-panel .page{display:none;}
+    #crm-panel .page.on{display:block;}
+    /* Filtres scrollables */
+    #crm-panel .fscroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;margin-bottom:12px;}
+    #crm-panel .fscroll::-webkit-scrollbar{display:none;}
+    #crm-panel .fchip{flex-shrink:0;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #d7e0e9;background:#fff;color:#6b8299;cursor:pointer;white-space:nowrap;}
+    #crm-panel .fchip.on{background:#0a1628;color:#fff;border-color:#0a1628;}
+    @media(min-width:768px){
+      #crm-panel .cw{padding:24px;}
+      #crm-panel .kgrid{grid-template-columns:repeat(4,1fr);}
+      #crm-panel .tabbar{position:sticky;top:0;bottom:auto;justify-content:center;gap:4px;border-top:none;border-bottom:1px solid #e2e9f0;}
+      #crm-panel .tabbar button{flex:0 0 auto;flex-direction:row;padding:11px 20px;font-size:13px;border-radius:9px;}
+      #crm-panel .tabbar button .ic{font-size:15px;}
+      #crm-panel .tabbar button.on{background:#0a1628;color:#fff;}
+    }
+  </style>
 
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;background:var(--ink);color:white;padding:16px 20px;border-radius:10px;">
-      <div style="display:flex;align-items:center;gap:16px;">
-        <span style="font-size:22px;">📊</span>
-        <div>
-          <h2 style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin:0;">Espace de gestion</h2>
-          <p style="font-size:12px;color:rgba(255,255,255,.6);margin:0;" id="crm-subtitle">Chargement...</p>
+  <!-- Header -->
+  <div class="ch">
+    <div>
+      <h2>VoltExpert</h2>
+      <p class="sub" id="crm-subtitle">Tableau de bord</p>
+    </div>
+    <div class="ch-btns">
+      <a href="https://borneirve.github.io/irve-studio/configurateur.html#admin" class="bgreen">⚙️ Catalogue</a>
+      <button onclick="closeCRM()" class="bsec">✕</button>
+    </div>
+  </div>
+
+  <!-- Navigation (haut PC / bas mobile via CSS) -->
+  <div class="tabbar" id="crm-tabbar">
+    <button onclick="crmTab('dash')" id="ctab-dash" class="on"><span class="ic">🏠</span>Accueil</button>
+    <button onclick="crmTab('planning')" id="ctab-planning"><span class="ic">📅</span>Planning</button>
+    <button onclick="crmTab('leads')" id="ctab-leads"><span class="ic">👥</span>Leads</button>
+    <button onclick="crmTab('argent')" id="ctab-argent"><span class="ic">💶</span>Argent</button>
+    <button onclick="crmTab('depenses')" id="ctab-depenses"><span class="ic">🧾</span>Dépenses</button>
+  </div>
+
+  <div class="cw">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page on" id="crm-tab-dash">
+      <div class="kgrid" id="dash-kpis" style="margin-bottom:14px;"></div>
+      <div class="card">
+        <h3 class="card-t">📅 Prochains chantiers</h3>
+        <div id="dash-chantiers"></div>
+      </div>
+      <div class="card">
+        <h3 class="card-t">👥 Leads à suivre</h3>
+        <div id="dash-leads"></div>
+      </div>
+    </div>
+
+    <!-- ══ PLANNING ══ -->
+    <div class="page" id="crm-tab-planning">
+      <div class="card" style="background:linear-gradient(135deg,#0a1628,#19293d);color:#fff;border:none;">
+        <h3 class="card-t" style="color:#fff;">📲 Synchroniser mon iPhone</h3>
+        <p style="font-size:13px;color:rgba(255,255,255,.7);margin:0 0 12px;line-height:1.5;">Ajoutez ce calendrier une fois. Chaque nouveau chantier apparaît automatiquement.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="ouvrirAbonnement()" class="btn btn-g">📅 Ajouter à mon iPhone</button>
+          <button onclick="copierLienCalendrier()" class="btn btn-o" style="background:rgba(255,255,255,.12);color:#fff;border:none;">📋 Copier le lien</button>
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <a href="https://borneirve.github.io/irve-studio/configurateur.html#admin" style="background:var(--green);color:var(--ink);padding:7px 14px;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;">⚙️ Catalogue & Tarifs</a>
-        <a href="https://borneirve.github.io/irve-studio/" style="background:rgba(255,255,255,.1);color:white;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">🏠 Accueil</a>
-        <button onclick="closeCRM()" style="background:rgba(255,255,255,.1);color:white;border:none;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">✕ Fermer</button>
+      <div class="card">
+        <h3 class="card-t">➕ Planifier une installation</h3>
+        <div class="field"><label class="fl">Lier à un lead</label><select id="pl-lead" onchange="remplirDepuisLead()"><option value="">— Saisie manuelle —</option></select></div>
+        <div class="g2"><div class="field"><label class="fl">Client</label><input type="text" id="pl-nom" placeholder="M. Dupont"></div><div class="field"><label class="fl">Téléphone</label><input type="tel" id="pl-tel" placeholder="06..."></div></div>
+        <div class="field"><label class="fl">Adresse complète</label><input type="text" id="pl-adresse" placeholder="12 rue... 75001 Paris"></div>
+        <div class="g2"><div class="field"><label class="fl">Borne à poser</label><input type="text" id="pl-borne" placeholder="Schneider 7kW"></div><div class="field"><label class="fl">Montant TTC (€)</label><input type="text" id="pl-montant" placeholder="1980"></div></div>
+        <div class="field"><label class="fl">Travaux à réaliser</label><textarea id="pl-travaux" placeholder="Pose + tableau + 15m câble..." style="min-height:54px;"></textarea></div>
+        <div class="g3"><div class="field"><label class="fl">Date</label><input type="date" id="pl-date"></div><div class="field"><label class="fl">Heure</label><input type="time" id="pl-heure" value="09:00"></div><div class="field"><label class="fl">Durée (h)</label><input type="number" id="pl-duree" value="4" min="1" max="12"></div></div>
+        <button onclick="ajouterInstallation()" class="btn btn-g" style="width:100%;">✅ Planifier</button>
       </div>
+      <div class="card"><h3 class="card-t">🗓️ Installations</h3><div id="pl-liste"></div></div>
     </div>
 
-    <!-- Onglets principaux -->
-    <div style="display:flex;gap:0;background:white;border-radius:10px;overflow:hidden;border:1px solid #dce8f0;margin-bottom:20px;">
-      <button onclick="crmTab('leads')" id="ctab-leads" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:var(--ink);color:white;border-right:1px solid #dce8f0;">📋 Leads</button>
-      <button onclick="crmTab('finance')" id="ctab-finance" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:white;color:#6b8299;border-right:1px solid #dce8f0;">💰 Finances</button>
-      <button onclick="crmTab('depenses')" id="ctab-depenses" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:white;color:#6b8299;border-right:1px solid #dce8f0;">🧾 Dépenses</button>
-      <button onclick="crmTab('planning')" id="ctab-planning" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:white;color:#6b8299;border-right:1px solid #dce8f0;">📅 Planning</button>
-      <button onclick="crmTab('rapports')" id="ctab-rapports" style="flex:1;padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;cursor:pointer;background:white;color:#6b8299;">📈 Rapports</button>
+    <!-- ══ LEADS ══ -->
+    <div class="page" id="crm-tab-leads">
+      <div class="fscroll" id="lead-filters">
+        <div class="fchip on" onclick="setLeadFilter('',this)">Tous</div>
+        <div class="fchip" onclick="setLeadFilter('nouveau',this)">🔵 Nouveau</div>
+        <div class="fchip" onclick="setLeadFilter('contact',this)">📞 À contacter</div>
+        <div class="fchip" onclick="setLeadFilter('relance',this)">🔄 Relance</div>
+        <div class="fchip" onclick="setLeadFilter('devis',this)">📄 Devis</div>
+        <div class="fchip" onclick="setLeadFilter('signe',this)">✅ Signé</div>
+        <div class="fchip" onclick="setLeadFilter('cloture',this)">🏁 Clôturé</div>
+        <div class="fchip" onclick="setLeadFilter('perdu',this)">❌ Perdu</div>
+      </div>
+      <div class="field"><input type="search" id="crm-search" oninput="renderLeads()" placeholder="🔍 Rechercher un client..."></div>
+      <div id="leads-list"></div>
+      <button onclick="exportLeads()" class="btn btn-o" style="width:100%;margin-top:10px;">⬇ Exporter en CSV</button>
     </div>
 
-    <!-- ══ ONGLET LEADS ══ -->
-    <div id="crm-tab-leads">
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <select id="crm-filter-statut" onchange="renderLeads()" style="padding:8px 12px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          <option value="">Tous les statuts</option>
-          <option value="nouveau">🔵 Nouveau</option>
-          <option value="contact">📞 À contacter</option>
-          <option value="relance">🔄 Relance</option>
-          <option value="devis">📄 Devis envoyé</option>
-          <option value="signe">✅ Signé</option>
-          <option value="cloture">🏁 Clôturé</option>
-          <option value="perdu">❌ Perdu</option>
-        </select>
-        <select id="crm-filter-type" onchange="renderLeads()" style="padding:8px 12px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          <option value="">Tous les profils</option>
-          <option value="particulier">🏠 Particulier</option>
-          <option value="copro">🏢 Copropriété</option>
-          <option value="pro">🏭 Entreprise</option>
-        </select>
-        <input id="crm-search" oninput="renderLeads()" placeholder="🔍 Rechercher..." style="padding:8px 12px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;flex:1;min-width:180px;">
-        <button onclick="exportLeads()" style="background:var(--ink);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">⬇ CSV</button>
+    <!-- ══ ARGENT (TVA + charges + bénéfice) ══ -->
+    <div class="page" id="crm-tab-argent">
+      <div class="fscroll" id="arg-period">
+        <div class="fchip on" onclick="setArgPeriode('mois',this)">Ce mois</div>
+        <div class="fchip" onclick="setArgPeriode('trimestre',this)">Ce trimestre</div>
+        <div class="fchip" onclick="setArgPeriode('annee',this)">Cette année</div>
       </div>
-      <div id="crm-stats" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:16px;"></div>
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;overflow:hidden;">
-        <table style="width:100%;border-collapse:collapse;" id="crm-table">
-          <thead>
-            <tr style="background:var(--ink);color:white;">
-              <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;">Client</th>
-              <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;">Contact</th>
-              <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;">Profil</th>
-              <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;">Devis HT</th>
-              <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;">Encaissé</th>
-              <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;">Date</th>
-              <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;">Statut</th>
-              <th style="padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="crm-tbody"></tbody>
-        </table>
-        <div id="crm-empty" style="display:none;padding:48px;text-align:center;color:#6b8299;">
-          <div style="font-size:36px;margin-bottom:12px;">📭</div>
-          <p style="font-size:15px;font-weight:600;">Aucun lead pour le moment</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══ ONGLET FINANCES ══ -->
-    <div id="crm-tab-finance" style="display:none;">
-      <!-- KPIs -->
-      <div id="fin-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;"></div>
       <!-- TVA -->
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;padding:20px;margin-bottom:20px;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin-bottom:16px;">📋 Tableau TVA</h3>
-        <div id="fin-tva" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;"></div>
-      </div>
-      <!-- Charges sociales -->
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;padding:20px;margin-bottom:20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin:0;">📊 Charges sociales estimées</h3>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <label style="font-size:12px;color:#6b8299;">Taux URSSAF %</label>
-            <input type="number" id="taux-urssaf" value="22" min="0" max="50" style="width:60px;padding:4px 8px;border:1px solid #dce8f0;border-radius:4px;font-size:13px;" oninput="calcObjectif()">
-            <label style="font-size:12px;color:#6b8299;">Retraite %</label>
-            <input type="number" id="taux-retraite" value="8" min="0" max="30" style="width:60px;padding:4px 8px;border:1px solid #dce8f0;border-radius:4px;font-size:13px;" oninput="calcObjectif()">
-          </div>
+      <div class="card" id="arg-tva-card">
+        <h3 class="card-t">🧮 TVA <span id="arg-tva-period" style="font-weight:400;color:#9aa9b8;font-size:12px;"></span></h3>
+        <div id="arg-tva-big" style="text-align:center;padding:8px 0 14px;"></div>
+        <div class="g2">
+          <div class="kpi"><div class="v" id="arg-tva-col" style="color:#0066cc;">—</div><div class="l">Collectée (5,5%)</div></div>
+          <div class="kpi"><div class="v" id="arg-tva-ded" style="color:#00875a;">—</div><div class="l">Déductible (20%)</div></div>
         </div>
-        <div id="fin-charges" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;"></div>
+        <div style="margin-top:10px;padding:11px;background:#f5f8fc;border-radius:9px;font-size:12px;color:#6b8299;line-height:1.5;" id="arg-tva-info"></div>
       </div>
-      <!-- Objectif salaire -->
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;padding:20px;margin-bottom:20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin:0;">🎯 Objectif salaire</h3>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <label style="font-size:12px;color:#6b8299;">Objectif net mensuel</label>
-            <input type="number" id="objectif-salaire" value="1500" min="0" style="width:90px;padding:4px 8px;border:1px solid #dce8f0;border-radius:4px;font-size:13px;" oninput="calcObjectif()">
-            <span style="font-size:12px;color:#6b8299;">€/mois</span>
-          </div>
+      <!-- Charges + bénéfice -->
+      <div class="card">
+        <h3 class="card-t">📊 Charges & bénéfice</h3>
+        <div class="g2" style="margin-bottom:10px;">
+          <div class="field" style="margin:0;"><label class="fl">URSSAF %</label><input type="number" id="taux-urssaf" value="22" oninput="renderArgent()"></div>
+          <div class="field" style="margin:0;"><label class="fl">Retraite %</label><input type="number" id="taux-retraite" value="8" oninput="renderArgent()"></div>
         </div>
-        <div id="fin-objectif" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;"></div>
+        <div class="kgrid" id="arg-kpis"></div>
       </div>
-      <!-- Détail par chantier -->
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;overflow:hidden;">
-        <div style="padding:16px 20px;border-bottom:1px solid #dce8f0;display:flex;justify-content:space-between;align-items:center;">
-          <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin:0;">📑 Détail par chantier (signés + clôturés)</h3>
-          <div style="display:flex;gap:8px;">
-            <input type="date" id="fin-date-from" style="padding:6px 10px;border:1px solid #dce8f0;border-radius:6px;font-size:12px;" oninput="renderFinance()">
-            <span style="line-height:2;color:#6b8299;font-size:12px;">au</span>
-            <input type="date" id="fin-date-to" style="padding:6px 10px;border:1px solid #dce8f0;border-radius:6px;font-size:12px;" oninput="renderFinance()">
-            <button onclick="resetFinDates()" style="background:#f0f4f8;border:1px solid #dce8f0;padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;">Tout</button>
-          </div>
-        </div>
-        <table style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr style="background:#f5f8fc;">
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Client</th>
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Date</th>
-              <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Montant HT</th>
-              <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">TVA 5,5%</th>
-              <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">TTC</th>
-              <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Encaissé</th>
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Statut</th>
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Devis signé</th>
-            </tr>
-          </thead>
-          <tbody id="fin-tbody"></tbody>
-        </table>
+      <!-- Objectif -->
+      <div class="card">
+        <h3 class="card-t">🎯 Objectif salaire</h3>
+        <div class="field"><label class="fl">Objectif net mensuel (€)</label><input type="number" id="objectif-salaire" value="1500" oninput="calcObjectif()"></div>
+        <div id="arg-objectif"></div>
       </div>
+      <button onclick="exporterRapport()" class="btn btn-d" style="width:100%;">⬇️ Télécharger le rapport complet</button>
     </div>
 
-    <!-- ══ ONGLET DÉPENSES ══ -->
-    <div id="crm-tab-depenses" style="display:none;">
-      <!-- Formulaire ajout dépense -->
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;padding:20px;margin-bottom:20px;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin-bottom:16px;">➕ Ajouter une dépense</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div>
-            <label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Catégorie</label>
-            <select id="dep-cat" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-              <option value="bornes">🔌 Bornes & matériel</option>
-              <option value="outillage">🔧 Outillage</option>
-              <option value="consommable">📦 Consommables</option>
-              <option value="carburant">⛽ Carburant</option>
-              <option value="protection">🦺 EPI & protection</option>
-              <option value="sous-traitance">👷 Sous-traitance</option>
-              <option value="admin">📄 Administratif</option>
-              <option value="autre">📁 Autre</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Description</label>
-            <input type="text" id="dep-desc" placeholder="Borne Schneider EVlink..." style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          </div>
-          <div>
-            <label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Montant HT (€)</label>
-            <input type="number" id="dep-ht" placeholder="450.00" step="0.01" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          </div>
-          <div>
-            <label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Date</label>
-            <input type="date" id="dep-date" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div>
-            <label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Fournisseur</label>
-            <input type="text" id="dep-fourn" placeholder="Amazon, Rexel, Total..." style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          </div>
-          <div>
-            <label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">🔗 Lien Google Drive (facture)</label>
-            <input type="url" id="dep-drive" placeholder="https://drive.google.com/file/..." style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          </div>
-        </div>
-        <button onclick="ajouterDepense()" style="background:var(--green);color:var(--ink);border:none;padding:9px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;">✅ Ajouter la dépense</button>
+    <!-- ══ DÉPENSES ══ -->
+    <div class="page" id="crm-tab-depenses">
+      <div class="card">
+        <h3 class="card-t">➕ Nouvelle dépense</h3>
+        <div class="g2"><div class="field"><label class="fl">Catégorie</label><select id="dep-cat"><option value="bornes">🔌 Bornes & matériel</option><option value="outillage">🔧 Outillage</option><option value="consommable">📦 Consommables</option><option value="carburant">⛽ Carburant</option><option value="protection">🦺 EPI</option><option value="sous-traitance">👷 Sous-traitance</option><option value="admin">📄 Administratif</option><option value="autre">📁 Autre</option></select></div><div class="field"><label class="fl">Montant HT (€)</label><input type="number" id="dep-ht" placeholder="450" step="0.01"></div></div>
+        <div class="field"><label class="fl">Description</label><input type="text" id="dep-desc" placeholder="Borne Schneider..."></div>
+        <div class="g2"><div class="field"><label class="fl">Fournisseur</label><input type="text" id="dep-fourn" placeholder="Rexel..."></div><div class="field"><label class="fl">Date</label><input type="date" id="dep-date"></div></div>
+        <div class="field"><label class="fl">🔗 Lien facture (Drive)</label><input type="url" id="dep-drive" placeholder="https://drive..."></div>
+        <button onclick="ajouterDepense()" class="btn btn-g" style="width:100%;">✅ Ajouter</button>
       </div>
-      <!-- Résumé par catégorie -->
-      <div id="dep-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;"></div>
-      <!-- Table dépenses -->
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;overflow:hidden;">
-        <div style="padding:14px 20px;border-bottom:1px solid #dce8f0;display:flex;justify-content:space-between;align-items:center;">
-          <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin:0;">🧾 Historique des dépenses</h3>
-          <select id="dep-filter-cat" onchange="renderDepenses()" style="padding:7px 12px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-            <option value="">Toutes catégories</option>
-            <option value="bornes">Bornes & matériel</option>
-            <option value="outillage">Outillage</option>
-            <option value="consommable">Consommables</option>
-            <option value="carburant">Carburant</option>
-            <option value="protection">EPI & protection</option>
-            <option value="sous-traitance">Sous-traitance</option>
-            <option value="admin">Administratif</option>
-            <option value="autre">Autre</option>
-          </select>
-        </div>
-        <table style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr style="background:#f5f8fc;">
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Date</th>
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Catégorie</th>
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Description</th>
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Fournisseur</th>
-              <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">HT</th>
-              <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">TVA 20%</th>
-              <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">TTC</th>
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;">Facture</th>
-              <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#6b8299;"></th>
-            </tr>
-          </thead>
-          <tbody id="dep-tbody"></tbody>
-        </table>
-        <div id="dep-empty" style="display:none;padding:32px;text-align:center;color:#6b8299;">
-          <div style="font-size:28px;margin-bottom:8px;">🧾</div>
-          <p>Aucune dépense enregistrée</p>
-        </div>
+      <div class="fscroll" id="dep-filters">
+        <div class="fchip on" onclick="setDepFilter('',this)">Toutes</div>
+        <div class="fchip" onclick="setDepFilter('bornes',this)">🔌 Bornes</div>
+        <div class="fchip" onclick="setDepFilter('outillage',this)">🔧 Outillage</div>
+        <div class="fchip" onclick="setDepFilter('consommable',this)">📦 Conso.</div>
+        <div class="fchip" onclick="setDepFilter('carburant',this)">⛽ Carburant</div>
+        <div class="fchip" onclick="setDepFilter('protection',this)">🦺 EPI</div>
+        <div class="fchip" onclick="setDepFilter('sous-traitance',this)">👷 S-traitance</div>
+        <div class="fchip" onclick="setDepFilter('admin',this)">📄 Admin</div>
+        <div class="fchip" onclick="setDepFilter('autre',this)">📁 Autre</div>
       </div>
-    </div>
-
-    <!-- ══ ONGLET PLANNING ══ -->
-    <div id="crm-tab-planning" style="display:none;">
-      <!-- Bandeau abonnement iPhone -->
-      <div style="background:linear-gradient(135deg,#0a1628,#19293d);border-radius:10px;padding:20px;margin-bottom:20px;color:white;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin:0 0 8px;">📲 Synchroniser avec votre iPhone</h3>
-        <p style="font-size:13px;color:rgba(255,255,255,.7);margin:0 0 12px;line-height:1.5;">Ajoutez ce calendrier une seule fois. Votre iPhone se mettra à jour automatiquement à chaque nouvelle installation.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <button onclick="copierLienCalendrier()" style="background:var(--green);color:var(--ink);border:none;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;">📋 Copier le lien d'abonnement</button>
-          <button onclick="ouvrirAbonnement()" style="background:rgba(255,255,255,.15);color:white;border:none;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;">📅 Ajouter à mon iPhone</button>
-        </div>
-        <p style="font-size:11px;color:rgba(255,255,255,.45);margin:10px 0 0;">Sur iPhone : Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un abonnement calendrier › collez le lien</p>
-      </div>
-
-      <!-- Formulaire nouvelle installation -->
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;padding:20px;margin-bottom:20px;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin-bottom:16px;">➕ Planifier une installation</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Client</label><input type="text" id="pl-nom" placeholder="M. Dupont" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
-          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Téléphone</label><input type="tel" id="pl-tel" placeholder="06 12 34 56 78" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
-          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Lier à un lead</label><select id="pl-lead" onchange="remplirDepuisLead()" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"><option value="">— Aucun —</option></select></div>
-        </div>
-        <div style="margin-bottom:12px;"><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Adresse complète</label><input type="text" id="pl-adresse" placeholder="12 rue de la Paix, 75001 Paris" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Borne à poser</label><input type="text" id="pl-borne" placeholder="Schneider EVlink 7kW" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
-          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Montant (€)</label><input type="text" id="pl-montant" placeholder="1980" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
-        </div>
-        <div style="margin-bottom:12px;"><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Travaux à réaliser</label><textarea id="pl-travaux" placeholder="Pose borne + tableau divisionnaire + 15m câble..." style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;min-height:50px;resize:vertical;"></textarea></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Date</label><input type="date" id="pl-date" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
-          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Heure</label><input type="time" id="pl-heure" value="09:00" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
-          <div><label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Durée (h)</label><input type="number" id="pl-duree" value="4" min="1" max="12" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;"></div>
-        </div>
-        <button onclick="ajouterInstallation()" style="background:var(--green);color:var(--ink);border:none;padding:9px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;">✅ Planifier l'installation</button>
-      </div>
-
-      <!-- Liste des installations -->
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;overflow:hidden;">
-        <div style="padding:14px 20px;border-bottom:1px solid #dce8f0;">
-          <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin:0;">🗓️ Installations planifiées</h3>
-        </div>
-        <div id="pl-liste"></div>
-      </div>
-    </div>
-
-    <!-- ══ ONGLET RAPPORTS ══ -->
-    <div id="crm-tab-rapports" style="display:none;">
-      <div style="background:white;border-radius:10px;border:1px solid #dce8f0;padding:24px;margin-bottom:20px;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#0d1b2a;margin-bottom:20px;">📅 Période du rapport</h3>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
-          <button onclick="setPeriode('mois')" id="rp-mois" style="padding:12px;border:2px solid #dce8f0;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;background:white;transition:all .2s;">📅 Ce mois</button>
-          <button onclick="setPeriode('trimestre')" id="rp-trim" style="padding:12px;border:2px solid #dce8f0;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;background:white;transition:all .2s;">📆 Ce trimestre</button>
-          <button onclick="setPeriode('annee')" id="rp-annee" style="padding:12px;border:2px solid #dce8f0;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;background:white;transition:all .2s;">🗓️ Cette année</button>
-          <button onclick="setPeriode('perso')" id="rp-perso" style="padding:12px;border:2px solid #dce8f0;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;background:white;transition:all .2s;">✏️ Personnalisé</button>
-        </div>
-        <div id="rp-perso-dates" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-          <div>
-            <label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Du</label>
-            <input type="date" id="rp-date-from" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          </div>
-          <div>
-            <label style="font-size:12px;color:#6b8299;font-weight:600;display:block;margin-bottom:4px;">Au</label>
-            <input type="date" id="rp-date-to" style="width:100%;padding:8px;border:1px solid #dce8f0;border-radius:6px;font-size:13px;">
-          </div>
-        </div>
-        <!-- Preview rapport -->
-        <div id="rp-preview" style="background:#f5f8fc;border-radius:8px;padding:20px;margin-bottom:20px;"></div>
-        <button onclick="exporterRapport()" style="background:var(--ink);color:white;border:none;padding:12px 28px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;">
-          ⬇️ Télécharger le rapport complet (.zip)
-        </button>
-      </div>
+      <div class="card"><h3 class="card-t">🧾 Historique</h3><div id="dep-list"></div></div>
     </div>
 
   </div>
 </div>
+
+
 <!-- Login CRM -->
 <div id="lead-modal" onclick="if(event.target===this)closeModal()" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
   <div onclick="event.stopPropagation()" style="background:white;border-radius:12px;width:90%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.3);">
@@ -946,686 +841,250 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
   </div>
 </footer>
 <script>
+// ═══════════ CRM LOGIQUE ═══════════
+var CRM_PWD='irve2024';
+var VERCEL_URL='https://vercel-dun-eta-98.vercel.app';
 
+// — API —
+async function apiGetLeads(){var r=await fetch(VERCEL_URL+'/api/get-leads?t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});if(!r.ok)throw new Error('Erreur '+r.status);return (await r.json()).leads||[];}
+async function apiUpdateLead(id,u){await fetch(VERCEL_URL+'/api/get-leads',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify(Object.assign({id:id},u))});}
+async function apiGetDepenses(){var r=await fetch(VERCEL_URL+'/api/get-depenses?t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});if(!r.ok)return [];return (await r.json()).depenses||[];}
+async function apiSaveDepenses(d){var r=await fetch(VERCEL_URL+'/api/save-depenses',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({depenses:d})});if(!r.ok)throw new Error('Erreur '+r.status);}
+async function apiGetPlanning(){var r=await fetch(VERCEL_URL+'/api/planning?t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});if(!r.ok)return [];return (await r.json()).planning||[];}
+async function apiSavePlanning(p){var r=await fetch(VERCEL_URL+'/api/planning',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({planning:p})});if(!r.ok)throw new Error('Erreur '+r.status);}
 
+var STATUTS={nouveau:{l:'Nouveau',c:'#0066cc',b:'#e8f0ff'},contact:{l:'À contacter',c:'#d97706',b:'#fff4e0'},relance:{l:'Relance',c:'#9b59b6',b:'#f5eeff'},devis:{l:'Devis envoyé',c:'#0a1628',b:'#e8ecf0'},signe:{l:'Signé',c:'#00875a',b:'#e8fff4'},cloture:{l:'Clôturé',c:'#155724',b:'#d4edda'},perdu:{l:'Perdu',c:'#dc3545',b:'#ffeaea'}};
+var DEP_CATS={bornes:{l:'Bornes & matériel',i:'🔌'},outillage:{l:'Outillage',i:'🔧'},consommable:{l:'Consommables',i:'📦'},carburant:{l:'Carburant',i:'⛽'},protection:{l:'EPI',i:'🦺'},'sous-traitance':{l:'Sous-traitance',i:'👷'},admin:{l:'Administratif',i:'📄'},autre:{l:'Autre',i:'📁'}};
 
+// — Helpers —
+function fmt(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function fmt2(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function devisHT(l){return (parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.'))||0)/1.055;}
+function encaisse(l){var h=devisHT(l);if(l.statut==='cloture')return h;if(l.statut==='signe')return h*0.3;return 0;}
+function parseDate(s){if(!s)return null;if(s.indexOf('/')>-1){var p=s.split('/');return new Date(p[2],p[1]-1,p[0]);}return new Date(s);}
 
-// -- CRM CONFIG ---------------------------------
-var CRM_PWD = 'irve2024';
-var VERCEL_URL = 'https://vercel-dun-eta-98.vercel.app';
-
-// -- API LEADS ----------------------------------
-async function apiGetLeads() {
-  const r = await fetch(VERCEL_URL + '/api/get-leads?t=' + Date.now(), {
-    headers: { 'Authorization': 'Bearer ' + CRM_PWD }, cache: 'no-store'
+// — Navigation —
+function crmTab(tab){
+  ['dash','planning','leads','argent','depenses'].forEach(function(t){
+    var p=document.getElementById('crm-tab-'+t);if(p)p.classList.toggle('on',t===tab);
+    var b=document.getElementById('ctab-'+t);if(b)b.classList.toggle('on',t===tab);
   });
-  if (!r.ok) throw new Error('Erreur ' + r.status);
-  return (await r.json()).leads || [];
+  if(tab==='dash')renderDash();
+  if(tab==='planning')renderPlanning();
+  if(tab==='leads')renderLeads();
+  if(tab==='argent')renderArgent();
+  if(tab==='depenses')renderDepenses();
 }
-async function apiUpdateLead(id, updates) {
-  await fetch(VERCEL_URL + '/api/get-leads', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + CRM_PWD, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, ...updates })
-  });
+function openCRM(e){if(e&&e.preventDefault)e.preventDefault();if(sessionStorage.getItem('crm_auth')==='1'){showCRM();}else{var l=document.getElementById('crm-login');if(l)l.style.display='flex';}}
+function checkPwd(){var p=document.getElementById('crm-pwd');var er=document.getElementById('crm-pwd-err');if(p&&p.value===CRM_PWD){sessionStorage.setItem('crm_auth','1');p.value='';var l=document.getElementById('crm-login');if(l)l.style.display='none';if(er)er.style.display='none';showCRM();}else{if(er)er.style.display='block';}}
+function showCRM(){var pa=document.getElementById('crm-panel'),o=document.getElementById('crm-overlay');if(pa)pa.style.display='block';if(o)o.style.display='block';document.body.style.overflow='hidden';setTimeout(function(){crmTab('dash');},50);}
+function closeCRM(){var pa=document.getElementById('crm-panel'),o=document.getElementById('crm-overlay');if(pa)pa.style.display='none';if(o)o.style.display='none';document.body.style.overflow='';}
+function closeModal(){var m=document.getElementById('lead-modal');if(m)m.style.display='none';}
+
+// — Calcul financier période —
+function calcPeriode(periode){
+  var now=new Date(),from,to=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
+  if(periode==='mois')from=new Date(now.getFullYear(),now.getMonth(),1);
+  else if(periode==='trimestre'){var q=Math.floor(now.getMonth()/3);from=new Date(now.getFullYear(),q*3,1);to=new Date(now.getFullYear(),q*3+3,0,23,59,59);}
+  else {from=new Date(now.getFullYear(),0,1);to=new Date(now.getFullYear(),11,31,23,59,59);}
+  return {from:from,to:to};
+}
+async function computeFinance(periode){
+  var leads=[];try{leads=await apiGetLeads();}catch(e){}
+  var dep=[];try{dep=await apiGetDepenses();}catch(e){}
+  var pr=calcPeriode(periode);
+  var inP=function(d){var x=parseDate(d);return x&&x>=pr.from&&x<=pr.to;};
+  var fL=leads.filter(function(l){return (l.statut==='signe'||l.statut==='cloture')&&inP(l.date);});
+  var fD=dep.filter(function(d){return inP(d.date);});
+  var caHT=fL.reduce(function(s,l){return s+devisHT(l);},0);
+  var caEnc=fL.reduce(function(s,l){return s+encaisse(l);},0);
+  var depHT=fD.reduce(function(s,d){return s+(parseFloat(d.ht)||0);},0);
+  var tvaCol=caHT*0.055, tvaDed=depHT*0.20, tvaNet=tvaCol-tvaDed;
+  var tUr=parseFloat((document.getElementById('taux-urssaf')||{}).value)||22;
+  var tRet=parseFloat((document.getElementById('taux-retraite')||{}).value)||8;
+  var benBrut=caEnc-depHT;
+  var charges=benBrut>0?benBrut*(tUr+tRet)/100:0;
+  var benNet=benBrut-charges;
+  return {periode:periode,from:pr.from,to:pr.to,leads:leads,dep:dep,fL:fL,fD:fD,caHT:caHT,caEnc:caEnc,depHT:depHT,tvaCol:tvaCol,tvaDed:tvaDed,tvaNet:tvaNet,tUr:tUr,tRet:tRet,benBrut:benBrut,charges:charges,benNet:benNet};
 }
 
-// -- API D PENSES (Upstash via get-leads endpoint r utilis ) ------------
-async function apiGetDepenses() {
-  const r = await fetch(VERCEL_URL + '/api/get-depenses?t=' + Date.now(), {
-    headers: { 'Authorization': 'Bearer ' + CRM_PWD }, cache: 'no-store'
-  });
-  if (!r.ok) throw new Error('Erreur get-depenses: ' + r.status);
-  const json = await r.json();
-  return Array.isArray(json.depenses) ? json.depenses : [];
+// — DASHBOARD —
+async function renderDash(){
+  var f=await computeFinance('mois');
+  // Prochaine déclaration TVA (trimestre suivant, le 12 du mois)
+  var now=new Date();var q=Math.floor(now.getMonth()/3);var nextDecl=new Date(now.getFullYear(),q*3+3,12);
+  document.getElementById('dash-kpis').innerHTML=
+    kpic((Math.abs(f.tvaNet)<0.5?'':(f.tvaNet>=0?'-':'+'))+fmt(Math.abs(f.tvaNet))+'€',f.tvaNet>=0?'TVA à payer (mois)':'Crédit TVA (mois)',Math.abs(f.tvaNet)<0.5?'#6b8299':(f.tvaNet>=0?'#dc3545':'#00875a'))+
+    kpic(fmt(f.benNet)+'€','Bénéfice net (mois)',f.benNet>=0?'#00875a':'#dc3545')+
+    kpic(fmt(f.caEnc)+'€','Encaissé (mois)','#0066cc')+
+    kpic(nextDecl.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}),'Prochaine déclaration','#d97706');
+  // Prochains chantiers
+  var pl=[];try{pl=await apiGetPlanning();}catch(e){}
+  var aVenir=pl.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))>=new Date(new Date().toDateString());}).sort(function(a,b){return (a.date+a.heure).localeCompare(b.date+b.heure);}).slice(0,3);
+  var dc=document.getElementById('dash-chantiers');
+  if(!aVenir.length)dc.innerHTML='<p style="color:#9aa9b8;font-size:13px;margin:0;">Aucun chantier planifié. <a onclick="crmTab(\'planning\')" style="color:#0066cc;cursor:pointer;font-weight:700;">Planifier</a></p>';
+  else dc.innerHTML=aVenir.map(function(p){var d=new Date(p.date+'T'+(p.heure||'09:00'));return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:center;"><div><strong style="font-size:14px;color:#0d1b2a;">'+p.nom+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">📍 '+(p.adresse||'-')+'</div></div><span class="chip" style="background:#e8fff4;color:#00875a;">'+d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' · '+(p.heure||'09:00')+'</span></div></div>';}).join('');
+  // Leads à suivre (nouveau, contact, relance)
+  var suivi=f.leads.filter(function(l){return ['nouveau','contact','relance','devis'].indexOf(l.statut)>-1;}).slice(0,4);
+  var dl=document.getElementById('dash-leads');
+  if(!suivi.length)dl.innerHTML='<p style="color:#9aa9b8;font-size:13px;margin:0;">Aucun lead en attente.</p>';
+  else dl.innerHTML=suivi.map(function(l){var s=STATUTS[l.statut]||STATUTS.nouveau;return '<div class="row" onclick="openDetail('+l.id+')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><div><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">'+(l.ville||l.cp||'')+' · '+fmt(devisHT(l))+'€ HT</div></div><span class="chip" style="background:'+s.b+';color:'+s.c+';">'+s.l+'</span></div>';}).join('');
+  document.getElementById('crm-subtitle').textContent='Tableau de bord · '+now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
 }
-async function apiSaveDepenses(depenses) {
-  const r = await fetch(VERCEL_URL + '/api/save-depenses', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + CRM_PWD, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ depenses })
-  });
-  if (!r.ok) throw new Error('Erreur save-depenses: ' + r.status);
-}
+function kpic(v,l,c,s){return '<div class="kpi"><div class="v" style="color:'+(c||'#0d1b2a')+';">'+v+'</div><div class="l">'+l+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'</div>';}
 
-// -- STATUTS ------------------------------------
-var STATUTS = {
-  nouveau:  {label:'Nouveau',      color:'#0066cc', bg:'#e8f0ff'},
-  contact:  {label:'  contacter',  color:'#f5a623', bg:'#fff4e0'},
-  relance:  {label:'Relance',      color:'#9b59b6', bg:'#f5eeff'},
-  devis:    {label:'Devis envoy ', color:'#0a1628', bg:'#e8ecf0'},
-  signe:    {label:'Sign ',        color:'#00875a', bg:'#e8fff4'},
-  cloture:  {label:'Cl tur ',      color:'#155724', bg:'#d4edda'},
-  perdu:    {label:'Perdu',        color:'#dc3545', bg:'#ffeaea'},
-};
-
-var DEP_CATS = {
-  bornes:        {label:'Bornes & mat riel', ico:''},
-  outillage:     {label:'Outillage',         ico:''},
-  consommable:   {label:'Consommables',      ico:''},
-  carburant:     {label:'Carburant',         ico:''},
-  protection:    {label:'EPI & protection',  ico:''},
-  'sous-traitance': {label:'Sous-traitance', ico:''},
-  admin:         {label:'Administratif',     ico:''},
-  autre:         {label:'Autre',             ico:''},
-};
-
-// -- NAVIGATION ONGLETS -------------------------
-window.crmTab = function(tab) {
-  ['leads','finance','depenses','planning','rapports'].forEach(function(t) {
-    var panel = document.getElementById('crm-tab-'+t);
-    if(panel) panel.style.display = t===tab ? 'block' : 'none';
-    var btn = document.getElementById('ctab-'+t);
-    if(btn){ btn.style.background = t===tab ? 'var(--ink)' : 'white'; btn.style.color = t===tab ? 'white' : '#6b8299'; }
-  });
-  if(tab==='finance') renderFinance();
-  if(tab==='depenses') renderDepenses();
-  if(tab==='planning') renderPlanning();
-  if(tab==='rapports') renderRapport();
-}
-
-// ── PLANNING INSTALLATIONS ──────────────────────
-var _planning = [];
-async function apiGetPlanning(){
-  var r = await fetch(VERCEL_URL+'/api/planning?t='+Date.now(), { headers:{'Authorization':'Bearer '+CRM_PWD}, cache:'no-store' });
-  if(!r.ok) return [];
-  return (await r.json()).planning || [];
-}
-async function apiSavePlanning(planning){
-  var r = await fetch(VERCEL_URL+'/api/planning', { method:'POST', headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'}, body:JSON.stringify({planning:planning}) });
-  if(!r.ok) throw new Error('Erreur '+r.status);
-}
-async function renderPlanning(){
-  // Remplir le select des leads
-  try {
-    var leads = await apiGetLeads();
-    var sel = document.getElementById('pl-lead');
-    if(sel && sel.options.length<=1){
-      leads.forEach(function(l){
-        var o=document.createElement('option');
-        o.value=l.id; o.textContent=l.nom+' ('+(l.ville||l.cp||'')+')';
-        o._lead=l; sel.appendChild(o);
-      });
-    }
-  } catch(e){}
-  // Init date
-  var dEl=document.getElementById('pl-date');
-  if(dEl && !dEl.value) dEl.valueAsDate=new Date();
-  // Charger les installations
-  try { _planning = await apiGetPlanning(); } catch(e){ _planning=[]; }
-  var liste=document.getElementById('pl-liste');
-  var aVenir=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))>=new Date(new Date().toDateString());}).sort(function(a,b){return (a.date+a.heure).localeCompare(b.date+b.heure);});
-  var passees=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))<new Date(new Date().toDateString());}).sort(function(a,b){return (b.date+b.heure).localeCompare(a.date+a.heure);});
-  if(!_planning.length){
-    liste.innerHTML='<div style="padding:32px;text-align:center;color:#aaa;"><div style="font-size:28px;margin-bottom:8px;">📅</div>Aucune installation planifiée</div>';
-    return;
+// — ARGENT —
+var _argPeriode='mois';
+function setArgPeriode(p,el){_argPeriode=p;document.querySelectorAll('#arg-period .fchip').forEach(function(c){c.classList.remove('on');});if(el)el.classList.add('on');renderArgent();}
+async function renderArgent(){
+  var f=await computeFinance(_argPeriode);
+  window._finData={caEnc:f.caEnc,depTotal:f.depHT};
+  var plabel=_argPeriode==='mois'?'(ce mois)':_argPeriode==='trimestre'?'(ce trimestre)':'(cette année)';
+  document.getElementById('arg-tva-period').textContent=plabel;
+  // Gros chiffre TVA
+  var big=document.getElementById('arg-tva-big');
+  if(f.tvaNet>=0){
+    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#dc3545;">'+fmt2(f.tvaNet)+' €</div><div style="font-size:13px;color:#6b8299;margin-top:2px;">à reverser à l\'État</div>';
+    document.getElementById('arg-tva-info').innerHTML='Vous collectez '+fmt2(f.tvaCol)+'€ de TVA (5,5%) et déduisez '+fmt2(f.tvaDed)+'€ (20% sur achats). Solde à payer : <strong>'+fmt2(f.tvaNet)+'€</strong>.';
+  }else{
+    big.innerHTML='<div style="font-family:Syne,sans-serif;font-size:34px;font-weight:800;color:#00875a;">+'+fmt2(Math.abs(f.tvaNet))+' €</div><div style="font-size:13px;color:#6b8299;margin-top:2px;">crédit de TVA en votre faveur</div>';
+    document.getElementById('arg-tva-info').innerHTML='Vous déduisez plus de TVA ('+fmt2(f.tvaDed)+'€) que vous n\'en collectez ('+fmt2(f.tvaCol)+'€). L\'État vous doit <strong>'+fmt2(Math.abs(f.tvaNet))+'€</strong> (remboursable ou reportable).';
   }
-  var render=function(arr,past){
-    return arr.map(function(p){
-      var d=new Date(p.date+'T'+(p.heure||'09:00'));
-      var dateStr=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-      return '<div style="padding:14px 20px;border-bottom:1px solid #eee;'+(past?'opacity:.55;':'')+'">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">'
-        +'<div style="flex:1;">'
-        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="background:'+(past?'#e8ecf0':'#e8fff4')+';color:'+(past?'#6b8299':'#00875a')+';padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">'+dateStr+' · '+(p.heure||'09:00')+'</span></div>'
-        +'<strong style="font-size:14px;color:#0d1b2a;">'+p.nom+'</strong>'
-        +'<div style="font-size:12px;color:#555;margin-top:3px;">📍 '+(p.adresse||'-')+'</div>'
-        +'<div style="font-size:12px;color:#555;">📞 '+(p.tel||'-')+' · 🔌 '+(p.borne||'-')+'</div>'
-        +(p.travaux?'<div style="font-size:12px;color:#888;margin-top:3px;">🔧 '+p.travaux+'</div>':'')
-        +(p.montant?'<div style="font-size:12px;color:#00875a;font-weight:700;margin-top:3px;">'+p.montant+' € TTC</div>':'')
-        +'</div>'
-        +'<button onclick="supprimerInstallation(\''+p.id+'\')" style="background:#ffeaea;color:#dc3545;border:none;padding:5px 9px;border-radius:5px;font-size:11px;cursor:pointer;">🗑</button>'
-        +'</div></div>';
-    }).join('');
-  };
-  var html='';
-  if(aVenir.length) html+='<div style="padding:8px 20px;background:#f5f8fc;font-size:11px;font-weight:700;color:#6b8299;text-transform:uppercase;">À venir ('+aVenir.length+')</div>'+render(aVenir,false);
-  if(passees.length) html+='<div style="padding:8px 20px;background:#f5f8fc;font-size:11px;font-weight:700;color:#6b8299;text-transform:uppercase;">Passées ('+passees.length+')</div>'+render(passees,true);
-  liste.innerHTML=html;
+  document.getElementById('arg-tva-col').textContent=fmt(f.tvaCol)+'€';
+  document.getElementById('arg-tva-ded').textContent=fmt(f.tvaDed)+'€';
+  // KPIs charges/bénéfice
+  document.getElementById('arg-kpis').innerHTML=
+    kpic(fmt(f.caEnc)+'€','Encaissé','#0066cc')+
+    kpic(fmt(f.depHT)+'€','Dépenses HT','#dc3545')+
+    kpic(fmt(f.charges)+'€','Charges à provisionner','#d97706','URSSAF + retraite')+
+    kpic(fmt(f.benNet)+'€','Bénéfice net',f.benNet>=0?'#00875a':'#dc3545');
+  calcObjectif();
 }
-function remplirDepuisLead(){
-  var sel=document.getElementById('pl-lead');
-  var opt=sel.options[sel.selectedIndex];
-  if(opt && opt._lead){
-    var l=opt._lead;
-    document.getElementById('pl-nom').value=l.nom||'';
-    document.getElementById('pl-tel').value=l.tel||'';
-    document.getElementById('pl-adresse').value=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));
-    document.getElementById('pl-borne').value=l.borne||'';
-    document.getElementById('pl-montant').value=(l.devis||'').replace(/\s/g,'');
-  }
-}
-async function ajouterInstallation(){
-  var nom=document.getElementById('pl-nom').value.trim();
-  var date=document.getElementById('pl-date').value;
-  if(!nom||!date){ alert('Nom du client et date requis'); return; }
-  var inst={
-    id:Date.now().toString(),
-    nom:nom,
-    tel:document.getElementById('pl-tel').value.trim(),
-    adresse:document.getElementById('pl-adresse').value.trim(),
-    borne:document.getElementById('pl-borne').value.trim(),
-    montant:document.getElementById('pl-montant').value.trim(),
-    travaux:document.getElementById('pl-travaux').value.trim(),
-    date:date,
-    heure:document.getElementById('pl-heure').value||'09:00',
-    duree:document.getElementById('pl-duree').value||'4',
-  };
-  try { _planning=await apiGetPlanning(); } catch(e){ _planning=[]; }
-  _planning.push(inst);
-  try {
-    await apiSavePlanning(_planning);
-    ['pl-nom','pl-tel','pl-adresse','pl-borne','pl-montant','pl-travaux'].forEach(function(id){document.getElementById(id).value='';});
-    document.getElementById('pl-lead').selectedIndex=0;
-    renderPlanning();
-    alert('Installation planifiée ! Elle apparaîtra automatiquement sur votre iPhone.');
-  } catch(e){ alert('Erreur: '+e.message); }
-}
-async function supprimerInstallation(id){
-  if(!confirm('Supprimer cette installation ?')) return;
-  _planning=_planning.filter(function(p){return p.id!==id;});
-  try { await apiSavePlanning(_planning); renderPlanning(); } catch(e){ alert('Erreur: '+e.message); }
-}
-function lienCalendrier(){
-  return VERCEL_URL+'/api/calendar.ics';
-}
-function copierLienCalendrier(){
-  var lien=VERCEL_URL+'/api/calendar';
-  navigator.clipboard.writeText(lien).then(function(){ alert('Lien copié !\n\n'+lien+'\n\nCollez-le dans Réglages › Calendrier › Ajouter un abonnement'); }).catch(function(){ prompt('Copiez ce lien:', lien); });
-}
-function ouvrirAbonnement(){
-  // webcal:// force l'ouverture dans l'app Calendrier iOS
-  var lien=VERCEL_URL.replace('https://','webcal://')+'/api/calendar';
-  window.location.href=lien;
+function calcObjectif(){
+  if(!window._finData)window._finData={caEnc:0,depTotal:0};
+  var caEnc=window._finData.caEnc||0,depTotal=window._finData.depTotal||0;
+  var tUr=parseFloat((document.getElementById('taux-urssaf')||{}).value)||22;
+  var tRet=parseFloat((document.getElementById('taux-retraite')||{}).value)||8;
+  var obj=parseFloat((document.getElementById('objectif-salaire')||{}).value)||1500;
+  var tc=(tUr+tRet)/100;
+  var caNec=obj/(1-tc)+depTotal;
+  var reste=Math.max(0,caNec-caEnc);
+  var av=caNec>0?Math.min(100,Math.round(caEnc/caNec*100)):100;
+  var el=document.getElementById('arg-objectif');if(!el)return;
+  el.innerHTML='<div class="g2" style="margin-bottom:10px;">'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:#0066cc;">'+fmt(caNec)+'€</div><div class="l">CA HT nécessaire</div></div>'+
+    '<div class="kpi"><div class="v" style="font-size:16px;color:'+(reste>0?'#dc3545':'#00875a')+';">'+(reste>0?fmt(reste)+'€':'Atteint ✅')+'</div><div class="l">Reste à facturer</div></div></div>'+
+    '<div style="background:#eef2f6;border-radius:10px;height:10px;overflow:hidden;"><div style="width:'+av+'%;height:100%;background:'+(av>=100?'#00875a':av>=50?'#d97706':'#dc3545')+';transition:width .5s;"></div></div>'+
+    '<div style="text-align:center;font-size:12px;color:#6b8299;margin-top:6px;font-weight:700;">'+av+'% de l\'objectif</div>';
 }
 
-// -- OUVERTURE CRM -----------------------------
-
-
-
-
-
-// -- HELPER FORMAT -----------------------------
-function fmt(v) { return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function kpi(label, val, color, sub) {
-  return '<div style="background:white;border-radius:8px;border:1px solid #dce8f0;padding:16px;text-align:center;">'
-    +'<div style="font-size:20px;font-weight:800;font-family:Syne,sans-serif;color:'+(color||'#0d1b2a')+';">'+val+'</div>'
-    +'<div style="font-size:11px;color:#6b8299;margin-top:3px;">'+label+'</div>'
-    +(sub?'<div style="font-size:10px;color:#aaa;margin-top:2px;">'+sub+'</div>':'')
-    +'</div>';
-}
-
-// -- ONGLET LEADS ------------------------------
-async function renderLeads() {
-  var fStat   = document.getElementById('crm-filter-statut').value;
-  var fType   = document.getElementById('crm-filter-type').value;
-  var fSearch = (document.getElementById('crm-search').value||'').toLowerCase();
-  var leads;
-  try {
-    leads = await apiGetLeads();
-  } catch(e) {
-    document.getElementById('crm-subtitle').textContent = 'Erreur: ' + e.message;
-    document.getElementById('crm-tbody').innerHTML = '<tr><td colspan="8" style="padding:32px;text-align:center;color:#dc3545;"> ' + e.message + '</td></tr>';
-    return;
-  }
-  // Stats
-  var stats={nouveau:0,contact:0,relance:0,devis:0,signe:0,cloture:0,perdu:0};
-  leads.forEach(function(l){if(stats[l.statut]!==undefined) stats[l.statut]++;});
-  document.getElementById('crm-stats').innerHTML = Object.keys(STATUTS).map(function(k){
-    return '<div style="background:'+STATUTS[k].bg+';border:1px solid '+STATUTS[k].color+'33;border-radius:8px;padding:10px;text-align:center;cursor:pointer;" onclick="document.getElementById(\'crm-filter-statut\').value=\''+k+'\';renderLeads()">'
-      +'<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:'+STATUTS[k].color+';">'+stats[k]+'</div>'
-      +'<div style="font-size:10px;color:#666;margin-top:2px;">'+STATUTS[k].label+'</div></div>';
-  }).join('');
-  document.getElementById('crm-subtitle').textContent = leads.length+' lead'+(leads.length>1?'s':'')+' total';
-  // Filtrage
-  var filtered = leads.filter(function(l) {
-    if(fStat && l.statut!==fStat) return false;
-    if(fType && !l.itype.toLowerCase().includes(fType)) return false;
-    if(fSearch && !(l.nom+l.email+(l.cp||'')).toLowerCase().includes(fSearch)) return false;
+// — LEADS —
+var _leadFilter='';
+function setLeadFilter(s,el){_leadFilter=s;document.querySelectorAll('#lead-filters .fchip').forEach(function(c){c.classList.remove('on');});if(el)el.classList.add('on');renderLeads();}
+async function renderLeads(){
+  var leads;try{leads=await apiGetLeads();}catch(e){document.getElementById('leads-list').innerHTML='<p style="color:#dc3545;padding:20px;text-align:center;">Erreur: '+e.message+'</p>';return;}
+  var search=((document.getElementById('crm-search')||{}).value||'').toLowerCase();
+  var f=leads.filter(function(l){
+    if(_leadFilter&&l.statut!==_leadFilter)return false;
+    if(search&&!((l.nom||'')+(l.email||'')+(l.ville||'')).toLowerCase().includes(search))return false;
     return true;
   });
-  var tbody = document.getElementById('crm-tbody');
-  var empty = document.getElementById('crm-empty');
-  if(!filtered.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
-  var devisHT = function(l) {
-    var ttc = parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.')) || 0;
-    return ttc/1.055;
-  };
-  var encaisse = function(l) {
-    var ht = devisHT(l);
-    if(l.statut==='cloture') return ht;
-    if(l.statut==='signe') return ht*0.3;
-    return 0;
-  };
-  tbody.innerHTML = filtered.map(function(l,i) {
-    var s = STATUTS[l.statut]||STATUTS.nouveau;
-    var ht = devisHT(l);
-    var enc = encaisse(l);
-    return '<tr style="border-bottom:1px solid #eee;'+(i%2===0?'background:#fafafa;':'')+'" onmouseover="this.style.background=\'#f0f7ff\'" onmouseout="this.style.background=\''+(i%2===0?'#fafafa':'white')+'\'">'
-      +'<td style="padding:11px 14px;"><strong style="font-size:13px;color:#0d1b2a;">'+l.nom+'</strong><br><span style="font-size:11px;color:#888;">'+(l.ville||l.cp||'-')+'</span></td>'
-      +'<td style="padding:11px 14px;font-size:12px;color:#444;"><div>  '+l.email+'</div><div> '+(l.tel||'-')+'</div></td>'
-      +'<td style="padding:11px 14px;font-size:12px;color:#555;">'+l.itype+'<br><span style="color:#888;">'+l.nb_b+' borne(s)</span></td>'
-      +'<td style="padding:11px 14px;font-size:13px;font-weight:700;color:#0d1b2a;">'+fmt(ht)+' EUR</td>'
-      +'<td style="padding:11px 14px;font-size:13px;font-weight:700;color:'+(enc>0?'#00875a':'#aaa')+';">'+(enc>0?fmt(enc)+' EUR':'-')+'</td>'
-      +'<td style="padding:11px 14px;font-size:12px;color:#888;">'+l.date+'</td>'
-      +'<td style="padding:11px 14px;">'
-        +'<select onchange="updateStatut('+l.id+',this.value)" style="padding:4px 7px;border-radius:5px;border:1px solid '+s.color+';background:'+s.bg+';color:'+s.color+';font-size:12px;font-weight:700;cursor:pointer;">'
-        +Object.keys(STATUTS).map(function(k){ return '<option value="'+k+'"'+(l.statut===k?' selected':'')+'>'+STATUTS[k].label+'</option>'; }).join('')
-        +'</select></td>'
-      +'<td style="padding:11px 14px;display:flex;gap:5px;">'
-        +'<button onclick="openDetail('+l.id+')" style="background:#e8f0ff;color:#0066cc;border:none;padding:4px 9px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;"></button>'
-        +'<button onclick="demanderLienDevis('+l.id+')" style="background:#e8fff4;color:#00875a;border:none;padding:4px 9px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;'+(!l.devis_drive?'':'opacity:.5')+'"></button>'
-        +'<button onclick="deleteLead('+l.id+')" style="background:#ffeaea;color:#dc3545;border:none;padding:4px 9px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;"></button>'
-      +'</td></tr>';
-  }).join('');
+  document.getElementById('crm-subtitle').textContent=leads.length+' lead'+(leads.length>1?'s':'');
+  var list=document.getElementById('leads-list');
+  if(!f.length){list.innerHTML='<div class="card" style="text-align:center;color:#9aa9b8;padding:32px;"><div style="font-size:30px;">📭</div><p>Aucun lead</p></div>';return;}
+  list.innerHTML='<div class="card">'+f.map(function(l){var s=STATUTS[l.statut]||STATUTS.nouveau;var enc=encaisse(l);return '<div class="row" onclick="openDetail('+l.id+')" style="cursor:pointer;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;min-width:0;"><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#6b8299;margin-top:3px;">📞 '+(l.tel||'-')+'</div><div style="font-size:12px;color:#6b8299;">📍 '+(l.ville||l.cp||'-')+'</div><div style="font-size:13px;color:#0d1b2a;font-weight:700;margin-top:4px;">'+fmt(devisHT(l))+'€ HT'+(enc>0?' · <span style="color:#00875a;">'+fmt(enc)+'€ encaissé</span>':'')+'</div></div><span class="chip" style="background:'+s.b+';color:'+s.c+';flex-shrink:0;">'+s.l+'</span></div></div>';}).join('')+'</div>';
 }
-
-window.updateStatut = async function(id, statut) {
-  var s = STATUTS[statut]||STATUTS.nouveau;
-  try { await apiUpdateLead(id, { statut, histo_action: 'Statut -> '+s.label }); renderLeads(); }
-  catch(e) { alert('Erreur: '+e.message); }
-}
-window.deleteLead = async function(id) {
-  if(!confirm('Supprimer ce lead ?')) return;
-  try { await apiUpdateLead(id, { statut: '__delete__' }); renderLeads(); }
-  catch(e) { alert('Erreur: '+e.message); }
-}
-window.demanderLienDevis = async function(id) {
-  var lien = prompt('Coller le lien Google Drive du devis sign :');
-  if(!lien) return;
-  try { await apiUpdateLead(id, { devis_drive: lien, histo_action: ' Devis sign  ajout  (Drive)' }); renderLeads(); }
-  catch(e) { alert('Erreur: '+e.message); }
-}
-window.openDetail = function(id) {
-  apiGetLeads().then(function(leads) {
-    var l = leads.find(function(x){return x.id===id;});
-    if(!l) return;
-    document.getElementById('modal-title').textContent = '  '+l.nom+'   '+l.date;
-    document.getElementById('modal-body').innerHTML =
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">'
-      +'<div><p style="font-size:11px;font-weight:700;color:#0a1628;text-transform:uppercase;margin-bottom:8px;">Coordonn es</p>'
-      +'<p style="font-size:13px;margin-bottom:3px;"><strong>'+l.nom+'</strong></p>'
-      +'<p style="font-size:13px;color:#1a1a1a;margin-bottom:2px;">  '+l.email+'</p>'
-      +'<p style="font-size:13px;color:#1a1a1a;margin-bottom:2px;"> '+(l.tel||'-')+'</p>'
-      +'<p style="font-size:13px;color:#1a1a1a;">  '+(l.adresse||(l.adr&&l.adr!=='-'?l.adr+' ':'')+l.cp+(l.ville&&l.ville!=='-'?' '+l.ville:''))+'</p></div>'
-      +'<div><p style="font-size:11px;font-weight:700;color:#0a1628;text-transform:uppercase;margin-bottom:8px;">Projet</p>'
-      +'<p style="font-size:13px;margin-bottom:2px;">Type : <strong>'+l.itype+'</strong></p>'
-      +'<p style="font-size:13px;margin-bottom:2px;">Borne : '+l.borne+'</p>'
-      +'<p style="font-size:13px;margin-bottom:2px;">Nb bornes : '+l.nb_b+'</p>'
-      +'<p style="font-size:13px;margin-bottom:2px;">Devis TTC : <strong style="color:#00875a;">'+l.devis+' EUR</strong></p>'
-      +'<p style="font-size:13px;">Tarif reco : '+l.tarif+'</p></div></div>'
-      +(l.devis_drive?'<div style="background:#e8fff4;border-left:3px solid #00875a;padding:8px 12px;border-radius:0 6px 6px 0;margin-bottom:12px;font-size:13px;"><a href="'+l.devis_drive+'" target="_blank" style="color:#00875a;font-weight:700;"> Voir le devis sign  (Drive)</a></div>':'')
-      +(l.msg?'<div style="background:#f5f9ff;border-left:3px solid #0066cc;padding:8px 12px;border-radius:0 6px 6px 0;margin-bottom:12px;font-size:13px;color:#1a1a1a;">  '+l.msg+'</div>':'')
-      +'<div style="margin-bottom:12px;">'
-      +'<p style="font-size:11px;font-weight:700;color:#0a1628;text-transform:uppercase;margin-bottom:6px;">Notes</p>'
-      +'<textarea id="note-'+l.id+'" style="width:100%;border:1px solid #dce8f0;border-radius:6px;padding:8px;font-size:13px;resize:vertical;min-height:70px;">'+( l.notes||'')+'</textarea>'
-      +'<button onclick="saveNote('+l.id+')" style="background:#0a1628;color:white;border:none;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;"> Sauvegarder</button></div>'
-      +'<div><p style="font-size:11px;font-weight:700;color:#0a1628;text-transform:uppercase;margin-bottom:6px;">Historique</p>'
-      +'<div style="display:flex;flex-direction:column;gap:5px;">'
-      +(l.histo||[]).map(function(h){ return '<div style="display:flex;gap:8px;font-size:12px;color:#333;"><span style="color:#00875a;flex-shrink:0;font-weight:600;">'+h.date+'</span><span>'+h.action+'</span></div>'; }).join('')
-      +'</div></div>'
-      +'<div style="margin-top:14px;padding-top:14px;border-top:1px solid #eee;display:flex;gap:8px;flex-wrap:wrap;">'
-      +'<button onclick="addHistoNote('+l.id+')" style="background:#f5f9ff;color:#0066cc;border:1px solid #0066cc;padding:6px 12px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;"> Appel</button>'
-      +'<button onclick="addHistoRelance('+l.id+')" style="background:#fff4e0;color:#f5a623;border:1px solid #f5a623;padding:6px 12px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;"> Relance</button>'
-      +'<button onclick="addHistoDevis('+l.id+')" style="background:#e8fff4;color:#00875a;border:1px solid #00875a;padding:6px 12px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;"> Devis envoy </button>'
-      +'<button onclick="updateStatut('+l.id+',\'signe\')" style="background:#d4edda;color:#155724;border:1px solid #155724;padding:6px 12px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;">[OK] Sign </button>'
-      +'<button onclick="updateStatut('+l.id+',\'cloture\')" style="background:#0a1628;color:white;border:none;padding:6px 12px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;"> Cl turer</button>'
-      +'</div>';
+function openDetail(id){
+  apiGetLeads().then(function(leads){
+    var l=leads.find(function(x){return x.id===id;});if(!l)return;
+    document.getElementById('modal-title').textContent='👤 '+l.nom;
+    var adr=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));
+    document.getElementById('modal-body').innerHTML=
+      '<div style="font-size:13px;line-height:1.9;color:#0d1b2a;margin-bottom:14px;">📧 '+l.email+'<br>📞 '+(l.tel||'-')+'<br>📍 '+adr+'<br>🔌 '+(l.borne||'-')+' ('+l.nb_b+' borne)<br>💶 <strong>'+l.devis+'€ TTC</strong></div>'+
+      (l.msg?'<div style="background:#f5f9ff;border-left:3px solid #0066cc;padding:10px;border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px;">💬 '+l.msg+'</div>':'')+
+      '<label class="fl">Notes</label><textarea id="note-'+l.id+'" style="min-height:60px;margin-bottom:8px;">'+(l.notes||'')+'</textarea>'+
+      '<button onclick="saveNote('+l.id+')" class="btn btn-d" style="width:100%;margin-bottom:14px;">💾 Enregistrer la note</button>'+
+      '<label class="fl">Changer le statut</label><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">'+
+      Object.keys(STATUTS).map(function(k){var s=STATUTS[k];return '<button onclick="updateStatut('+l.id+',\''+k+'\')" class="chip" style="background:'+(l.statut===k?s.c:s.b)+';color:'+(l.statut===k?'#fff':s.c)+';border:none;cursor:pointer;padding:8px 12px;">'+s.l+'</button>';}).join('')+'</div>'+
+      '<button onclick="demanderLienDevis('+l.id+')" class="btn btn-o" style="width:100%;margin-top:14px;">📎 '+(l.devis_drive?'Modifier':'Ajouter')+' lien devis signé</button>'+
+      (l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" style="display:block;text-align:center;color:#00875a;font-weight:700;font-size:13px;margin-top:8px;">📎 Voir le devis</a>':'')+
+      '<button onclick="deleteLead('+l.id+')" class="btn" style="width:100%;margin-top:14px;background:#ffeaea;color:#dc3545;">🗑 Supprimer ce lead</button>';
     document.getElementById('lead-modal').style.display='flex';
   });
 }
+async function updateStatut(id,st){try{await apiUpdateLead(id,{statut:st,histo_action:'Statut → '+STATUTS[st].l});closeModal();renderLeads();}catch(e){alert('Erreur: '+e.message);}}
+async function deleteLead(id){if(!confirm('Supprimer ce lead ?'))return;try{await apiUpdateLead(id,{statut:'__delete__'});closeModal();renderLeads();}catch(e){alert('Erreur: '+e.message);}}
+async function saveNote(id){try{await apiUpdateLead(id,{notes:document.getElementById('note-'+id).value,histo_action:'Note modifiée'});alert('Note enregistrée');}catch(e){alert('Erreur: '+e.message);}}
+async function demanderLienDevis(id){var l=prompt('Lien Google Drive du devis signé:');if(!l)return;try{await apiUpdateLead(id,{devis_drive:l,histo_action:'📎 Devis signé ajouté'});openDetail(id);}catch(e){alert('Erreur: '+e.message);}}
+async function exportLeads(){var leads;try{leads=await apiGetLeads();}catch(e){alert(e.message);return;}if(!leads.length){alert('Aucun lead');return;}var csv='Nom,Email,Tel,Ville,Type,Devis TTC,Statut,Date\n';leads.forEach(function(l){csv+=[l.nom,l.email,l.tel||'-',l.ville||'-',l.itype,l.devis,l.statut,l.date].join(',')+'\n';});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='leads-'+new Date().toISOString().slice(0,10)+'.csv';a.click();}
 
-window.saveNote = async function(id){
-  try { await apiUpdateLead(id, { notes: document.getElementById('note-'+id).value, histo_action: 'Note ajout e' }); alert('Sauvegard '); }
-  catch(e) { alert('Erreur: '+e.message); }
+// — DÉPENSES —
+var _depFilter='',_depenses=[];
+function setDepFilter(c,el){_depFilter=c;document.querySelectorAll('#dep-filters .fchip').forEach(function(x){x.classList.remove('on');});if(el)el.classList.add('on');renderDepenses(false);}
+async function renderDepenses(reload){
+  if(reload!==false){try{_depenses=await apiGetDepenses();}catch(e){_depenses=[];}}
+  var de=document.getElementById('dep-date');if(de&&!de.value)de.valueAsDate=new Date();
+  var f=_depFilter?_depenses.filter(function(d){return d.cat===_depFilter;}):_depenses;
+  var list=document.getElementById('dep-list');
+  if(!f.length){list.innerHTML='<p style="color:#9aa9b8;text-align:center;padding:20px;font-size:13px;">Aucune dépense</p>';return;}
+  list.innerHTML=f.map(function(d){var ht=parseFloat(d.ht)||0,cat=DEP_CATS[d.cat]||{l:d.cat,i:'📁'};return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><strong style="font-size:14px;color:#0d1b2a;">'+d.desc+'</strong><div style="font-size:12px;color:#6b8299;margin-top:2px;">'+cat.i+' '+cat.l+' · '+d.date+(d.fourn?' · '+d.fourn:'')+'</div>'+(d.drive?'<a href="'+d.drive+'" target="_blank" style="font-size:12px;color:#00875a;font-weight:700;">📎 Facture</a>':'')+'</div><div style="text-align:right;flex-shrink:0;"><div style="font-size:14px;font-weight:700;color:#dc3545;">'+fmt2(ht)+'€</div><div style="font-size:10px;color:#9aa9b8;">+'+fmt2(ht*0.2)+'€ TVA</div><button onclick="supprimerDepense(\''+d.id+'\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:14px;margin-top:2px;">🗑</button></div></div></div>';}).join('');
 }
-window.addHistoAction = async function(id, action, statut){
-  var updates = { histo_action: action };
-  if(statut) updates.statut = statut;
-  try { await apiUpdateLead(id, updates); openDetail(id); renderLeads(); }
-  catch(e) { alert('Erreur: '+e.message); }
+async function ajouterDepense(){
+  var ht=parseFloat(document.getElementById('dep-ht').value),desc=document.getElementById('dep-desc').value.trim();
+  if(!desc||!ht||ht<=0){alert('Description et montant requis');return;}
+  var dv=document.getElementById('dep-date').value;
+  var dep={id:Date.now().toString(),cat:document.getElementById('dep-cat').value,desc:desc,ht:ht,date:dv?dv.split('-').reverse().join('/'):new Date().toLocaleDateString('fr-FR'),fourn:document.getElementById('dep-fourn').value.trim(),drive:document.getElementById('dep-drive').value.trim()};
+  var ex=[];try{ex=await apiGetDepenses();}catch(e){}
+  ex.unshift(dep);
+  try{await apiSaveDepenses(ex);_depenses=ex;['dep-ht','dep-desc','dep-fourn','dep-drive'].forEach(function(i){document.getElementById(i).value='';});renderDepenses(false);}catch(e){alert('Erreur: '+e.message);}
 }
-window.addHistoNote = function(id){ addHistoAction(id,' Appel effectu ','contact'); }
-window.addHistoRelance = function(id){ addHistoAction(id,' Relance planifi e','relance'); }
-window.addHistoDevis = function(id){ addHistoAction(id,' Devis envoy ','devis'); }
+async function supprimerDepense(id){if(!confirm('Supprimer ?'))return;try{var ex=await apiGetDepenses();ex=ex.filter(function(d){return d.id!==id;});await apiSaveDepenses(ex);_depenses=ex;renderDepenses(false);}catch(e){alert('Erreur: '+e.message);}}
 
-window.exportLeads = async function(){
-  var leads; try { leads = await apiGetLeads(); } catch(e){ alert('Erreur: '+e.message); return; }
-  if(!leads.length){ alert('Aucun lead'); return; }
-  var csv = 'Nom,Email,Tel,Adresse,CP,Ville,Type,Borne,Devis TTC,Statut,Date,Notes\n';
-  leads.forEach(function(l){
-    csv += [l.nom,l.email,l.tel||'-',l.adr||'-',l.cp||'-',l.ville||'-',l.itype,l.borne,l.devis,l.statut,l.date,'"'+(l.notes||'').replace(/"/g,"'")+'"'].join(',')+'\n';
-  });
-  var a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
-  a.download='leads-'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
+// — PLANNING —
+var _planning=[];
+async function renderPlanning(){
+  try{var leads=await apiGetLeads();var sel=document.getElementById('pl-lead');if(sel&&sel.options.length<=1){leads.forEach(function(l){var o=document.createElement('option');o.value=l.id;o.textContent=l.nom+' ('+(l.ville||l.cp||'')+')';o._lead=l;sel.appendChild(o);});}}catch(e){}
+  var de=document.getElementById('pl-date');if(de&&!de.value)de.valueAsDate=new Date();
+  try{_planning=await apiGetPlanning();}catch(e){_planning=[];}
+  var liste=document.getElementById('pl-liste');
+  var aVenir=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))>=new Date(new Date().toDateString());}).sort(function(a,b){return (a.date+a.heure).localeCompare(b.date+b.heure);});
+  var passees=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))<new Date(new Date().toDateString());}).sort(function(a,b){return (b.date+b.heure).localeCompare(a.date+a.heure);});
+  if(!_planning.length){liste.innerHTML='<p style="color:#9aa9b8;text-align:center;padding:20px;font-size:13px;">Aucune installation planifiée</p>';return;}
+  var rd=function(arr,past){return arr.map(function(p){var d=new Date(p.date+'T'+(p.heure||'09:00'));return '<div class="row" style="'+(past?'opacity:.55;':'')+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;"><span class="chip" style="background:'+(past?'#eef2f6':'#e8fff4')+';color:'+(past?'#6b8299':'#00875a')+';margin-bottom:5px;">'+d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' · '+(p.heure||'09:00')+'</span><div><strong style="font-size:14px;color:#0d1b2a;">'+p.nom+'</strong></div><div style="font-size:12px;color:#6b8299;margin-top:2px;">📍 '+(p.adresse||'-')+'</div><div style="font-size:12px;color:#6b8299;">📞 '+(p.tel||'-')+' · 🔌 '+(p.borne||'-')+'</div>'+(p.travaux?'<div style="font-size:12px;color:#9aa9b8;margin-top:2px;">🔧 '+p.travaux+'</div>':'')+(p.montant?'<div style="font-size:13px;color:#00875a;font-weight:700;margin-top:2px;">'+p.montant+'€ TTC</div>':'')+'</div><button onclick="supprimerInstallation(\''+p.id+'\')" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:15px;">🗑</button></div></div>';}).join('');};
+  var h='';
+  if(aVenir.length)h+='<div style="font-size:11px;font-weight:700;color:#6b8299;text-transform:uppercase;margin:4px 0 6px;">À venir ('+aVenir.length+')</div>'+rd(aVenir,false);
+  if(passees.length)h+='<div style="font-size:11px;font-weight:700;color:#6b8299;text-transform:uppercase;margin:14px 0 6px;">Passées ('+passees.length+')</div>'+rd(passees,true);
+  liste.innerHTML=h;
 }
-
-// -- ONGLET FINANCES ---------------------------
-window.renderFinance = async function() {
-  var leads; try { leads = await apiGetLeads(); } catch(e){ return; }
-  var now = new Date();
-  var fromEl = document.getElementById('fin-date-from');
-  var toEl   = document.getElementById('fin-date-to');
-  // Initialiser sur le mois en cours si vide
-  if(fromEl && !fromEl.value){
-    fromEl.value = now.getFullYear()+'-'+(String(now.getMonth()+1).padStart(2,'0'))+'-01';
-  }
-  if(toEl && !toEl.value){
-    var lastDay = new Date(now.getFullYear(), now.getMonth()+1, 0);
-    toEl.value = lastDay.getFullYear()+'-'+(String(lastDay.getMonth()+1).padStart(2,'0'))+'-'+(String(lastDay.getDate()).padStart(2,'0'));
-  }
-  var filtered = leads.filter(function(l){
-    if(l.statut!=='signe'&&l.statut!=='cloture') return false;
-    if(fromEl&&fromEl.value){ var d=new Date(l.date.split('/').reverse().join('-')); if(d<new Date(fromEl.value)) return false; }
-    if(toEl&&toEl.value){ var d2=new Date(l.date.split('/').reverse().join('-')); if(d2>new Date(toEl.value)) return false; }
-    return true;
-  });
-  var devisHT = function(l){ return (parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.')) || 0)/1.055; };
-  var encaisse = function(l){ var ht=devisHT(l); return l.statut==='cloture'?ht:ht*0.3; };
-  var caTotal=0, caEncaisse=0, tvaCol=0;
-  filtered.forEach(function(l){ caTotal+=devisHT(l); caEncaisse+=encaisse(l); tvaCol+=devisHT(l)*0.055; });
-  var dep=[]; try { dep=await apiGetDepenses(); } catch(e){}
-  var depTotal=dep.reduce(function(s,d){return s+(parseFloat(d.ht)||0);},0);
-  var tvaDed=depTotal*0.20;
-  var tvaAverser=Math.max(0,tvaCol-tvaDed);
-  var benBrut=caEncaisse-depTotal;
-  var tauxUr=parseFloat(document.getElementById('taux-urssaf').value)||22;
-  var tauxRet=parseFloat(document.getElementById('taux-retraite').value)||8;
-  var charges=benBrut>0?benBrut*(tauxUr+tauxRet)/100:0;
-  var benNet=benBrut-charges;
-  document.getElementById('fin-kpis').innerHTML =
-    kpi('CA total (devis HT)', fmt(caTotal)+' EUR', '#0066cc', filtered.length+' chantiers')+
-    kpi('Encaiss  (30%/100%)', fmt(caEncaisse)+' EUR', '#00875a')+
-    kpi('D penses HT', fmt(depTotal)+' EUR', '#dc3545')+
-    kpi('B n fice net estim ', fmt(benNet)+' EUR', benNet>=0?'#00875a':'#dc3545', 'apr s charges');
-  document.getElementById('fin-tva').innerHTML =
-    kpi('TVA collect e (5,5%)', fmt(tvaCol)+' EUR', '#0066cc')+
-    kpi('TVA d ductible (20%)', fmt(tvaDed)+' EUR', '#00875a')+
-    kpi('TVA   reverser', fmt(tvaAverser)+' EUR', tvaAverser>0?'#dc3545':'#00875a');
-  document.getElementById('fin-charges').innerHTML =
-    kpi('B n fice brut', fmt(benBrut)+' EUR', '#0066cc')+
-    kpi('URSSAF ('+tauxUr+'%)', fmt(benBrut>0?benBrut*tauxUr/100:0)+' EUR', '#f5a623')+
-    kpi('Retraite ('+tauxRet+'%)', fmt(benBrut>0?benBrut*tauxRet/100:0)+' EUR', '#9b59b6')+
-    kpi('B n fice net', fmt(benNet)+' EUR', benNet>=0?'#00875a':'#dc3545');
-
-  // Stocker les donn es pour recalcul objectif
-  window._finData = { caEnc: caEnc, depTotal: depTotal };
-  calcObjectif();
-  document.getElementById('fin-tbody').innerHTML = filtered.length ? filtered.map(function(l,i){
-    var ht=devisHT(l),tva=ht*0.055,ttc=ht+tva,enc=encaisse(l);
-    return '<tr style="border-bottom:1px solid #eee;'+(i%2===0?'background:#fafafa;':'')+'">'
-      +'<td style="padding:10px 14px;font-size:13px;color:#1a1a1a;"><strong>'+l.nom+'</strong></td>'
-      +'<td style="padding:10px 14px;font-size:12px;color:#555;">'+l.date+'</td>'
-      +'<td style="padding:10px 14px;font-size:13px;text-align:right;color:#1a1a1a;">'+fmt(ht)+' EUR</td>'
-      +'<td style="padding:10px 14px;font-size:13px;text-align:right;color:#555;">'+fmt(tva)+' EUR</td>'
-      +'<td style="padding:10px 14px;font-size:13px;text-align:right;color:#1a1a1a;">'+fmt(ttc)+' EUR</td>'
-      +'<td style="padding:10px 14px;font-size:13px;text-align:right;font-weight:700;color:#00875a;">'+fmt(enc)+' EUR</td>'
-      +'<td style="padding:10px 14px;"><span style="background:'+STATUTS[l.statut].bg+';color:'+STATUTS[l.statut].color+';padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700;">'+STATUTS[l.statut].label+'</span></td>'
-      +'<td style="padding:10px 14px;">'+(l.devis_drive?'<a href="'+l.devis_drive+'" target="_blank" style="color:#00875a;font-size:12px;font-weight:700;"> Drive</a>':'<button onclick="demanderLienDevis('+l.id+')" style="background:#f0f4f8;border:1px solid #dce8f0;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;">+ Ajouter</button>')+'</td>'
-      +'</tr>';
-  }).join('') : '<tr><td colspan="8" style="padding:24px;text-align:center;color:#aaa;">Aucun chantier sign  ou cl tur </td></tr>';
+function remplirDepuisLead(){var sel=document.getElementById('pl-lead');var o=sel.options[sel.selectedIndex];if(o&&o._lead){var l=o._lead;document.getElementById('pl-nom').value=l.nom||'';document.getElementById('pl-tel').value=l.tel||'';document.getElementById('pl-adresse').value=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));document.getElementById('pl-borne').value=l.borne||'';document.getElementById('pl-montant').value=(l.devis||'').replace(/\s/g,'');}}
+async function ajouterInstallation(){
+  var nom=document.getElementById('pl-nom').value.trim(),date=document.getElementById('pl-date').value;
+  if(!nom||!date){alert('Nom et date requis');return;}
+  var inst={id:Date.now().toString(),nom:nom,tel:document.getElementById('pl-tel').value.trim(),adresse:document.getElementById('pl-adresse').value.trim(),borne:document.getElementById('pl-borne').value.trim(),montant:document.getElementById('pl-montant').value.trim(),travaux:document.getElementById('pl-travaux').value.trim(),date:date,heure:document.getElementById('pl-heure').value||'09:00',duree:document.getElementById('pl-duree').value||'4'};
+  try{_planning=await apiGetPlanning();}catch(e){_planning=[];}
+  _planning.push(inst);
+  try{await apiSavePlanning(_planning);['pl-nom','pl-tel','pl-adresse','pl-borne','pl-montant','pl-travaux'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('pl-lead').selectedIndex=0;renderPlanning();alert('Installation planifiée ! Elle apparaîtra sur votre iPhone.');}catch(e){alert('Erreur: '+e.message);}
 }
-window.calcObjectif = function(){
-  if(!window._finData) window._finData = { caEnc: 0, depTotal: 0 };
-  var caEnc    = window._finData.caEnc    || 0;
-  var depTotal = window._finData.depTotal || 0;
-  var tauxUr   = parseFloat(document.getElementById('taux-urssaf')   ? document.getElementById('taux-urssaf').value   : 22) || 22;
-  var tauxRet  = parseFloat(document.getElementById('taux-retraite') ? document.getElementById('taux-retraite').value : 8)  || 8;
-  var objEl    = document.getElementById('objectif-salaire');
-  var objMensuel = parseFloat(objEl ? objEl.value : 1500) || 1500;
-  var tauxCharges = (tauxUr + tauxRet) / 100;
-  var caNecess  = objMensuel / (1 - tauxCharges) + depTotal;
-  var caRestant = Math.max(0, caNecess - caEnc);
-  var avancement = caNecess > 0 ? Math.min(100, Math.round(caEnc / caNecess * 100)) : 100;
-  var el = document.getElementById('fin-objectif');
-  if(!el) return;
-  var pct = avancement + "% de l'objectif";
-  var reste = caRestant > 0 ? fmt(caRestant) + ' EUR' : 'Objectif atteint';
-  var resteSub = caRestant > 0 ? Math.ceil(caRestant / 500) + ' devis ~500 EUR HT' : '';
-  var objHtml = kpi('CA HT necessaire', fmt(caNecess) + ' EUR', '#0066cc', 'pour ' + fmt(objMensuel) + ' EUR net') +
-    kpi('Deja encaisse', fmt(caEnc) + ' EUR', caEnc >= caNecess ? '#00875a' : '#f5a623', pct) +
-    kpi('Reste a facturer', reste, caRestant > 0 ? '#dc3545' : '#00875a', resteSub);
-  objHtml += '<div style="grid-column:1/-1;background:#f0f4f8;border-radius:8px;overflow:hidden;height:8px;">' +
-    '<div style="width:' + avancement + '%;height:100%;background:' + (avancement >= 100 ? '#00875a' : avancement >= 50 ? '#f5a623' : '#dc3545') + ';transition:width .5s;border-radius:8px;"></div></div>';
-  el.innerHTML = objHtml;
+async function supprimerInstallation(id){if(!confirm('Supprimer ?'))return;_planning=_planning.filter(function(p){return p.id!==id;});try{await apiSavePlanning(_planning);renderPlanning();}catch(e){alert('Erreur: '+e.message);}}
+function copierLienCalendrier(){var l=VERCEL_URL+'/api/calendar';if(navigator.clipboard)navigator.clipboard.writeText(l).then(function(){alert('Lien copié !\n\n'+l);}).catch(function(){prompt('Copiez:',l);});else prompt('Copiez:',l);}
+function ouvrirAbonnement(){window.location.href=VERCEL_URL.replace('https://','webcal://')+'/api/calendar';}
+
+// — RAPPORT —
+async function exporterRapport(){
+  var f=await computeFinance(_argPeriode);
+  var pl=_argPeriode==='mois'?'Mois en cours':_argPeriode==='trimestre'?'Trimestre':'Année';
+  var csv='RAPPORT FINANCIER - '+pl+'\n';
+  csv+='Du,'+f.from.toLocaleDateString('fr-FR')+'\nAu,'+f.to.toLocaleDateString('fr-FR')+'\n\n';
+  csv+='REVENUS\nCA HT facturé,'+fmt2(f.caHT)+'\nEncaissé,'+fmt2(f.caEnc)+'\n\n';
+  csv+='TVA\nCollectée 5.5%,'+fmt2(f.tvaCol)+'\nDéductible 20%,'+fmt2(f.tvaDed)+'\n'+(f.tvaNet>=0?'À reverser':'Crédit TVA')+','+fmt2(Math.abs(f.tvaNet))+'\n\n';
+  csv+='CHARGES\nDépenses HT,'+fmt2(f.depHT)+'\nURSSAF '+f.tUr+'%,'+fmt2(f.benBrut>0?f.benBrut*f.tUr/100:0)+'\nRetraite '+f.tRet+'%,'+fmt2(f.benBrut>0?f.benBrut*f.tRet/100:0)+'\n\n';
+  csv+='RESULTAT\nBénéfice brut,'+fmt2(f.benBrut)+'\nCharges,'+fmt2(f.charges)+'\nBénéfice net,'+fmt2(f.benNet)+'\n\n';
+  csv+='CHANTIERS\nClient,Date,Devis HT,Encaissé,Statut,Lien devis\n';
+  f.fL.forEach(function(l){csv+=[l.nom,l.date,fmt2(devisHT(l)),fmt2(encaisse(l)),l.statut,l.devis_drive||''].join(',')+'\n';});
+  csv+='\nDEPENSES\nDate,Catégorie,Description,Fournisseur,HT,Facture\n';
+  f.fD.forEach(function(d){csv+=[d.date,d.cat,d.desc,d.fourn||'',fmt2(d.ht),d.drive||''].join(',')+'\n';});
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='rapport-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
 }
-
-window.resetFinDates = function(){ document.getElementById('fin-date-from').value=''; document.getElementById('fin-date-to').value=''; renderFinance(); }
-
-// -- ONGLET D PENSES ---------------------------
-var _depenses = [];
-window.renderDepenses = async function(forceReload) {
-  if(forceReload !== false) {
-    try { _depenses = await apiGetDepenses(); } catch(e){ console.error('renderDepenses:', e); _depenses=[]; }
-  }
-  // Init date par d faut
-  var depDateEl = document.getElementById('dep-date');
-  if(depDateEl && !depDateEl.value) depDateEl.valueAsDate = new Date();
-  var fCat = document.getElementById('dep-filter-cat').value;
-  var filtered = fCat ? _depenses.filter(function(d){return d.cat===fCat;}) : _depenses;
-  // KPIs par cat gorie
-  var totByCat = {};
-  _depenses.forEach(function(d){ totByCat[d.cat]=(totByCat[d.cat]||0)+(parseFloat(d.ht)||0); });
-  var kpisHtml = Object.keys(DEP_CATS).map(function(k){
-    var v=totByCat[k]||0;
-    return v>0?'<div style="background:white;border-radius:8px;border:1px solid #dce8f0;padding:12px;text-align:center;">'
-      +'<div style="font-size:16px;font-weight:800;font-family:Syne,sans-serif;color:#dc3545;">'+fmt(v)+' EUR</div>'
-      +'<div style="font-size:11px;color:#6b8299;margin-top:2px;">'+DEP_CATS[k].ico+' '+DEP_CATS[k].label+'</div></div>':'';
-  }).join('');
-  document.getElementById('dep-kpis').innerHTML = kpisHtml ||
-    '<div style="grid-column:1/-1;text-align:center;color:#aaa;padding:8px;">Aucune d pense enregistr e</div>';
-  var tbody = document.getElementById('dep-tbody');
-  var empty = document.getElementById('dep-empty');
-  if(!filtered.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
-  tbody.innerHTML = filtered.map(function(d,i){
-    var ht=parseFloat(d.ht)||0, tva=ht*0.20, ttc=ht+tva;
-    var cat=DEP_CATS[d.cat]||{label:d.cat,ico:''};
-    return '<tr style="border-bottom:1px solid #eee;'+(i%2===0?'background:#fafafa;':'')+'">'
-      +'<td style="padding:10px 14px;font-size:12px;color:#555;">'+d.date+'</td>'
-      +'<td style="padding:10px 14px;font-size:12px;color:#1a1a1a;">'+cat.ico+' '+cat.label+'</td>'
-      +'<td style="padding:10px 14px;font-size:13px;color:#1a1a1a;"><strong>'+d.desc+'</strong></td>'
-      +'<td style="padding:10px 14px;font-size:12px;color:#555;">'+(d.fourn||'-')+'</td>'
-      +'<td style="padding:10px 14px;font-size:13px;text-align:right;color:#dc3545;font-weight:700;">'+fmt(ht)+' EUR</td>'
-      +'<td style="padding:10px 14px;font-size:12px;text-align:right;color:#555;">'+fmt(tva)+' EUR</td>'
-      +'<td style="padding:10px 14px;font-size:13px;text-align:right;color:#1a1a1a;">'+fmt(ttc)+' EUR</td>'
-      +'<td style="padding:10px 14px;">'+(d.drive?'<a href="'+d.drive+'" target="_blank" style="color:#00875a;font-size:12px;font-weight:700;"> Facture</a>':'<span style="color:#aaa;font-size:11px;"> </span>')+'</td>'
-      +'<td style="padding:10px 14px;"><button onclick="supprimerDepense(\''+d.id+'\')" style="background:#ffeaea;color:#dc3545;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;"></button></td>'
-      +'</tr>';
-  }).join('');
-}
-window.ajouterDepense = async function() {
-  var ht = parseFloat(document.getElementById('dep-ht').value);
-  var desc = document.getElementById('dep-desc').value.trim();
-  if(!desc || !ht || ht<=0){ alert('Description et montant HT requis'); return; }
-
-  var btn = document.querySelector('button[onclick="ajouterDepense()"]');
-  if(btn){ btn.textContent=' Sauvegarde...'; btn.disabled=true; }
-
-  var dep = {
-    id: Date.now().toString(),
-    cat: document.getElementById('dep-cat').value,
-    desc: desc,
-    ht: ht,
-    date: (function(){
-      var v = document.getElementById('dep-date').value;
-      if(!v) return new Date().toLocaleDateString('fr-FR');
-      var p = v.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
-    })(),
-    fourn: document.getElementById('dep-fourn').value.trim(),
-    drive: document.getElementById('dep-drive').value.trim(),
-  };
-
-  // 1. Lire les d penses existantes
-  var existing = [];
-  try {
-    existing = await apiGetDepenses();
-    console.log('D penses existantes charg es:', existing.length);
-  } catch(e) {
-    console.warn('Impossible de charger les d penses existantes:', e.message, '  on continue avec tableau vide');
-  }
-
-  existing.unshift(dep);
-  console.log('Nouvelle d pense:', dep);
-
-  // 2. Sauvegarder
-  try {
-    var r = await fetch(VERCEL_URL + '/api/save-depenses', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + CRM_PWD, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ depenses: existing })
-    });
-    var txt = await r.text();
-    console.log('save-depenses r ponse:', r.status, txt);
-    if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + txt);
-    var json = JSON.parse(txt);
-    if (!json.success) throw new Error(json.error || 'Echec sauvegarde');
-
-    // Reset formulaire
-    document.getElementById('dep-ht').value = '';
-    document.getElementById('dep-desc').value = '';
-    document.getElementById('dep-fourn').value = '';
-    document.getElementById('dep-drive').value = '';
-    _depenses = existing;
-    if(btn){ btn.textContent='[OK] Ajouter la d pense'; btn.disabled=false; }
-    renderDepenses(false);
-  } catch(e) {
-    console.error('Erreur save-depenses:', e);
-    alert('Erreur sauvegarde: ' + e.message + '\n\nV rifiez les logs Vercel.');
-    if(btn){ btn.textContent='[OK] Ajouter la d pense'; btn.disabled=false; }
-  }
-}
-
-window.supprimerDepense = async function(id) {
-  if(!confirm('Supprimer cette d pense ?')) return;
-  try {
-    var existing = await apiGetDepenses();
-    existing = existing.filter(function(d){ return d.id !== id; });
-    var r = await fetch(VERCEL_URL + '/api/save-depenses', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + CRM_PWD, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ depenses: existing })
-    });
-    if (!r.ok) throw new Error('Erreur ' + r.status);
-    _depenses = existing;
-    renderDepenses(false);
-  } catch(e) { alert('Erreur: ' + e.message); }
-}
-
-// -- ONGLET RAPPORTS ---------------------------
-var _rp_periode = 'mois';
-window.setPeriode = function(p) {
-  _rp_periode = p;
-  ['mois','trim','annee','perso'].forEach(function(id){
-    var btn = document.getElementById('rp-'+id);
-    if(!btn) return;
-    btn.style.background = (id===p||('trimestre'===p&&id==='trim')) ? 'var(--ink)' : 'white';
-    btn.style.color = (id===p||('trimestre'===p&&id==='trim')) ? 'white' : '#6b8299';
-    btn.style.borderColor = (id===p||('trimestre'===p&&id==='trim')) ? 'var(--ink)' : '#dce8f0';
-  });
-  document.getElementById('rp-perso-dates').style.display = p==='perso' ? 'grid' : 'none';
-  renderRapport();
-}
-window.renderRapport = async function() {
-  var now = new Date();
-  var from, to = new Date(now);
-  if(_rp_periode==='mois'){ from=new Date(now.getFullYear(),now.getMonth(),1); }
-  else if(_rp_periode==='trimestre'){ var q=Math.floor(now.getMonth()/3); from=new Date(now.getFullYear(),q*3,1); }
-  else if(_rp_periode==='annee'){ from=new Date(now.getFullYear(),0,1); }
-  else {
-    var f=document.getElementById('rp-date-from').value;
-    var t=document.getElementById('rp-date-to').value;
-    from=f?new Date(f):new Date(now.getFullYear(),0,1);
-    to=t?new Date(t):now;
-  }
-  var leads=[]; try { leads=await apiGetLeads(); } catch(e){}
-  var dep=[];   try { dep=await apiGetDepenses(); } catch(e){}
-  var inPeriod = function(dateStr){
-    var parts=dateStr.split('/');
-    var d=parts.length===3?new Date(parts[2],parts[1]-1,parts[0]):new Date(dateStr);
-    return d>=from && d<=to;
-  };
-  var filtL = leads.filter(function(l){ return (l.statut==='signe'||l.statut==='cloture') && inPeriod(l.date); });
-  var filtD = dep.filter(function(d){ return inPeriod(d.date); });
-  var devisHT = function(l){ return (parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.')) || 0)/1.055; };
-  var enc = function(l){ var ht=devisHT(l); return l.statut==='cloture'?ht:ht*0.3; };
-  var caTotal=filtL.reduce(function(s,l){return s+devisHT(l);},0);
-  var caEnc=filtL.reduce(function(s,l){return s+enc(l);},0);
-  var depTotal=filtD.reduce(function(s,d){return s+(parseFloat(d.ht)||0);},0);
-  var tvaCol=caTotal*0.055, tvaDed=depTotal*0.20;
-  var benBrut=caEnc-depTotal;
-  var tauxUr=parseFloat(document.getElementById('taux-urssaf')?document.getElementById('taux-urssaf').value:22)||22;
-  var tauxRet=parseFloat(document.getElementById('taux-retraite')?document.getElementById('taux-retraite').value:8)||8;
-  var charges=benBrut>0?benBrut*(tauxUr+tauxRet)/100:0;
-  var benNet=benBrut-charges;
-  var periodLabel = _rp_periode==='mois'?'Ce mois':_rp_periode==='trimestre'?'Ce trimestre':_rp_periode==='annee'?'Cette ann e':'P riode personnalis e';
-  document.getElementById('rp-preview').innerHTML =
-    '<h4 style="font-family:Syne,sans-serif;font-weight:800;color:#0d1b2a;margin-bottom:16px;">'+periodLabel+'   du '+from.toLocaleDateString('fr-FR')+' au '+to.toLocaleDateString('fr-FR')+'</h4>'
-    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">'
-    +kpi('CA HT factur ', fmt(caTotal)+' EUR', '#0066cc', filtL.length+' chantier'+(filtL.length>1?'s':''))
-    +kpi('Encaiss ', fmt(caEnc)+' EUR', '#00875a')
-    +kpi('D penses HT', fmt(depTotal)+' EUR', '#dc3545', filtD.length+' ligne'+(filtD.length>1?'s':''))
-    +kpi('B n fice net', fmt(benNet)+' EUR', benNet>=0?'#00875a':'#dc3545')
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">'
-    +kpi('TVA collect e', fmt(tvaCol)+' EUR', '#0066cc')
-    +kpi('TVA d ductible', fmt(tvaDed)+' EUR', '#00875a')
-    +kpi('TVA   reverser', fmt(Math.max(0,tvaCol-tvaDed))+' EUR', '#f5a623')
-    +'</div>';
-  // Stocker pour export
-  window._rpData = { periodLabel, from, to, caTotal, caEnc, depTotal, tvaCol, tvaDed, benBrut, charges, benNet, filtL, filtD, tauxUr, tauxRet };
-}
-window.exporterRapport = async function() {
-  if(!window._rpData){ alert('G n rez d\'abord un aper u'); return; }
-  var d = window._rpData;
-  // CSV rapport
-  var csv = 'RAPPORT FINANCIER\n';
-  csv += 'P riode,'+d.periodLabel+'\n';
-  csv += 'Du,'+d.from.toLocaleDateString('fr-FR')+'\n';
-  csv += 'Au,'+d.to.toLocaleDateString('fr-FR')+'\n\n';
-  csv += 'REVENUS\n';
-  csv += 'CA HT factur ,'+fmt(d.caTotal)+' EUR\n';
-  csv += 'Montant encaiss ,'+fmt(d.caEnc)+' EUR\n\n';
-  csv += 'TVA\n';
-  csv += 'TVA collect e (5,5%),'+fmt(d.tvaCol)+' EUR\n';
-  csv += 'TVA d ductible (20%),'+fmt(d.tvaDed)+' EUR\n';
-  csv += 'TVA   reverser,'+fmt(Math.max(0,d.tvaCol-d.tvaDed))+' EUR\n\n';
-  csv += 'CHARGES\n';
-  csv += 'D penses HT,'+fmt(d.depTotal)+' EUR\n';
-  csv += 'URSSAF ('+d.tauxUr+'%),'+fmt(d.benBrut>0?d.benBrut*d.tauxUr/100:0)+' EUR\n';
-  csv += 'Retraite ('+d.tauxRet+'%),'+fmt(d.benBrut>0?d.benBrut*d.tauxRet/100:0)+' EUR\n\n';
-  csv += 'R SULTAT\n';
-  csv += 'B n fice brut,'+fmt(d.benBrut)+' EUR\n';
-  csv += 'Charges sociales,'+fmt(d.charges)+' EUR\n';
-  csv += 'B n fice net,'+fmt(d.benNet)+' EUR\n\n';
-  csv += '\nCHANTIERS\n';
-  csv += 'Client,Date,Devis HT,TVA,TTC,Encaiss ,Statut,Lien devis\n';
-  d.filtL.forEach(function(l){
-    var ht=(parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.'))||0)/1.055;
-    var enc=l.statut==='cloture'?ht:ht*0.3;
-    csv += [l.nom,l.date,fmt(ht),fmt(ht*0.055),fmt(ht*1.055),fmt(enc),l.statut,l.devis_drive||''].join(',')+'\n';
-  });
-  csv += '\nD PENSES\n';
-  csv += 'Date,Cat gorie,Description,Fournisseur,HT,TVA,TTC,Facture\n';
-  d.filtD.forEach(function(dep){
-    var ht=parseFloat(dep.ht)||0;
-    csv += [dep.date,dep.cat,dep.desc,dep.fourn||'',fmt(ht),fmt(ht*0.2),fmt(ht*1.2),dep.drive||''].join(',')+'\n';
-  });
-  // Liens Drive
-  var liens = '\nLIENS GOOGLE DRIVE\n\nDevis sign s:\n';
-  d.filtL.forEach(function(l){ if(l.devis_drive) liens += l.nom+' ('+l.date+'): '+l.devis_drive+'\n'; });
-  liens += '\nFactures d penses:\n';
-  d.filtD.forEach(function(dep){ if(dep.drive) liens += dep.desc+' ('+dep.date+'): '+dep.drive+'\n'; });
-  // T l charger le CSV (pas de ZIP natif en JS pur sans lib)
-  var nom = 'rapport-'+new Date().toISOString().slice(0,10)+'.csv';
-  var blob = new Blob(['\uFEFF'+csv+liens], {type:'text/csv;charset=utf-8'});
-  var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nom; a.click();
-  alert('Rapport CSV t l charg  !\n\nPour obtenir un ZIP avec toutes vos factures, ouvrez les liens Google Drive list s dans le fichier CSV.');
-}
-
 
 </script>
 </body>
