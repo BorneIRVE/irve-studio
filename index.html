@@ -882,7 +882,7 @@ async function uploadDrive(file,nomFichier,client,dateStr,statut){
   var ext=(file.name.split('.').pop()||'pdf').toLowerCase();
   var fileName=nettoyerNom(nomFichier)+'.'+ext;
   var b64=await fileToBase64(file);
-  var r=await fetch(VERCEL_URL+'/api/drive-upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,annee:annee,mois:statutLabel+'/'+moisNom,client:nettoyerNom(client)||'Divers'})});
+  var r=await fetch(VERCEL_URL+'/api/drive?action=upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,annee:annee,mois:statutLabel+'/'+moisNom,client:nettoyerNom(client)||'Divers'})});
   var j=await r.json();
   if(!r.ok||!j.success)throw new Error(j.error||'Upload échoué');
   return j.link;
@@ -1113,7 +1113,7 @@ async function deplacerDossierDrive(lead,ancienStatut,nouveauStatut){
     var moisNom=MOIS_FR[d.getMonth()];
     var ancienLabel=ancienStatut&&STATUTS[ancienStatut]?STATUTS[ancienStatut].l:'Nouveau';
     var nouveauLabel=STATUTS[nouveauStatut]?STATUTS[nouveauStatut].l:'Nouveau';
-    var r=await fetch(VERCEL_URL+'/api/drive-move',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({client:nettoyerNom(lead.nom),annee:annee,mois:moisNom,ancienStatut:ancienLabel,nouveauStatut:nouveauLabel})});
+    var r=await fetch(VERCEL_URL+'/api/drive?action=move',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({client:nettoyerNom(lead.nom),annee:annee,mois:moisNom,ancienStatut:ancienLabel,nouveauStatut:nouveauLabel})});
     var j=await r.json();
     if(!r.ok)console.log('Déplacement Drive erreur:',j.error);
     else if(j.moved)console.log('Dossier déplacé:',ancienLabel,'->',nouveauLabel);
@@ -1220,7 +1220,7 @@ async function listerDocsClient(nom,targetId){
   var el=document.getElementById(targetId);if(!el)return;
   el.innerHTML='<p style="font-size:12px;color:#6b8299;">⏳ Chargement...</p>';
   try{
-    var r=await fetch(VERCEL_URL+'/api/drive-list?client='+encodeURIComponent(nettoyerNom(nom))+'&t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});
+    var r=await fetch(VERCEL_URL+'/api/drive?action=list&client='+encodeURIComponent(nettoyerNom(nom))+'&t='+Date.now(),{headers:{'Authorization':'Bearer '+CRM_PWD},cache:'no-store'});
     var j=await r.json();
     if(!r.ok)throw new Error(j.error||'Erreur');
     if(!j.files||!j.files.length){el.innerHTML='<p style="font-size:12px;color:#9aa9b8;">Aucun document Drive pour ce client.</p>';return;}

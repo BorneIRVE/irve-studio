@@ -1459,7 +1459,7 @@ async function envoyerEmail(nom, email, top, roiAns, c100){
       for(var u=0;u<uploads.length;u++){
         if(!uploads[u].data)continue;
         try{
-          await fetch(VERCEL_API_URL.replace('/api/send-email','/api/drive-upload'),{
+          await fetch(VERCEL_API_URL.replace('/api/send-email','/api/drive?action=upload'),{
             method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer irve2024'},
             body:JSON.stringify({fileName:uploads[u].name,fileData:uploads[u].data,mimeType:uploads[u].mime,annee:anneeD,mois:'Nouveau/'+moisFR,client:clientClean})
           });
