@@ -798,8 +798,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
         <div style="margin-top:10px;padding:10px;background:#fff8e8;border-radius:9px;font-size:11px;color:#7a5c00;line-height:1.5;">⚠️ Estimation indicative pour piloter votre activité. Les taux réels dépendent de votre situation. Votre expert-comptable reste la référence pour vos déclarations.</div>
       </div>
 
-      <button onclick="exporterRapport()" class="btn btn-o" style="width:100%;margin-bottom:8px;">⬇️ Rapport CSV simple</button>
-      <button onclick="exporterZipComptable()" class="btn btn-d" style="width:100%;">📦 Export comptable (.zip + Excel)</button>
+      <button onclick="exporterZipComptable()" class="btn btn-d" style="width:100%;">📊 Export comptable (Excel + lien Drive)</button>
     </div>
 
     <!-- ══ DÉPENSES ══ -->
@@ -1521,82 +1520,78 @@ function ouvrirAbonnement(){window.location.href=VERCEL_URL.replace('https://','
 
 // — EXPORT ZIP COMPTABLE —
 async function exporterZipComptable(){
-  if(typeof XLSX==='undefined'||typeof JSZip==='undefined'){alert('Bibliothèques en cours de chargement, réessayez dans un instant.');return;}
+  if(typeof XLSX==='undefined'){alert('Bibliothèque en cours de chargement, réessayez dans un instant.');return;}
   var f=await computeFinance(_argPeriode);
   var chs=await computeChantiers();
-  // Filtrer chantiers sur la période
   var inP=function(d){var x=parseDate(d);return x&&x>=f.from&&x<=f.to;};
   var chsP=chs.filter(function(c){return inP(c.lead.date);});
   var periodeLabel=f.from.toLocaleDateString('fr-FR')+' au '+f.to.toLocaleDateString('fr-FR');
 
-  // === Feuille 1 : Situation entreprise ===
+  // Récupérer le lien du dossier Drive de la période
+  var driveLink='';
+  try{
+    var annee=f.from.getFullYear();
+    var moisParam='';
+    // Si la période est un seul mois, on cible le dossier du mois
+    if(_argPeriode==='mois'){moisParam='&mois='+encodeURIComponent(MOIS_FR[f.from.getMonth()]);}
+    var lr=await fetch(VERCEL_URL+'/api/drive?action=folderlink&annee='+annee+moisParam,{headers:{'Authorization':'Bearer '+CRM_PWD}});
+    var lj=await lr.json();driveLink=lj.link||'';
+  }catch(e){}
+
+  // === Un seul tableau clair ===
   var wb=XLSX.utils.book_new();
-  var situation=[
-    ['SITUATION ENTREPRISE'],
-    ['Période',periodeLabel],
-    [''],
-    ['REVENUS'],
-    ['CA HT facturé',f.caHT],
-    ['CA TTC',f.caHT*1.055],
-    ['Encaissé',f.caEnc],
-    [''],
-    ['TVA'],
-    ['TVA collectée (5,5%)',f.tvaCol],
-    ['TVA déductible (20%)',f.tvaDed],
-    [f.tvaNet>=0?'TVA à reverser':'Crédit de TVA',Math.abs(f.tvaNet)],
-    [''],
-    ['CHARGES'],
-    ['Dépenses HT',f.depHT],
-    ['URSSAF ('+f.tUr+'%)',f.benBrut>0?f.benBrut*f.tUr/100:0],
-    ['Retraite ('+f.tRet+'%)',f.benBrut>0?f.benBrut*f.tRet/100:0],
-    ['Total charges sociales',f.charges],
-    [''],
-    ['RÉSULTAT'],
-    ['Bénéfice brut',f.benBrut],
-    ['Bénéfice net',f.benNet],
-  ];
-  var ws1=XLSX.utils.aoa_to_sheet(situation);
-  ws1['!cols']=[{wch:30},{wch:18}];
-  XLSX.utils.book_append_sheet(wb,ws1,'Situation');
+  var rows=[];
+  rows.push(['DOSSIER COMPTABLE — '+periodeLabel]);
+  rows.push(['']);
+  rows.push(['RÉSUMÉ']);
+  rows.push(['CA HT facturé',arr(f.caHT)]);
+  rows.push(['CA TTC',arr(f.caHT*1.055)]);
+  rows.push(['Encaissé',arr(f.caEnc)]);
+  rows.push(['Dépenses HT',arr(f.depHT)]);
+  rows.push(['']);
+  rows.push(['TVA']);
+  rows.push(['TVA collectée',arr(f.tvaCol)]);
+  rows.push(['TVA déductible',arr(f.tvaDed)]);
+  rows.push([f.tvaNet>=0?'TVA à reverser':'Crédit de TVA',arr(Math.abs(f.tvaNet))]);
+  rows.push(['']);
+  rows.push(['RÉSULTAT']);
+  rows.push(['Résultat avant rémunération',arr(f.caEnc-f.depHT)]);
+  rows.push(['']);
+  if(driveLink){rows.push(['📁 Factures & devis (Google Drive)',driveLink]);rows.push(['']);}
 
-  // === Feuille 2 : Chantiers ===
-  var chData=[['Client','Ville','Date','Borne','CA HT','CA TTC','Coût matériel/ST','Marge €','Marge %','Encaissé','Statut','Lien devis']];
+  // Détail des revenus (chantiers)
+  rows.push(['REVENUS — CHANTIERS']);
+  rows.push(['Date','Client','Ville','Type','CA HT','CA TTC','Encaissé','Statut','Lien devis']);
   chsP.forEach(function(c){
-    chData.push([c.lead.nom,c.lead.ville||c.lead.cp||'',c.lead.date,c.lead.borne||'',c.caHT,c.caTTC,c.coutMat,c.marge,Math.round(c.margePct)+'%',c.encaisse,c.lead.statut,c.lead.devis_drive||'']);
+    rows.push([c.lead.date,c.lead.nom,c.lead.ville||c.lead.cp||'',c.lead.type==='st'?'Sous-traitance':'Direct',arr(c.caHT),arr(c.caTTC),arr(c.encaisse),(STATUTS[c.lead.statut]||{l:c.lead.statut}).l,c.lead.devis_drive||'']);
   });
-  var ws2=XLSX.utils.aoa_to_sheet(chData);
-  ws2['!cols']=[{wch:20},{wch:14},{wch:12},{wch:16},{wch:10},{wch:10},{wch:14},{wch:10},{wch:9},{wch:10},{wch:10},{wch:40}];
-  XLSX.utils.book_append_sheet(wb,ws2,'Chantiers');
+  rows.push(['','','','TOTAL',arr(chsP.reduce(function(s,c){return s+c.caHT;},0)),arr(chsP.reduce(function(s,c){return s+c.caTTC;},0)),arr(chsP.reduce(function(s,c){return s+c.encaisse;},0)),'','']);
+  rows.push(['']);
 
-  // === Feuille 3 : Dépenses ===
-  var depData=[['Date','Catégorie','Description','Fournisseur','Montant HT','TVA 20%','TTC','Chantier lié','Lien facture']];
+  // Détail des dépenses
+  rows.push(['DÉPENSES']);
+  rows.push(['Date','Catégorie','Description','Fournisseur','Montant HT','TVA 20%','TTC','Chantier lié','Lien facture']);
   f.fD.forEach(function(d){
     var ht=parseFloat(d.ht)||0;
-    depData.push([d.date,(DEP_CATS[d.cat]||{l:d.cat}).l,d.desc,d.fourn||'',ht,ht*0.2,ht*1.2,d.chantierNom||'Frais fonctionnement',d.drive||'']);
+    rows.push([d.date,(DEP_CATS[d.cat]||{l:d.cat}).l,d.desc,d.fourn||'',arr(ht),arr(ht*0.2),arr(ht*1.2),d.chantierNom||'Frais fonctionnement',d.drive||'']);
   });
-  var ws3=XLSX.utils.aoa_to_sheet(depData);
-  ws3['!cols']=[{wch:12},{wch:18},{wch:25},{wch:15},{wch:12},{wch:10},{wch:10},{wch:22},{wch:40}];
-  XLSX.utils.book_append_sheet(wb,ws3,'Dépenses');
+  rows.push(['','','','TOTAL',arr(f.depHT),arr(f.depHT*0.2),arr(f.depHT*1.2),'','']);
 
-  // Générer le xlsx
-  var xlsxData=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:20},{wch:14},{wch:14},{wch:11},{wch:11},{wch:11},{wch:22},{wch:42}];
+  XLSX.utils.book_append_sheet(wb,ws,'Comptabilité');
 
-  // === ZIP ===
-  var zip=new JSZip();
-  zip.file('situation-entreprise.xlsx',xlsxData);
-  // Liste des liens Drive (factures + devis) dans un fichier texte
-  var liens='LIENS DES DOCUMENTS (Google Drive)\nPériode: '+periodeLabel+'\n\n=== DEVIS SIGNÉS ===\n';
-  chsP.forEach(function(c){if(c.lead.devis_drive)liens+=c.lead.nom+' ('+c.lead.date+'): '+c.lead.devis_drive+'\n';});
-  liens+='\n=== FACTURES DÉPENSES ===\n';
-  f.fD.forEach(function(d){if(d.drive)liens+=d.date+' - '+d.desc+': '+d.drive+'\n';});
-  zip.file('liens-factures-devis.txt',liens);
+  XLSX.writeFile(wb,'comptable-'+f.from.toISOString().slice(0,10)+'_'+f.to.toISOString().slice(0,10)+'.xlsx');
 
-  var readme='DOSSIER COMPTABLE - '+periodeLabel+'\n\nContenu:\n- situation-entreprise.xlsx : situation complète (3 onglets: Situation, Chantiers, Dépenses)\n- liens-factures-devis.txt : tous les liens Google Drive des justificatifs\n\nLes factures et devis sont accessibles via les liens Google Drive.\nGénéré le '+new Date().toLocaleString('fr-FR');
-  zip.file('LISEZ-MOI.txt',readme);
-
-  var blob=await zip.generateAsync({type:'blob'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='comptable-'+f.from.toISOString().slice(0,10)+'_'+f.to.toISOString().slice(0,10)+'.zip';a.click();
+  if(driveLink){
+    setTimeout(function(){
+      if(confirm('Tableau Excel téléchargé ✅\n\nVoulez-vous ouvrir le dossier Google Drive ('+( _argPeriode==='mois'?'mois':'année')+') pour télécharger les factures et devis ?')){window.open(driveLink,'_blank');}
+    },400);
+  }else{
+    setTimeout(function(){alert('Tableau Excel téléchargé ✅\n\n(Le lien vers le dossier Drive n\'a pas pu être récupéré — vérifiez que des documents existent pour cette période.)');},400);
+  }
 }
+function arr(n){return Math.round((parseFloat(n)||0)*100)/100;}
 async function exporterRapport(){
   var f=await computeFinance(_argPeriode);
   var pl=_argPeriode==='mois'?'Mois en cours':_argPeriode==='trimestre'?'Trimestre':'Année';
