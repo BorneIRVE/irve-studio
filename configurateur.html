@@ -1449,8 +1449,12 @@ async function envoyerEmail(nom, email, top, roiAns, c100){
       var anneeD=dNow.getFullYear();
       var moisFR=['01-Janvier','02-Fevrier','03-Mars','04-Avril','05-Mai','06-Juin','07-Juillet','08-Aout','09-Septembre','10-Octobre','11-Novembre','12-Decembre'][dNow.getMonth()];
       var clientClean=(nom||'Client').replace(/[^a-zA-Z0-9 \-_]/g,'').replace(/\s+/g,'-');
+      var villeClean=(document.getElementById('c-ville').value||'').replace(/[^a-zA-Z0-9 \-_]/g,'').replace(/\s+/g,'-');
+      var clientVille=clientClean+(villeClean?'-'+villeClean:'');
       var dateStr=dNow.toLocaleDateString('fr-FR').replace(/\//g,'-');
       var montantTTC=Math.round(top.ttc||0);
+      // Arborescence : Année / Mois / Statut(Nouveau) / Chantiers directs / Client-Ville / Devis-etude
+      var basePath=[String(anneeD),moisFR,'Nouveau','Chantiers directs',clientVille,'Devis-etude'];
       var uploads=[
         {data:etudeB64,name:'Etude-'+clientClean+'-'+dateStr+'.pdf',mime:'application/pdf'},
         {data:devisPdfB64,name:'Devis-'+clientClean+'-'+dateStr+'-'+montantTTC+'EUR.pdf',mime:'application/pdf'},
@@ -1461,7 +1465,7 @@ async function envoyerEmail(nom, email, top, roiAns, c100){
         try{
           await fetch(VERCEL_API_URL.replace('/api/send-email','/api/drive?action=upload'),{
             method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer irve2024'},
-            body:JSON.stringify({fileName:uploads[u].name,fileData:uploads[u].data,mimeType:uploads[u].mime,annee:anneeD,mois:'Nouveau/'+moisFR,client:clientClean})
+            body:JSON.stringify({fileName:uploads[u].name,fileData:uploads[u].data,mimeType:uploads[u].mime,path:basePath})
           });
         }catch(e){console.log('Upload Drive '+uploads[u].name+' échoué:',e);}
       }

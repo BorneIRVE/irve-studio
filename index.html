@@ -654,10 +654,12 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     #crm-panel .tabbar button.on{color:#0a1628;}
     #crm-panel .tabbar button.on .ic{filter:none;}
     /* Inputs */
-    #crm-panel input,#crm-panel select,#crm-panel textarea{width:100%;padding:11px 12px;border:1px solid #d7e0e9;border-radius:9px;font-size:14px;font-family:inherit;background:#fff;color:#0d1b2a;}
+    #crm-panel input,#crm-panel select,#crm-panel textarea{width:100%;padding:11px 12px;border:1px solid #d7e0e9;border-radius:9px;font-size:14px;font-family:inherit;background:#fff;color:#0d1b2a;min-width:0;}
+    #crm-panel input[type=date]{-webkit-appearance:none;appearance:none;}
+    #crm-panel .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0;}
+    #crm-panel .g2>*{min-width:0;}
     #crm-panel label.fl{font-size:11px;color:#455a6e;font-weight:700;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;}
     #crm-panel .field{margin-bottom:12px;}
-    #crm-panel .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
     #crm-panel .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
     #crm-panel .btn{padding:12px 18px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:'Syne',sans-serif;}
     #crm-panel .btn-g{background:#c8f135;color:#0a1628;}
@@ -876,15 +878,24 @@ var VERCEL_URL='https://vercel-dun-eta-98.vercel.app';
 var MOIS_FR=['01-Janvier','02-Fevrier','03-Mars','04-Avril','05-Mai','06-Juin','07-Juillet','08-Aout','09-Septembre','10-Octobre','11-Novembre','12-Decembre'];
 function nettoyerNom(s){return String(s||'').replace(/[^a-zA-Z0-9 \-_]/g,'').replace(/\s+/g,'-').trim();}
 function fileToBase64(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});}
-async function uploadDrive(file,nomFichier,client,dateStr,statut){
-  var d=parseDate(dateStr)||new Date();
-  var annee=d.getFullYear();
+// Construit le chemin Drive : Année / Mois / Statut / [Chantiers directs|sous-traitance] / Client+Ville
+function cheminDrive(lead){
+  var d=parseDate(lead.date)||new Date();
+  var annee=String(d.getFullYear());
   var moisNom=MOIS_FR[d.getMonth()];
-  var statutLabel=statut&&STATUTS[statut]?STATUTS[statut].l:'Nouveau';
+  var statutLabel=lead.statut&&STATUTS[lead.statut]?STATUTS[lead.statut].l:'Nouveau';
+  var typeDossier=lead.type==='st'?'Chantiers sous-traitance':'Chantiers directs';
+  var clientVille=nettoyerNom(lead.nom)+(lead.ville?'-'+nettoyerNom(lead.ville):'');
+  return [annee,moisNom,statutLabel,typeDossier,clientVille||'Divers'];
+}
+// sousDossier : 'Devis-etude' | 'Photos-chantier' | 'Factures'
+async function uploadDrive(file,nomFichier,lead,sousDossier){
   var ext=(file.name.split('.').pop()||'pdf').toLowerCase();
   var fileName=nettoyerNom(nomFichier)+'.'+ext;
   var b64=await fileToBase64(file);
-  var r=await fetch(VERCEL_URL+'/api/drive?action=upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,annee:annee,mois:statutLabel+'/'+moisNom,client:nettoyerNom(client)||'Divers'})});
+  var path=cheminDrive(lead);
+  if(sousDossier)path.push(sousDossier);
+  var r=await fetch(VERCEL_URL+'/api/drive?action=upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,path:path})});
   var j=await r.json();
   if(!r.ok||!j.success)throw new Error(j.error||'Upload échoué');
   return j.link;
@@ -1215,13 +1226,11 @@ async function deplacerDossierDrive(lead,ancienStatut,nouveauStatut){
     var d=parseDate(lead.date)||new Date();
     var annee=d.getFullYear();
     var moisNom=MOIS_FR[d.getMonth()];
-    var ancienLabel=ancienStatut&&STATUTS[ancienStatut]?STATUTS[ancienStatut].l:'Nouveau';
     var nouveauLabel=STATUTS[nouveauStatut]?STATUTS[nouveauStatut].l:'Nouveau';
-    var r=await fetch(VERCEL_URL+'/api/drive?action=move',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({client:nettoyerNom(lead.nom),annee:annee,mois:moisNom,ancienStatut:ancienLabel,nouveauStatut:nouveauLabel})});
+    var clientVille=nettoyerNom(lead.nom)+(lead.ville?'-'+nettoyerNom(lead.ville):'');
+    var typeDossier=lead.type==='st'?'Chantiers sous-traitance':'Chantiers directs';
+    var r=await fetch(VERCEL_URL+'/api/drive?action=move',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({client:clientVille,annee:annee,mois:moisNom,nouveauStatut:nouveauLabel,typeDossier:typeDossier})});
     var j=await r.json();
-    if(!r.ok)console.log('Déplacement Drive erreur:',j.error);
-    else if(j.moved)console.log('Dossier déplacé:',ancienLabel,'->',nouveauLabel);
-    else console.log('Dossier non déplacé:',j.reason);
     return j;
   }catch(e){console.log('Déplacement Drive échoué:',e);return null;}
 }
@@ -1237,7 +1246,7 @@ async function uploadDevisLead(id,input){
     var dateStr=(l.date||new Date().toLocaleDateString('fr-FR')).replace(/\//g,'-');
     // Même format que le configurateur + "-Signe"
     var nom='Devis-'+nettoyerNom(l.nom)+'-'+dateStr+'-'+montantTTC+'EUR-Signe';
-    var lien=await uploadDrive(file,nom,l.nom,l.date,l.statut);
+    var lien=await uploadDrive(file,nom,l,'Devis-etude');
     await apiUpdateLead(id,{devis_drive:lien,histo_action:'📎 Devis signé uploadé'});
     st.textContent='✅ Uploadé sur Drive';
     setTimeout(function(){openFiche(id);},800);
@@ -1305,12 +1314,14 @@ async function renderChantiers(){
     kpisEl.innerHTML=kpic(dataST.length,'Chantiers ST','#0066cc')+kpic(fmt(totST)+'€','CA HT','#0d1b2a')+kpic(fmt(totEncST)+'€','Encaissé','#00875a');
     var formHtml='<div class="card"><h3 class="card-t">➕ Nouveau chantier sous-traitance</h3>'+
       '<div class="field"><label class="fl">Installateur (donneur d\'ordre)</label><input id="st-installateur" placeholder="Izy by EDF, ZePlug..."></div>'+
-      '<div class="field"><label class="fl">Référence / nom du chantier</label><input id="st-nom" placeholder="Chantier Dupont - Lyon"></div>'+
-      '<div class="g2"><div class="field" style="margin:0;"><label class="fl">Montant facturé (€)</label><input id="st-montant" type="number" placeholder="800"></div>'+
-      '<div class="field" style="margin:0;"><label class="fl">TVA</label><select id="st-tva"><option value="auto">Autoliquidation (sans TVA)</option><option value="20">Avec TVA 20%</option></select></div></div>'+
+      '<div class="field"><label class="fl">Nom du client final</label><input id="st-nom" placeholder="M. Dupont"></div>'+
+      '<div class="g2"><div class="field" style="margin:0;"><label class="fl">Ville</label><input id="st-ville" placeholder="Lyon"></div>'+
+      '<div class="field" style="margin:0;"><label class="fl">Téléphone client</label><input id="st-tel" placeholder="06..."></div></div>'+
+      '<div class="field"><label class="fl">Adresse du chantier</label><input id="st-adresse" placeholder="12 rue..."></div>'+
+      '<div class="g2"><div class="field" style="margin:0;"><label class="fl">Montant facturé HT (€)</label><input id="st-montant" type="number" placeholder="800"></div>'+
+      '<div class="field" style="margin:0;"><label class="fl">TVA</label><select id="st-tva"><option value="auto">Autoliquidation</option><option value="20">TVA 20%</option></select></div></div>'+
       '<div class="g2"><div class="field" style="margin:0;"><label class="fl">Statut</label><select id="st-statut"><option value="signe">Signé</option><option value="encours">En cours</option><option value="termine">Terminé - à facturer</option><option value="cloture">Clôturé (payé)</option></select></div>'+
       '<div class="field" style="margin:0;"><label class="fl">Date</label><input id="st-date" type="date"></div></div>'+
-      '<div class="field"><label class="fl">Lieu / notes</label><input id="st-notes" placeholder="Ville, infos..."></div>'+
       '<button onclick="ajouterChantierST()" class="btn btn-d" style="width:100%;">✅ Ajouter</button></div>';
     if(!dataST.length){list.innerHTML=formHtml+'<div class="card" style="text-align:center;color:#5a6b7d;padding:24px;"><div style="font-size:30px;">🤝</div><p>Aucun chantier de sous-traitance</p></div>';return;}
     list.innerHTML=formHtml+'<div class="card">'+dataST.map(function(c){
@@ -1352,10 +1363,10 @@ async function ajouterChantierST(){
   var nom=document.getElementById('st-nom').value.trim();
   var montant=document.getElementById('st-montant').value.trim();
   if(!installateur||!montant){alert('Installateur et montant requis');return;}
-  var lead={_create:true,type:'st',installateur:installateur,nom:nom||installateur,devis:montant,tva:document.getElementById('st-tva').value,statut:document.getElementById('st-statut').value,date:document.getElementById('st-date').value?new Date(document.getElementById('st-date').value).toLocaleDateString('fr-FR'):new Date().toLocaleDateString('fr-FR'),notes:document.getElementById('st-notes').value.trim(),histo_action:'🤝 Chantier sous-traitance créé'};
+  var lead={_create:true,type:'st',installateur:installateur,nom:nom||installateur,ville:document.getElementById('st-ville').value.trim(),tel:document.getElementById('st-tel').value.trim(),adresse:document.getElementById('st-adresse').value.trim(),devis:montant,tva:document.getElementById('st-tva').value,statut:document.getElementById('st-statut').value,date:document.getElementById('st-date').value?new Date(document.getElementById('st-date').value).toLocaleDateString('fr-FR'):new Date().toLocaleDateString('fr-FR'),histo_action:'🤝 Chantier sous-traitance créé'};
   try{
     await fetch(VERCEL_URL+'/api/get-leads',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify(lead)});
-    ['st-installateur','st-nom','st-montant','st-notes'].forEach(function(i){document.getElementById(i).value='';});
+    ['st-installateur','st-nom','st-ville','st-tel','st-adresse','st-montant'].forEach(function(i){document.getElementById(i).value='';});
     renderChantiers();
   }catch(e){alert('Erreur: '+e.message);}
 }
@@ -1371,7 +1382,7 @@ async function uploadPhotoChantier(id,input){
     var photos=l.chantier_photos||[];
     var num=photos.length+1;
     var nom='Photo-'+nettoyerNom(l.nom)+'-'+num;
-    var lien=await uploadDrive(file,nom,l.nom,l.date,l.statut);
+    var lien=await uploadDrive(file,nom,l,'Photos-chantier');
     photos.push({link:lien,date:new Date().toLocaleDateString('fr-FR')});
     await apiUpdateLead(id,{chantier_photos:photos,histo_action:'📷 Photo ajoutée'});
     st.textContent='✅ Photo ajoutée';
@@ -1435,9 +1446,11 @@ async function ajouterDepense(){
     var st=document.getElementById('dep-up-status');st.textContent='⏳ Upload facture...';
     try{
       var nom='Facture-'+nettoyerNom(fourn||'fournisseur')+'-'+dateStr.replace(/\//g,'-')+'-'+ht+'EUR';
-      if(chantierNom){
-        // Facture liée à un chantier -> dossier du chantier (avec statut)
-        drive=await uploadDrive(fileInput.files[0],nom,chantierNom,dateStr);
+      if(chantierId){
+        // Facture liée à un chantier -> dossier du chantier, sous-dossier Factures
+        var allLeads=await apiGetLeads();var chLead=allLeads.find(function(x){return x.id==chantierId;});
+        if(chLead)drive=await uploadDrive(fileInput.files[0],nom,chLead,'Factures');
+        else drive=await uploadFraisFonctionnement(fileInput.files[0],nom,dateStr);
       }else{
         // Frais de fonctionnement -> Frais-fonctionnement / Année / Mois (à la racine)
         drive=await uploadFraisFonctionnement(fileInput.files[0],nom,dateStr);
