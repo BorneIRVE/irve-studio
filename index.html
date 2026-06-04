@@ -747,9 +747,10 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
     <!-- ══ CHANTIERS (fusion Prospects + Chantiers actifs) ══ -->
     <div class="page" id="crm-tab-chantiers">
       <!-- Bascule des 2 vues -->
-      <div style="display:flex;gap:8px;margin-bottom:14px;background:#dde6ef;border-radius:10px;padding:4px;">
-        <button id="vue-prospects" onclick="setVueChantier('prospects',this)" class="vue-btn" style="flex:1;padding:10px;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;background:#fff;color:#0d1b2a;">👥 Prospects</button>
-        <button id="vue-chantiers" onclick="setVueChantier('chantiers',this)" class="vue-btn" style="flex:1;padding:10px;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#455a6e;">🏗️ Chantiers actifs</button>
+      <div style="display:flex;gap:6px;margin-bottom:14px;background:#dde6ef;border-radius:10px;padding:4px;">
+        <button id="vue-prospects" onclick="setVueChantier('prospects',this)" class="vue-btn" style="flex:1;padding:9px 4px;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;background:#fff;color:#0d1b2a;">👥 Prospects</button>
+        <button id="vue-chantiers" onclick="setVueChantier('chantiers',this)" class="vue-btn" style="flex:1;padding:9px 4px;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;background:transparent;color:#455a6e;">🏗️ Chantiers</button>
+        <button id="vue-st" onclick="setVueChantier('st',this)" class="vue-btn" style="flex:1;padding:9px 4px;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;background:transparent;color:#455a6e;">🤝 Sous-traitance</button>
       </div>
 
       <!-- Filtre multi-états -->
@@ -917,7 +918,11 @@ var DEP_CATS={bornes:{l:'Bornes & matériel',i:'🔌'},outillage:{l:'Outillage',
 // — Helpers —
 function fmt(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0});}
 function fmt2(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function devisHT(l){return (parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.'))||0)/1.055;}
+function devisHT(l){
+  var montant=parseFloat((l.devis||'0').replace(/\s/g,'').replace(',','.'))||0;
+  if(l.type==='st'){ if(l.tva==='20')return montant/1.20; return montant; }
+  return montant/1.055;
+}
 function encaisse(l){var h=devisHT(l);if(l.statut==='cloture')return h;if(l.statut==='signe'||l.statut==='encours'||l.statut==='termine')return h*0.3;return 0;}
 function parseDate(s){if(!s)return null;if(s.indexOf('/')>-1){var p=s.split('/');return new Date(p[2],p[1]-1,p[0]);}return new Date(s);}
 
@@ -986,7 +991,13 @@ async function computeFinance(periode){
   var caHT=fL.reduce(function(s,l){return s+devisHT(l);},0);
   var caEnc=fL.reduce(function(s,l){return s+encaisse(l);},0);
   var depHT=fD.reduce(function(s,d){return s+(parseFloat(d.ht)||0);},0);
-  var tvaCol=caHT*0.055, tvaDed=depHT*0.20, tvaNet=tvaCol-tvaDed;
+  // TVA collectée : 5,5% sur chantiers directs ; 20% sur sous-traitance facturée avec TVA ; 0 si autoliquidation
+  var tvaCol=fL.reduce(function(s,l){
+    var ht=devisHT(l);
+    if(l.type==='st'){ return s+(l.tva==='20'?ht*0.20:0); }
+    return s+ht*0.055;
+  },0);
+  var tvaDed=depHT*0.20, tvaNet=tvaCol-tvaDed;
   var tUr=parseFloat((document.getElementById('taux-urssaf')||{}).value)||22;
   var tRet=parseFloat((document.getElementById('taux-retraite')||{}).value)||8;
   var benBrut=caEnc-depHT;
@@ -1277,43 +1288,76 @@ async function changerStatutListe(id,st){
   }catch(e){alert('Erreur: '+e.message);}
 }
 async function renderChantiers(){
-  // Construire les filtres selon la vue
-  var statutsVue=_vueChantier==='prospects'?PROSPECT_STATUTS:ACTIF_STATUTS;
   var fc=document.getElementById('ch-filters');
-  fc.innerHTML=statutsVue.map(function(st){return '<div class="fchip'+(_chFilters.indexOf(st)>-1?' on':'')+'" onclick="toggleChFilter(\''+st+'\',this)">'+STATUTS[st].l+'</div>';}).join('');
-
-  var chs=await computeChantiers(); // tous les leads avec calculs
+  var chs=await computeChantiers();
   var search=((document.getElementById('crm-search')||{}).value||'').toLowerCase();
   var kpisEl=document.getElementById('ch-kpis');
   var list=document.getElementById('ch-list');
 
-  // Filtrer par vue
-  var data=chs.filter(function(c){return statutsVue.indexOf(c.lead.statut)>-1;});
-  // Filtrer par états cochés
+  // === VUE SOUS-TRAITANCE ===
+  if(_vueChantier==='st'){
+    fc.innerHTML='';
+    var dataST=chs.filter(function(c){return c.lead.type==='st';});
+    if(search)dataST=dataST.filter(function(c){return ((c.lead.nom||'')+(c.lead.installateur||'')).toLowerCase().includes(search);});
+    var totST=dataST.reduce(function(s,c){return s+c.caHT;},0);
+    var totEncST=dataST.reduce(function(s,c){return s+c.encaisse;},0);
+    kpisEl.style.display='grid';
+    kpisEl.innerHTML=kpic(dataST.length,'Chantiers ST','#0066cc')+kpic(fmt(totST)+'€','CA HT','#0d1b2a')+kpic(fmt(totEncST)+'€','Encaissé','#00875a');
+    var formHtml='<div class="card"><h3 class="card-t">➕ Nouveau chantier sous-traitance</h3>'+
+      '<div class="field"><label class="fl">Installateur (donneur d\'ordre)</label><input id="st-installateur" placeholder="Izy by EDF, ZePlug..."></div>'+
+      '<div class="field"><label class="fl">Référence / nom du chantier</label><input id="st-nom" placeholder="Chantier Dupont - Lyon"></div>'+
+      '<div class="g2"><div class="field" style="margin:0;"><label class="fl">Montant facturé (€)</label><input id="st-montant" type="number" placeholder="800"></div>'+
+      '<div class="field" style="margin:0;"><label class="fl">TVA</label><select id="st-tva"><option value="auto">Autoliquidation (sans TVA)</option><option value="20">Avec TVA 20%</option></select></div></div>'+
+      '<div class="g2"><div class="field" style="margin:0;"><label class="fl">Statut</label><select id="st-statut"><option value="signe">Signé</option><option value="encours">En cours</option><option value="termine">Terminé - à facturer</option><option value="cloture">Clôturé (payé)</option></select></div>'+
+      '<div class="field" style="margin:0;"><label class="fl">Date</label><input id="st-date" type="date"></div></div>'+
+      '<div class="field"><label class="fl">Lieu / notes</label><input id="st-notes" placeholder="Ville, infos..."></div>'+
+      '<button onclick="ajouterChantierST()" class="btn btn-d" style="width:100%;">✅ Ajouter</button></div>';
+    if(!dataST.length){list.innerHTML=formHtml+'<div class="card" style="text-align:center;color:#5a6b7d;padding:24px;"><div style="font-size:30px;">🤝</div><p>Aucun chantier de sous-traitance</p></div>';return;}
+    list.innerHTML=formHtml+'<div class="card">'+dataST.map(function(c){
+      var l=c.lead;var s=STATUTS[l.statut]||STATUTS.signe;
+      return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;cursor:pointer;" onclick="openFiche('+l.id+')"><strong style="font-size:14px;color:#0d1b2a;">'+(l.installateur||'Installateur')+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">'+(l.nom||'')+'</div><div style="font-size:13px;color:#0d1b2a;font-weight:700;margin-top:3px;">'+fmt(c.caHT)+'€ HT'+(l.tva==='auto'?' · autoliq.':' · TVA 20%')+'</div><div style="margin-top:6px;">'+menuStatut(l.id,l.statut)+'</div></div></div></div>';
+    }).join('')+'</div>';
+    return;
+  }
+
+  // === VUES PROSPECTS / CHANTIERS (chantiers directs uniquement, pas ST) ===
+  var statutsVue=_vueChantier==='prospects'?PROSPECT_STATUTS:ACTIF_STATUTS;
+  fc.innerHTML=statutsVue.map(function(st){return '<div class="fchip'+(_chFilters.indexOf(st)>-1?' on':'')+'" onclick="toggleChFilter(\''+st+'\',this)">'+STATUTS[st].l+'</div>';}).join('');
+
+  var data=chs.filter(function(c){return c.lead.type!=='st'&&statutsVue.indexOf(c.lead.statut)>-1;});
   if(_chFilters.length)data=data.filter(function(c){return _chFilters.indexOf(c.lead.statut)>-1;});
-  // Recherche
   if(search)data=data.filter(function(c){return ((c.lead.nom||'')+(c.lead.ville||'')+(c.lead.email||'')).toLowerCase().includes(search);});
 
   if(_vueChantier==='chantiers'){
-    // Vue chantiers actifs : KPIs + marges
     var totCA=data.reduce(function(s,c){return s+c.caHT;},0);
     var totMat=data.reduce(function(s,c){return s+c.coutMat;},0);
     kpisEl.style.display='grid';
-    kpisEl.innerHTML=kpic(data.length,'Chantiers','#0066cc')+kpic(fmt(totCA)+'€','CA HT','#0d1b2a')+kpic(fmt(totMat)+'€','Coût mat/ST','#dc3545')+kpic(fmt(totCA-totMat)+'€','Marge',totCA-totMat>=0?'#00875a':'#dc3545');
+    kpisEl.innerHTML=kpic(data.length,'Chantiers','#0066cc')+kpic(fmt(totCA)+'€','CA HT','#0d1b2a')+kpic(fmt(totMat)+'€','Coût mat/ST','#dc3545')+kpic(fmt(totCA-totMat)+'€','Marge HT',totCA-totMat>=0?'#00875a':'#dc3545');
     if(!data.length){list.innerHTML='<div class="card" style="text-align:center;color:#5a6b7d;padding:32px;"><div style="font-size:30px;">🏗️</div><p>Aucun chantier actif</p></div>';return;}
     list.innerHTML='<div class="card">'+data.map(function(c){
       var mc=c.margePct>=40?'#00875a':c.margePct>=20?'#d97706':'#dc3545';
-      return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;cursor:pointer;" onclick="openChantier('+c.lead.id+')"><strong style="font-size:14px;color:#0d1b2a;">'+c.lead.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">'+(c.lead.ville||c.lead.cp||'')+' · '+(c.lead.borne||'')+'</div><div style="font-size:12px;color:#455a6e;margin-top:2px;">CA '+fmt(c.caHT)+'€ · Matériel '+fmt(c.coutMat)+'€</div><div style="margin-top:6px;">'+menuStatut(c.lead.id,c.lead.statut)+'</div></div><div style="text-align:right;flex-shrink:0;cursor:pointer;" onclick="openChantier('+c.lead.id+')"><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:'+mc+';">'+Math.round(c.margePct)+'%</div><div style="font-size:11px;color:#455a6e;">marge</div><div style="font-size:13px;font-weight:700;color:'+mc+';margin-top:2px;">'+fmt(c.marge)+'€</div></div></div></div>';
+      return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;cursor:pointer;" onclick="openFiche('+c.lead.id+')"><strong style="font-size:14px;color:#0d1b2a;">'+c.lead.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">'+(c.lead.ville||c.lead.cp||'')+' · '+(c.lead.borne||'')+'</div><div style="font-size:12px;color:#455a6e;margin-top:2px;">CA '+fmt(c.caHT)+'€ · Matériel '+fmt(c.coutMat)+'€</div><div style="margin-top:6px;">'+menuStatut(c.lead.id,c.lead.statut)+'</div></div><div style="text-align:right;flex-shrink:0;cursor:pointer;" onclick="openFiche('+c.lead.id+')"><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:'+mc+';">'+Math.round(c.margePct)+'%</div><div style="font-size:11px;color:#455a6e;">marge HT</div><div style="font-size:13px;font-weight:700;color:'+mc+';margin-top:2px;">'+fmt(c.marge)+'€</div></div></div></div>';
     }).join('')+'</div>';
   }else{
-    // Vue prospects : liste simple avec menu statut
     kpisEl.style.display='none';
     if(!data.length){list.innerHTML='<div class="card" style="text-align:center;color:#5a6b7d;padding:32px;"><div style="font-size:30px;">👥</div><p>Aucun prospect</p></div>';return;}
     list.innerHTML='<div class="card">'+data.map(function(c){
       var l=c.lead;
-      return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;cursor:pointer;" onclick="openDetail('+l.id+')"><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">📞 '+(l.tel||'-')+'</div><div style="font-size:12px;color:#455a6e;">📍 '+(l.ville||l.cp||'-')+'</div><div style="font-size:13px;color:#0d1b2a;font-weight:700;margin-top:3px;">'+fmt(devisHT(l))+'€ HT</div><div style="margin-top:6px;">'+menuStatut(l.id,l.statut)+'</div></div></div></div>';
+      return '<div class="row"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div style="flex:1;cursor:pointer;" onclick="openFiche('+l.id+')"><strong style="font-size:14px;color:#0d1b2a;">'+l.nom+'</strong><div style="font-size:12px;color:#455a6e;margin-top:2px;">📞 '+(l.tel||'-')+'</div><div style="font-size:12px;color:#455a6e;">📍 '+(l.ville||l.cp||'-')+'</div><div style="font-size:13px;color:#0d1b2a;font-weight:700;margin-top:3px;">'+fmt(devisHT(l))+'€ HT</div><div style="margin-top:6px;">'+menuStatut(l.id,l.statut)+'</div></div></div></div>';
     }).join('')+'</div>';
   }
+}
+async function ajouterChantierST(){
+  var installateur=document.getElementById('st-installateur').value.trim();
+  var nom=document.getElementById('st-nom').value.trim();
+  var montant=document.getElementById('st-montant').value.trim();
+  if(!installateur||!montant){alert('Installateur et montant requis');return;}
+  var lead={_create:true,type:'st',installateur:installateur,nom:nom||installateur,devis:montant,tva:document.getElementById('st-tva').value,statut:document.getElementById('st-statut').value,date:document.getElementById('st-date').value?new Date(document.getElementById('st-date').value).toLocaleDateString('fr-FR'):new Date().toLocaleDateString('fr-FR'),notes:document.getElementById('st-notes').value.trim(),histo_action:'🤝 Chantier sous-traitance créé'};
+  try{
+    await fetch(VERCEL_URL+'/api/get-leads',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify(lead)});
+    ['st-installateur','st-nom','st-montant','st-notes'].forEach(function(i){document.getElementById(i).value='';});
+    renderChantiers();
+  }catch(e){alert('Erreur: '+e.message);}
 }
 async function saveChantierNote(id){
   var note=document.getElementById('ch-note-'+id).value;
