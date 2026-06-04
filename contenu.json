@@ -1,7 +1,7 @@
 {
   "_aide_photos": "Pour AFFICHER des realisations : ajoutez vos photos dans le dossier photos/ du depot, puis listez-les ci-dessous avec un chemin RELATIF (ex photos/chantier1.jpg). Chemin relatif = les photos suivront si vous changez d'hebergeur.",
   "_exemple_realisations": [
-    { "photo": "photos/IMG_5919.jpg", "legende": "Borne 7kW - Maison individuelle, Orchies" }
+    { "photo": "photos/IMG_5919.png", "legende": "Borne 7kW - Maison individuelle, Orchies" }
   ],
   "realisations": [],
 
