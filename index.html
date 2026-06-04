@@ -1416,13 +1416,18 @@ async function renderDepenses(reload){
   if(reload!==false){try{_depenses=await apiGetDepenses();}catch(e){_depenses=[];}}
   var de=document.getElementById('dep-date');if(de&&!de.value)de.valueAsDate=new Date();
   majChampChantier();
-  // Remplir le select chantier (leads signés/clôturés)
+  // Remplir le select chantier (tous les chantiers actifs : directs ET sous-traitance)
   try{
     var leads=await apiGetLeads();var sel=document.getElementById('dep-chantier');
-    if(sel&&sel.options.length<=1){
+    if(sel){
+      var current=sel.value;
+      sel.innerHTML='<option value="">— Frais de fonctionnement —</option>';
       leads.filter(function(l){return ['signe','encours','termine','cloture'].indexOf(l.statut)>-1;}).forEach(function(l){
-        var o=document.createElement('option');o.value=l.id;o.textContent=l.nom+' ('+(l.ville||l.cp||'')+')';sel.appendChild(o);
+        var o=document.createElement('option');o.value=l.id;
+        var label=l.type==='st'?((l.installateur||'ST')+' · '+(l.nom||'')):(l.nom+' ('+(l.ville||l.cp||'')+')');
+        o.textContent=label;sel.appendChild(o);
       });
+      if(current)sel.value=current;
     }
   }catch(e){}
   var f=_depFilter?_depenses.filter(function(d){return d.cat===_depFilter;}):_depenses;
