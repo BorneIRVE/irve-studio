@@ -1,0 +1,6 @@
+Placez vos photos de chantiers ici (format .jpg ou .png, idéalement < 500 Ko chacune).
+Puis ajoutez-les dans contenu.json avec un chemin relatif, par exemple :
+  "realisations": [
+    { "photo": "photos/chantier-lyon.jpg", "legende": "Borne 7kW - Lyon" }
+  ]
+Les chemins relatifs garantissent que vos photos resteront valides si vous changez d'hébergeur.
