@@ -900,16 +900,16 @@ async function uploadDrive(file,nomFichier,lead,sousDossier){
   if(!r.ok||!j.success)throw new Error(j.error||'Upload échoué');
   return j.link;
 }
-// Upload frais de fonctionnement : Frais-fonctionnement / Année / Mois (à la racine, hors statuts)
+// Upload frais de fonctionnement : Frais-Fonctionnement / Année / Mois (à la racine, hors statuts)
 async function uploadFraisFonctionnement(file,nomFichier,dateStr){
   var d=parseDate(dateStr)||new Date();
-  var annee=d.getFullYear();
+  var annee=String(d.getFullYear());
   var moisNom=MOIS_FR[d.getMonth()];
   var ext=(file.name.split('.').pop()||'pdf').toLowerCase();
   var fileName=nettoyerNom(nomFichier)+'.'+ext;
   var b64=await fileToBase64(file);
-  // chemin: client='Frais-fonctionnement', mois envoyé tel quel sans statut
-  var r=await fetch(VERCEL_URL+'/api/drive?action=upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,fraisFonctionnement:true,annee:annee,mois:moisNom})});
+  var path=['Frais-Fonctionnement',annee,moisNom];
+  var r=await fetch(VERCEL_URL+'/api/drive?action=upload',{method:'POST',headers:{'Authorization':'Bearer '+CRM_PWD,'Content-Type':'application/json'},body:JSON.stringify({fileName:fileName,fileData:b64,mimeType:file.type,path:path})});
   var j=await r.json();
   if(!r.ok||!j.success)throw new Error(j.error||'Upload échoué');
   return j.link;
@@ -1461,7 +1461,7 @@ async function ajouterDepense(){
         drive=await uploadFraisFonctionnement(fileInput.files[0],nom,dateStr);
       }
       st.textContent='✅ Facture uploadée';
-    }catch(e){st.textContent='❌ '+e.message;if(!confirm('Upload facture échoué ('+e.message+'). Ajouter la dépense quand même ?'))return;}
+    }catch(e){st.textContent='❌ Upload Drive : '+e.message;st.style.color='#dc3545';if(!confirm('La facture n\'a pas pu être envoyée sur Drive ('+e.message+'). Enregistrer quand même la dépense dans le CRM ?'))return;}
   }
   var dep={id:Date.now().toString(),cat:cat,desc:desc,ht:ht,date:dateStr,fourn:fourn,drive:drive,chantierId:chantierId,chantierNom:chantierNom};
   var ex=[];try{ex=await apiGetDepenses();}catch(e){}
