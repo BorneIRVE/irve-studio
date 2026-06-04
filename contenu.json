@@ -1,0 +1,20 @@
+{
+  "_aide_photos": "Pour AFFICHER des realisations : ajoutez vos photos dans le dossier photos/ du depot, puis listez-les ci-dessous avec un chemin RELATIF (ex photos/chantier1.jpg). Chemin relatif = les photos suivront si vous changez d'hebergeur.",
+  "_exemple_realisations": [
+    { "photo": "photos/chantier1.jpg", "legende": "Borne 7kW - Maison individuelle, Lyon" }
+  ],
+  "realisations": [],
+
+  "_aide_avis": "Deux facons d'afficher des avis : (A) MANUEL = remplissez la liste avis ci-dessous. (B) AUTO Google = passez googlePlaces.actif a true et mettez votre placeId (necessite l'API configuree). Si l'auto est actif, il a priorite sur le manuel.",
+  "googleNote": "",
+  "googleLien": "",
+  "_exemple_avis": [
+    { "auteur": "Jean D.", "ville": "Lyon", "note": 5, "texte": "Installation impeccable, equipe pro et ponctuelle." }
+  ],
+  "avis": [],
+
+  "googlePlaces": {
+    "actif": false,
+    "placeId": ""
+  }
+}
