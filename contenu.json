@@ -5,6 +5,7 @@
   ],
   "realisations": [],
 
+      { "photo": "photos/IMG_5919.png", "legende": "Borne 7kW - Maison individuelle, Orchies" }
   "_aide_avis": "Deux facons d'afficher des avis : (A) MANUEL = remplissez la liste avis ci-dessous. (B) AUTO Google = passez googlePlaces.actif a true et mettez votre placeId (necessite l'API configuree). Si l'auto est actif, il a priorite sur le manuel.",
   "googleNote": "",
   "googleLien": "",
