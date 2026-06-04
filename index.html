@@ -732,17 +732,8 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 6vw
           <button onclick="copierLienCalendrier()" class="btn btn-o" style="background:rgba(255,255,255,.12);color:#fff;border:none;">📋 Copier le lien</button>
         </div>
       </div>
-      <div class="card">
-        <h3 class="card-t">➕ Planifier une installation</h3>
-        <div class="field"><label class="fl">Lier à un lead</label><select id="pl-lead" onchange="remplirDepuisLead()"><option value="">— Saisie manuelle —</option></select></div>
-        <div class="g2"><div class="field"><label class="fl">Client</label><input type="text" id="pl-nom" placeholder="M. Dupont"></div><div class="field"><label class="fl">Téléphone</label><input type="tel" id="pl-tel" placeholder="06..."></div></div>
-        <div class="field"><label class="fl">Adresse complète</label><input type="text" id="pl-adresse" placeholder="12 rue... 75001 Paris"></div>
-        <div class="g2"><div class="field"><label class="fl">Borne à poser</label><input type="text" id="pl-borne" placeholder="Schneider 7kW"></div><div class="field"><label class="fl">Montant TTC (€)</label><input type="text" id="pl-montant" placeholder="1980"></div></div>
-        <div class="field"><label class="fl">Travaux à réaliser</label><textarea id="pl-travaux" placeholder="Pose + tableau + 15m câble..." style="min-height:54px;"></textarea></div>
-        <div class="g3"><div class="field"><label class="fl">Date</label><input type="date" id="pl-date"></div><div class="field"><label class="fl">Heure</label><input type="time" id="pl-heure" value="09:00"></div><div class="field"><label class="fl">Durée (h)</label><input type="number" id="pl-duree" value="4" min="1" max="12"></div></div>
-        <button onclick="ajouterInstallation()" class="btn btn-g" style="width:100%;">✅ Planifier</button>
-      </div>
-      <div class="card"><h3 class="card-t">🗓️ Installations</h3><div id="pl-liste"></div></div>
+      <div class="card" style="background:#f5f9ff;border:1px dashed #b8d4f0;"><p style="font-size:13px;color:#2d3e4f;margin:0;text-align:center;">💡 Pour planifier un chantier, ouvrez-le depuis l'onglet <strong>Chantiers</strong> et choisissez une date.</p></div>
+      <div class="card"><h3 class="card-t">🗓️ Installations planifiées</h3><div id="pl-liste"></div></div>
     </div>
 
     <!-- ══ LEADS ══ -->
@@ -1147,6 +1138,7 @@ async function openChantier(id){ openFiche(id); }
 async function openFiche(id){
   var chs=await computeChantiers();
   var c=chs.find(function(x){return x.lead.id===id;});if(!c)return;
+  try{_planning=await apiGetPlanning();}catch(e){_planning=_planning||[];}
   var l=c.lead;
   var s=STATUTS[l.statut]||STATUTS.nouveau;
   var adr=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));
@@ -1193,6 +1185,16 @@ async function openFiche(id){
 
   // — Notes —
   html+='<div style="margin-top:18px;"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#0d1b2a;margin-bottom:8px;">📝 Notes</div><textarea id="ch-note-'+l.id+'" placeholder="Compteur Linky, code portail, points d\'attention..." style="min-height:64px;">'+(l.chantier_notes||l.notes||'')+'</textarea><button onclick="saveChantierNote('+l.id+')" class="btn btn-d" style="width:100%;margin-top:6px;">💾 Enregistrer la note</button></div>';
+
+  // — Planification —
+  var planActuel=(_planning||[]).find(function(p){return p.leadId==l.id;});
+  html+='<div style="margin-top:18px;"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#0d1b2a;margin-bottom:8px;">📅 Planification</div>'+
+    (planActuel?'<div style="background:#e8fff4;border-radius:9px;padding:11px;margin-bottom:10px;font-size:13px;color:#0d1b2a;">✅ Planifié le <strong>'+formatDateFr(planActuel.date)+'</strong> à '+planActuel.heure+' ('+planActuel.duree+'h)</div>':'')+
+    '<div class="g3"><div class="field" style="margin:0;"><label class="fl">Date</label><input type="date" id="pf-date-'+l.id+'" value="'+(planActuel?planActuel.date:'')+'"></div>'+
+    '<div class="field" style="margin:0;"><label class="fl">Heure</label><input type="time" id="pf-heure-'+l.id+'" value="'+(planActuel?planActuel.heure:'09:00')+'"></div>'+
+    '<div class="field" style="margin:0;"><label class="fl">Durée (h)</label><input type="number" id="pf-duree-'+l.id+'" value="'+(planActuel?planActuel.duree:'4')+'" min="1" max="24"></div></div>'+
+    '<button onclick="planifierDepuisFiche('+l.id+')" class="btn btn-d" style="width:100%;">'+(planActuel?'🔄 Mettre à jour la planification':'📅 Planifier ce chantier')+'</button>'+
+    '<div id="pf-status-'+l.id+'" style="font-size:12px;color:#455a6e;text-align:center;margin-top:6px;"></div></div>';
 
   // — Photos —
   html+='<div style="margin-top:18px;"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#0d1b2a;margin-bottom:8px;">📷 Photos du chantier</div>'+
@@ -1473,8 +1475,6 @@ async function supprimerDepense(id){if(!confirm('Supprimer ?'))return;try{var ex
 // — PLANNING —
 var _planning=[];
 async function renderPlanning(){
-  try{var leads=await apiGetLeads();var sel=document.getElementById('pl-lead');if(sel&&sel.options.length<=1){leads.forEach(function(l){var o=document.createElement('option');o.value=l.id;o.textContent=l.nom+' ('+(l.ville||l.cp||'')+')';o._lead=l;sel.appendChild(o);});}}catch(e){}
-  var de=document.getElementById('pl-date');if(de&&!de.value)de.valueAsDate=new Date();
   try{_planning=await apiGetPlanning();}catch(e){_planning=[];}
   var liste=document.getElementById('pl-liste');
   var aVenir=_planning.filter(function(p){return new Date(p.date+'T'+(p.heure||'00:00'))>=new Date(new Date().toDateString());}).sort(function(a,b){return (a.date+a.heure).localeCompare(b.date+b.heure);});
@@ -1486,26 +1486,34 @@ async function renderPlanning(){
   if(passees.length)h+='<div style="font-size:11px;font-weight:700;color:#455a6e;text-transform:uppercase;margin:14px 0 6px;">Passées ('+passees.length+')</div>'+rd(passees,true);
   liste.innerHTML=h;
 }
-function remplirDepuisLead(){var sel=document.getElementById('pl-lead');var o=sel.options[sel.selectedIndex];if(o&&o._lead){var l=o._lead;document.getElementById('pl-nom').value=l.nom||'';document.getElementById('pl-tel').value=l.tel||'';document.getElementById('pl-adresse').value=l.adresse||((l.adr&&l.adr!=='-'?l.adr+' ':'')+(l.cp||'')+(l.ville&&l.ville!=='-'?' '+l.ville:''));document.getElementById('pl-borne').value=l.borne||'';document.getElementById('pl-montant').value=(l.devis||'').replace(/\s/g,'');}}
-async function ajouterInstallation(){
-  var nom=document.getElementById('pl-nom').value.trim(),date=document.getElementById('pl-date').value;
-  if(!nom||!date){alert('Nom et date requis');return;}
-  var leadSel=document.getElementById('pl-lead');
-  var leadId=leadSel?leadSel.value:'';
-  var inst={id:Date.now().toString(),leadId:leadId,nom:nom,tel:document.getElementById('pl-tel').value.trim(),adresse:document.getElementById('pl-adresse').value.trim(),borne:document.getElementById('pl-borne').value.trim(),montant:document.getElementById('pl-montant').value.trim(),travaux:document.getElementById('pl-travaux').value.trim(),date:date,heure:document.getElementById('pl-heure').value||'09:00',duree:document.getElementById('pl-duree').value||'4'};
-  try{_planning=await apiGetPlanning();}catch(e){_planning=[];}
-  _planning.push(inst);
+function formatDateFr(d){if(!d)return '';var p=d.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;}
+async function planifierDepuisFiche(id){
+  var date=document.getElementById('pf-date-'+id).value;
+  var heure=document.getElementById('pf-heure-'+id).value||'09:00';
+  var duree=document.getElementById('pf-duree-'+id).value||'4';
+  var st=document.getElementById('pf-status-'+id);
+  if(!date){st.textContent='⚠️ Choisissez une date';st.style.color='#d97706';return;}
+  st.textContent='⏳ Planification...';st.style.color='#455a6e';
   try{
+    var leads=await apiGetLeads();var l=leads.find(function(x){return x.id===id;});
+    if(!l){st.textContent='Erreur: chantier introuvable';return;}
+    try{_planning=await apiGetPlanning();}catch(e){_planning=[];}
+    // Adresse / montant / borne selon le type
+    var adresse=l.adresse||((l.ville||'')+' '+(l.cp||'')).trim();
+    var inst={id:Date.now().toString(),leadId:l.id,nom:l.type==='st'?((l.installateur||'')+' - '+(l.nom||'')):l.nom,tel:l.tel||'',adresse:adresse,borne:l.borne||'',montant:l.devis||'',travaux:l.chantier_notes||l.notes||'',date:date,heure:heure,duree:duree};
+    // Remplacer la planification existante de ce chantier, sinon ajouter
+    var idx=_planning.findIndex(function(p){return p.leadId==l.id;});
+    if(idx>-1)_planning[idx]=inst;else _planning.push(inst);
     await apiSavePlanning(_planning);
-    // Passer le lead lié en "En cours" + déplacer le dossier Drive
-    if(leadId){try{
-      var leadsP=await apiGetLeads();var leadP=leadsP.find(function(x){return x.id==leadId;});
-      var ancienP=leadP?leadP.statut:'signe';
-      await apiUpdateLead(parseInt(leadId),{statut:'encours',histo_action:'🔧 Installation planifiée — En cours'});
-      if(leadP&&ancienP!=='encours')deplacerDossierDrive(leadP,ancienP,'encours');
-    }catch(e){}}
-    ['pl-nom','pl-tel','pl-adresse','pl-borne','pl-montant','pl-travaux'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('pl-lead').selectedIndex=0;renderPlanning();alert('Installation planifiée ! Elle apparaîtra sur votre iPhone.');
-  }catch(e){alert('Erreur: '+e.message);}
+    // Passer en "En cours" + déplacer le dossier Drive si pas déjà fait
+    if(l.statut!=='encours'&&l.statut!=='termine'&&l.statut!=='cloture'){
+      var ancien=l.statut;
+      await apiUpdateLead(id,{statut:'encours',histo_action:'🔧 Planifié le '+formatDateFr(date)+' — En cours'});
+      deplacerDossierDrive(l,ancien,'encours');
+    }
+    st.textContent='✅ Planifié ! Visible dans le Planning et sur votre iPhone.';st.style.color='#00875a';
+    setTimeout(function(){closeModal();crmTab('planning');},900);
+  }catch(e){st.textContent='❌ '+e.message;st.style.color='#dc3545';}
 }
 async function supprimerInstallation(id){if(!confirm('Supprimer ?'))return;_planning=_planning.filter(function(p){return p.id!==id;});try{await apiSavePlanning(_planning);renderPlanning();}catch(e){alert('Erreur: '+e.message);}}
 function copierLienCalendrier(){var l=VERCEL_URL+'/api/calendar';if(navigator.clipboard)navigator.clipboard.writeText(l).then(function(){alert('Lien copié !\n\n'+l);}).catch(function(){prompt('Copiez:',l);});else prompt('Copiez:',l);}
