@@ -1,5 +1,5 @@
 // Service Worker VoltExpert CRM
-const CACHE = 'voltexpert-v19';
+const CACHE = 'voltexpert-v20';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

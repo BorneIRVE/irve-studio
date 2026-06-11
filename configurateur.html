@@ -691,11 +691,32 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
             <div><span class="adm-lbl">Email de contact</span><input type="email" id="e-email" placeholder="contact@votreentreprise.fr"></div>
           </div>
           <div class="g2a" style="margin-bottom:9px;">
+            <div><span class="adm-lbl">Capital social (EUR)</span><input type="text" id="e-capital" placeholder="1000"></div>
+            <div><span class="adm-lbl">Code APE/NAF</span><input type="text" id="e-ape" placeholder="43.21A"></div>
+          </div>
+          <div class="g2a" style="margin-bottom:9px;">
             <div><span class="adm-lbl">SIRET</span><input type="text" id="e-siret" placeholder="123 456 789 00012"></div>
             <div><span class="adm-lbl">TVA intracommunautaire</span><input type="text" id="e-tva" placeholder="FR12 123456789"></div>
           </div>
-          <div class="g2a">
+          <div class="g2a" style="margin-bottom:9px;">
             <div><span class="adm-lbl">RCS</span><input type="text" id="e-rcs" placeholder="Paris B 123 456 789"></div>
+            <div><span class="adm-lbl">Qualification IRVE (Qualifelec)</span><input type="text" id="e-qualif" placeholder="Qualifelec IRVE n°..."></div>
+          </div>
+          <div style="font-weight:700;font-size:13px;color:#0a1628;margin:14px 0 8px;">🛡️ Assurances (obligatoire bâtiment)</div>
+          <div class="g2a" style="margin-bottom:9px;">
+            <div><span class="adm-lbl">Assureur RC Pro</span><input type="text" id="e-rc" placeholder="AXA - contrat n°..."></div>
+            <div><span class="adm-lbl">Assureur décennale</span><input type="text" id="e-dec-assureur" placeholder="MAAF Pro"></div>
+          </div>
+          <div class="g2a" style="margin-bottom:9px;">
+            <div><span class="adm-lbl">N° contrat décennale</span><input type="text" id="e-dec-num" placeholder="Contrat n°..."></div>
+            <div><span class="adm-lbl">Zone couverture décennale</span><input type="text" id="e-dec-zone" placeholder="France métropolitaine"></div>
+          </div>
+          <div style="font-weight:700;font-size:13px;color:#0a1628;margin:14px 0 8px;">⚖️ Médiateur de la consommation (obligatoire avec particuliers)</div>
+          <div class="g2a">
+            <div><span class="adm-lbl">Nom du médiateur</span><input type="text" id="e-med-nom" placeholder="CM2C"></div>
+            <div><span class="adm-lbl">Site du médiateur</span><input type="text" id="e-med-site" placeholder="www.cm2c.net"></div>
+          </div>
+          <div class="g2a" style="margin-top:9px;">
             <div><span class="adm-lbl">URL Logo (optionnel)</span><input type="url" id="e-logo" placeholder="https://..."></div>
           </div>
         </div>
@@ -1643,14 +1664,21 @@ function generateDevisPDF(){
     y+=6;
 
     // Signatures
-    if(y>248){doc.addPage();bg(255,255,255);doc.rect(0,0,W,297,'F');y=15;}
+    if(y>240){doc.addPage();bg(255,255,255);doc.rect(0,0,W,297,'F');y=15;}
+    // Mention manuscrite obligatoire
+    fw('normal');fs(7);tc(90,90,90);
+    dt('Date de debut des travaux souhaitee : ______________   Duree estimee : '+(d.nbB>1?'2 a 3 jours':'1 journee'),14,y);y+=7;
     doc.setDrawColor(0,135,75);doc.setLineWidth(0.4);
-    doc.rect(14,y,88,32,'S');doc.rect(W-14-88,y,88,32,'S');
+    doc.rect(14,y,88,38,'S');doc.rect(W-14-88,y,88,38,'S');
     fw('bold');fs(7.5);tc(0,135,75);dt('BON POUR ACCORD - CLIENT',17,y+5);dt('POUR '+s(ENTREPRISE.nom).toUpperCase(),W-14-85,y+5);
-    fw('normal');fs(7.5);tc(80,80,80);
-    dt('Nom: '+s(nomC),17,y+11);dt('Date: '+today,W-14-85,y+11);
-    dt('Date: ___________________',17,y+17);dt('Signature et cachet:',W-14-85,y+17);
-    y+=38;
+    fw('normal');fs(6.3);tc(110,110,110);
+    dt('Mention manuscrite obligatoire : recopiez',17,y+10);
+    fw('italic');tc(0,135,75);dt('"Devis recu avant execution des travaux,',17,y+14);dt('bon pour accord"',17,y+17.5);
+    fw('normal');tc(80,80,80);fs(7.5);
+    dt('Nom : '+s(nomC),17,y+24);dt('Nom du signataire :',W-14-85,y+11);
+    dt('Date : ___________________',17,y+30);dt('Date : ___________________',W-14-85,y+18);
+    dt('Signature :',17,y+35);dt('Signature et cachet :',W-14-85,y+25);
+    y+=44;
 
     // Mentions légales
     // ── CGV & MENTIONS LÉGALES ──────────────────
@@ -1662,17 +1690,40 @@ function generateDevisPDF(){
     doc.setDrawColor(0,135,75);doc.line(14,y,W-14,y);y+=4;
 
     fw('normal');fs(6.5);tc(80,90,100);
+    // Helper : assemble seulement les champs renseignés
+    var mentLegales=function(){
+      var parts=[];
+      parts.push(s(ENTREPRISE.nom)+' - '+s(ENTREPRISE.forme)+(ENTREPRISE.capital?' au capital de '+s(ENTREPRISE.capital)+' EUR':''));
+      parts.push(s(ENTREPRISE.adresse)+' '+s(ENTREPRISE.cp_ville));
+      if(ENTREPRISE.siret)parts.push('SIRET '+s(ENTREPRISE.siret));
+      if(ENTREPRISE.ape)parts.push('APE '+s(ENTREPRISE.ape));
+      if(ENTREPRISE.rcs)parts.push('RCS '+s(ENTREPRISE.rcs));
+      if(ENTREPRISE.tva_intra)parts.push('TVA '+s(ENTREPRISE.tva_intra));
+      return parts.join(' - ')+'.';
+    };
+    var mentAssurance=function(){
+      var t='RC Professionnelle'+(ENTREPRISE.assurance_rc?' ('+s(ENTREPRISE.assurance_rc)+')':'')+' et assurance decennale';
+      if(ENTREPRISE.decennale_assureur)t+=' souscrite aupres de '+s(ENTREPRISE.decennale_assureur);
+      if(ENTREPRISE.decennale_num)t+=' (contrat '+s(ENTREPRISE.decennale_num)+')';
+      t+=', couverture '+s(ENTREPRISE.decennale_zone||'France metropolitaine')+'.';
+      if(ENTREPRISE.qualif_irve)t+=' Qualification IRVE : '+s(ENTREPRISE.qualif_irve)+'.';
+      return t;
+    };
+    var mentMediateur=function(){
+      if(ENTREPRISE.mediateur_nom)return 'En cas de litige non resolu, le client particulier peut recourir gratuitement au mediateur de la consommation : '+s(ENTREPRISE.mediateur_nom)+(ENTREPRISE.mediateur_site?' ('+s(ENTREPRISE.mediateur_site)+')':'')+', conformement aux art. L.616-1 et R.616-1 du Code de la consommation.';
+      return 'En cas de litige non resolu a l\'amiable, le client particulier peut recourir gratuitement a un mediateur de la consommation (art. L.616-1 C. conso.). Les coordonnees du mediateur sont disponibles sur demande.';
+    };
     var cgv=[
-      ['1. VALIDITE DU DEVIS','Ce devis est valable 30 jours a compter de sa date d\'emission. Passe ce delai, les tarifs pourront etre revises. Toute modification du projet apres acceptation pourra entrainer un avenant tarifaire.'],
+      ['1. VALIDITE DU DEVIS','Ce devis gratuit est valable 30 jours a compter de sa date d\'emission. Passe ce delai, les tarifs pourront etre revises. Toute modification du projet apres acceptation pourra entrainer un avenant tarifaire.'],
       ['2. MODALITES DE PAIEMENT','30% a la commande, solde a la reception des travaux. Paiement par virement bancaire ou cheque. En cas de retard de paiement, des penalites seront appliquees au taux legal majore de 5 points, ainsi qu\'une indemnite forfaitaire de recouvrement de 40 EUR (art. L.441-10 C. com.).'],
-      ['3. DELAI D\'EXECUTION','Delai indicatif : 2 a 4 semaines apres reception de l\'acompte et fourniture des documents necessaires. Ce delai peut varier selon disponibilite du materiel et contraintes de chantier. Aucune penalite ne pourra etre reclamee pour un retard imputable a des causes exterieures.'],
-      ['4. GARANTIES','Main d\'oeuvre garantie 2 ans. Materiel garanti selon conditions constructeur (mentionnees au devis). Garantie decennale et RC Professionnelle souscrites. Attestations disponibles sur demande.'],
-      ['5. TVA A TAUX REDUIT','TVA a 5,5% applicable conformement a l\'art. 279-0 bis du CGI pour les travaux d\'amelioration, de transformation et d\'entretien portant sur des locaux a usage d\'habitation acheves depuis plus de 2 ans. Le client certifie sur l\'honneur que ces conditions sont remplies. Toute fausse declaration engage sa seule responsabilite.'],
+      ['3. DELAI D\'EXECUTION','Debut des travaux et duree estimee precises ci-dessus. Delai indicatif : 2 a 4 semaines apres reception de l\'acompte et fourniture des documents necessaires. Ce delai peut varier selon disponibilite du materiel et contraintes de chantier.'],
+      ['4. GARANTIES & ASSURANCES','Main d\'oeuvre garantie 2 ans. Materiel garanti selon conditions constructeur. '+mentAssurance()+' Attestations disponibles sur demande.'],
+      ['5. TVA A TAUX REDUIT','TVA a 5,5% applicable conformement a l\'art. 279-0 bis du CGI pour les travaux portant sur des locaux a usage d\'habitation acheves depuis plus de 2 ans. Le client certifie sur l\'honneur que ces conditions sont remplies. Toute fausse declaration engage sa seule responsabilite.'],
       ['6. PRIME ADVENIR','L\'aide ADVENIR est soumise aux conditions d\'eligibilite de l\'AVERE-France et peut etre modifiee ou supprimee sans preavis. Son obtention ne saurait etre garantie. En cas de non-eligibilite constatee apres travaux, le montant TTC plein reste du par le client.'],
-      ['7. DROIT DE RETRACTATION','Conformement aux art. L.221-18 et suivants du Code de la consommation (clients particuliers), vous disposez d\'un delai de 14 jours a compter de la signature pour exercer votre droit de retractation, sans motif. Formulaire disponible sur demande. Passe ce delai, l\'acompte est acquis.'],
-      ['8. PROPRIETE & RESPONSABILITE','Le materiel demeure propriete du prestataire jusqu\'au paiement integral. Les risques sont transferes a la livraison. Le prestataire ne saurait etre tenu responsable des dommages indirects ou immateriels.'],
-      ['9. LITIGES','En cas de litige, une solution amiable sera recherchee en priorite. A defaut, le client peut recourir a la mediation de la consommation (art. L.616-1 C. conso.). Les tribunaux competents sont ceux du siege du prestataire.'],
-      ['10. MENTIONS LEGALES',s(ENTREPRISE.nom)+' - '+s(ENTREPRISE.forme)+' au capital social variable - SIRET '+s(ENTREPRISE.siret)+' - TVA intracommunautaire '+s(ENTREPRISE.tva_intra)+' - RCS '+s(ENTREPRISE.rcs)+' - Assurance RC Pro et Decennale souscrites.'],
+      ['7. DROIT DE RETRACTATION','Conformement aux art. L.221-18 et suivants du Code de la consommation (clients particuliers, contrat hors etablissement), vous disposez d\'un delai de 14 jours a compter de la signature pour exercer votre droit de retractation, sans motif. Formulaire de retractation disponible sur demande.'],
+      ['8. PROPRIETE & RESPONSABILITE','Le materiel demeure propriete du prestataire jusqu\'au paiement integral (clause de reserve de propriete). Les risques sont transferes a la livraison. Le prestataire ne saurait etre tenu responsable des dommages indirects ou immateriels.'],
+      ['9. MEDIATION & LITIGES',mentMediateur()+' A defaut, les tribunaux competents sont ceux du ressort du siege du prestataire.'],
+      ['10. MENTIONS LEGALES',mentLegales()],
     ];
 
     cgv.forEach(function(art){
@@ -1876,16 +1927,28 @@ function generatePDF(){
 
 // ── INFOS ENTREPRISE — À MODIFIER ──────────────
 const ENTREPRISE = {
-  nom:            'Votre Entreprise IRVE',
-  forme:          'SAS',                          // SAS, SARL, EI...
+  nom:            'VoltExpert',
+  forme:          'EURL',                          // SAS, SARL, EURL, EI...
+  capital:        '1000',                          // capital social en EUR
   adresse:        '12 rue de l\'Electricité',
   cp_ville:       '75000 Paris',
   tel:            '01 23 45 67 89',
-  email:          'contact@votreentreprise.fr',
-  siret:          '123 456 789 00012',
-  tva_intra:      'FR12 123456789',
-  rcs:            'Paris B 123 456 789',
-  logo_url:       '',                             // Laisser vide ou mettre une URL d'image
+  email:          'contact@voltexpert.fr',
+  siret:          '',                              // ex: 123 456 789 00012
+  ape:            '',                              // ex: 43.21A
+  tva_intra:      '',                              // ex: FR12 123456789
+  rcs:            '',                              // ex: Paris B 123 456 789
+  // Assurances (obligatoire bâtiment)
+  assurance_rc:   '',                              // ex: AXA - contrat n°...
+  decennale_assureur: '',                          // ex: MAAF Pro
+  decennale_num:  '',                              // n° de contrat décennale
+  decennale_zone: 'France métropolitaine',         // couverture géographique
+  // Qualification IRVE (utile ADVENIR)
+  qualif_irve:    '',                              // ex: Qualifelec IRVE n°...
+  // Médiateur de la consommation (obligatoire avec particuliers)
+  mediateur_nom:  '',                              // ex: CM2C
+  mediateur_site: '',                              // ex: www.cm2c.net
+  logo_url:       '',
 };
 
 async function generateDocx(){
@@ -2135,23 +2198,39 @@ async function generateDocx(){
     para(txt('3. DÉLAI D\'EXÉCUTION', {bold:true, size:20, color:'0a1628'}), {after:40}),
     para(txt('Délai d\'exécution estimé : 2 à 4 semaines après réception de l\'acompte et accord de l\'éventuelle déclaration préalable. Ce délai est donné à titre indicatif et peut varier selon les contraintes du chantier et les délais de livraison du matériel.', {size:19, color:'444444'}), {after:120}),
 
-    para(txt('4. GARANTIES', {bold:true, size:20, color:'0a1628'}), {after:40}),
-    para(txt('La main d\'œuvre est garantie 1 an. La borne est garantie '+b.gar+' an'+(b.gar>1?'s':'')+' constructeur. Les travaux sont couverts par notre assurance Responsabilité Civile Professionnelle et notre garantie décennale pour les travaux relevant de cette garantie.', {size:19, color:'444444'}), {after:120}),
+    para(txt('4. GARANTIES & ASSURANCES', {bold:true, size:20, color:'0a1628'}), {after:40}),
+    para(txt('La main d\'œuvre est garantie 2 ans. La borne est garantie '+b.gar+' an'+(b.gar>1?'s':'')+' constructeur. '+
+      'Responsabilité Civile Professionnelle'+(ENTREPRISE.assurance_rc?' ('+ENTREPRISE.assurance_rc+')':'')+' et assurance décennale'+
+      (ENTREPRISE.decennale_assureur?' souscrite auprès de '+ENTREPRISE.decennale_assureur:'')+
+      (ENTREPRISE.decennale_num?' (contrat '+ENTREPRISE.decennale_num+')':'')+
+      ', couverture '+(ENTREPRISE.decennale_zone||'France métropolitaine')+'.'+
+      (ENTREPRISE.qualif_irve?' Qualification IRVE : '+ENTREPRISE.qualif_irve+'.':'')+
+      ' Attestations disponibles sur demande.', {size:19, color:'444444'}), {after:120}),
 
     para(txt('5. TVA À TAUX RÉDUIT', {bold:true, size:20, color:'0a1628'}), {after:40}),
     para(txt('Conformément à l\'article 279-0 bis du CGI, la TVA au taux réduit de 5,5% est applicable aux travaux d\'installation de bornes de recharge pour véhicules électriques dans les locaux à usage d\'habitation achevés depuis plus de 2 ans. Le client atteste sur l\'honneur que les conditions d\'application du taux réduit sont remplies.', {size:19, color:'444444'}), {after:120}),
 
     para(txt('6. AIDE PRIME ADVENIR', {bold:true, size:20, color:'0a1628'}), {after:40}),
     para(txt(isCopro && d.adv > 0
-      ? 'Une prime ADVENIR de '+d.adv.toLocaleString('fr')+' € est applicable pour cette installation en copropriété. Cette prime est versée sous conditions d\'éligibilité par l\'AVERE-France. Nous accompagnons le client dans la constitution du dossier de demande.'
-      : 'La prime ADVENIR est applicable uniquement pour les installations en copropriété. Pour les maisons individuelles, d\'autres aides locales peuvent être disponibles (consultez votre mairie ou région).',
+      ? 'Une prime ADVENIR de '+d.adv.toLocaleString('fr')+' € est applicable pour cette installation en copropriété. Cette prime est versée sous conditions d\'éligibilité par l\'AVERE-France. Nous accompagnons le client dans la constitution du dossier. Son obtention ne saurait être garantie.'
+      : 'La prime ADVENIR est applicable principalement pour les installations en copropriété. Pour les maisons individuelles, d\'autres aides locales peuvent être disponibles. Son obtention ne saurait être garantie.',
       {size:19, color:'444444'}), {after:120}),
 
-    para(txt('7. DRetour sur investissementT DE RÉTRACTATION', {bold:true, size:20, color:'0a1628'}), {after:40}),
-    para(txt('Conformément aux articles L.221-18 et suivants du Code de la consommation (pour les consommateurs), vous disposez d\'un délai de 14 jours à compter de la signature du bon de commande pour exercer votre droit de rétractation, sans avoir à motiver votre décision.', {size:19, color:'444444'}), {after:120}),
+    para(txt('7. DROIT DE RÉTRACTATION', {bold:true, size:20, color:'0a1628'}), {after:40}),
+    para(txt('Conformément aux articles L.221-18 et suivants du Code de la consommation (contrat conclu hors établissement), le client particulier dispose d\'un délai de 14 jours à compter de la signature pour exercer son droit de rétractation, sans avoir à motiver sa décision. Un formulaire de rétractation est disponible sur demande.', {size:19, color:'444444'}), {after:120}),
+
+    para(txt('8. MÉDIATION DE LA CONSOMMATION', {bold:true, size:20, color:'0a1628'}), {after:40}),
+    para(txt(ENTREPRISE.mediateur_nom
+      ? 'En cas de litige non résolu à l\'amiable, le client particulier peut recourir gratuitement au médiateur de la consommation : '+ENTREPRISE.mediateur_nom+(ENTREPRISE.mediateur_site?' ('+ENTREPRISE.mediateur_site+')':'')+', conformément aux articles L.616-1 et R.616-1 du Code de la consommation.'
+      : 'En cas de litige non résolu à l\'amiable, le client particulier peut recourir gratuitement à un médiateur de la consommation (art. L.616-1 C. conso.). Les coordonnées du médiateur sont disponibles sur demande.',
+      {size:19, color:'444444'}), {after:120}),
 
     sp(200),
     hr(),
+
+    // Mention manuscrite obligatoire
+    para(txt('Date de début des travaux souhaitée : ______________     Durée estimée : '+(d.nbB>1?'2 à 3 jours':'1 journée'), {size:19, color:'444444'}), {after:80}),
+    para([txt('Mention manuscrite à recopier par le client : ', {size:19, color:'444444'}), txt('« Devis reçu avant exécution des travaux, bon pour accord »', {size:19, color:'00875a', bold:true, italic:true})], {after:160}),
 
     // Zone de signature
     new Table({
@@ -2184,7 +2263,12 @@ async function generateDocx(){
     }),
 
     sp(160),
-    para(txt(ENTREPRISE.nom+' — '+ENTREPRISE.forme+' — SIRET '+ENTREPRISE.siret+' — TVA '+ENTREPRISE.tva_intra, {size:16, color:'aaaaaa', italic:true}),
+    para(txt(ENTREPRISE.nom+' — '+ENTREPRISE.forme+(ENTREPRISE.capital?' au capital de '+ENTREPRISE.capital+' €':'')+
+      ' — '+ENTREPRISE.adresse+' '+ENTREPRISE.cp_ville+
+      (ENTREPRISE.siret?' — SIRET '+ENTREPRISE.siret:'')+
+      (ENTREPRISE.ape?' — APE '+ENTREPRISE.ape:'')+
+      (ENTREPRISE.rcs?' — RCS '+ENTREPRISE.rcs:'')+
+      (ENTREPRISE.tva_intra?' — TVA '+ENTREPRISE.tva_intra:''), {size:16, color:'aaaaaa', italic:true}),
       {align:AlignmentType.CENTER, after:0}),
   ];
 
@@ -2453,6 +2537,15 @@ function rdrEntreprise(){
   set('e-siret',e.siret);
   set('e-tva',e.tva_intra);
   set('e-rcs',e.rcs);
+  set('e-capital',e.capital);
+  set('e-ape',e.ape);
+  set('e-qualif',e.qualif_irve);
+  set('e-rc',e.assurance_rc);
+  set('e-dec-assureur',e.decennale_assureur);
+  set('e-dec-num',e.decennale_num);
+  set('e-dec-zone',e.decennale_zone);
+  set('e-med-nom',e.mediateur_nom);
+  set('e-med-site',e.mediateur_site);
   set('e-logo',e.logo_url);
 }
 async function sauverEntreprise(){
@@ -2468,6 +2561,15 @@ async function sauverEntreprise(){
     siret:document.getElementById('e-siret').value||'',
     tva_intra:document.getElementById('e-tva').value||'',
     rcs:document.getElementById('e-rcs').value||'',
+    capital:document.getElementById('e-capital').value||'',
+    ape:document.getElementById('e-ape').value||'',
+    qualif_irve:document.getElementById('e-qualif').value||'',
+    assurance_rc:document.getElementById('e-rc').value||'',
+    decennale_assureur:document.getElementById('e-dec-assureur').value||'',
+    decennale_num:document.getElementById('e-dec-num').value||'',
+    decennale_zone:document.getElementById('e-dec-zone').value||'',
+    mediateur_nom:document.getElementById('e-med-nom').value||'',
+    mediateur_site:document.getElementById('e-med-site').value||'',
     logo_url:document.getElementById('e-logo').value||'',
   };
   var sec=document.querySelector('#t-entreprise .asec');
