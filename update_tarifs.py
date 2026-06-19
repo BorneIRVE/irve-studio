@@ -13,7 +13,7 @@ from pathlib import Path
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 TARIFS_FILE = Path(__file__).parent / "tarifs.json"
-MODEL = "claude-sonnet-4-20250514"
+MODEL = "claude-sonnet-4-6"
 
 PROMPT = """
 Tu es un expert en tarifs d'électricité en France. Recherche sur le web les tarifs 
