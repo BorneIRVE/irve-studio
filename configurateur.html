@@ -112,6 +112,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;heigh
 .bc-badge{position:absolute;top:11px;right:11px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;}
 .bg-rec{background:var(--lime);color:var(--ink);}
 .bg-inc{background:rgba(255,107,107,.15);color:var(--coral);border:1px solid rgba(255,107,107,.25);}
+.bg-upg{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.3);position:absolute;top:11px;left:11px;right:auto;}
 .bc-name{font-family:'Cabinet Grotesk',sans-serif;font-size:14px;font-weight:800;color:var(--white);margin-bottom:2px;}
 .bc-marque{font-size:11px;color:var(--muted);margin-bottom:11px;}
 .bc-specs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px;}
@@ -346,8 +347,6 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
           <select id="kva">
             <option value="3">3 kVA</option><option value="6" selected>6 kVA</option>
             <option value="9">9 kVA</option><option value="12">12 kVA</option>
-            <option value="15">15 kVA</option><option value="18">18 kVA</option>
-            <option value="24">24 kVA</option><option value="36">36 kVA (triphasé)</option>
           </select>
         </div>
         <div class="fld">
@@ -875,6 +874,14 @@ function onFourni(){
 function onPhases(){
   const tri=document.querySelector('input[name="phases"]:checked').value==='tri';
   document.getElementById('al-phases').style.display=tri?'none':'block';
+  // Adapter les paliers kVA disponibles : mono 3-12, tri 12-36
+  const sel=document.getElementById('kva');
+  const prev=parseInt(sel.value)||6;
+  const paliers=tri?[12,15,18,24,30,36]:[3,6,9,12];
+  sel.innerHTML=paliers.map(function(k){return '<option value="'+k+'">'+k+' kVA</option>';}).join('');
+  // Conserver la valeur si encore valide, sinon défaut (6 en mono, 12 en tri)
+  if(paliers.indexOf(prev)>-1) sel.value=prev;
+  else sel.value=tri?12:6;
 }
 function chkChauf(){
   const ch=document.querySelector('input[name="chauf"]:checked').value;
@@ -954,6 +961,17 @@ function tveff(f,rh){
   return f.kb;
 }
 
+// Puissance souscrite (kVA) minimale recommandée selon la borne.
+// Une borne tire sa puissance nominale ; le compteur doit pouvoir la fournir EN PLUS
+// des usages du foyer. On vise donc le palier kVA >= puissance borne + marge ~2 kVA.
+function puissanceRequiseKva(borne){
+  var kw=borne&&borne.kw?borne.kw:0;
+  var paliers=[6,9,12,15,18,24,30,36];
+  // Puissance à couvrir = borne + marge foyer (≈ 2 kVA pour les usages simultanés de base)
+  var besoin=kw+2;
+  for(var i=0;i<paliers.length;i++){ if(paliers[i]>=besoin) return paliers[i]; }
+  return 36;
+}
 function getP(){
   const ct=parseInt(document.getElementById('foyer').value);
   const fid=document.getElementById('fourni').value;
@@ -967,6 +985,7 @@ function getP(){
   const adminTarifs=loadCat().tarifs||DEF_CAT.tarifs;
   // Puissance souscrite : compteur actuel vs requis par la borne
   const kvaActuel=parseInt(document.getElementById('kva').value)||6;
+  // Puissance kVA requise = valeur définie dans le panneau admin (champ kva de la borne)
   const kvaRequis=_sel&&_sel.kva?_sel.kva:kvaActuel;
   const kvaUpgrade=kvaRequis>kvaActuel; // augmentation d'abonnement nécessaire
   // Surcoût annuel réel basé sur les écarts d'abonnement de tarifs.json (TURPE réglementé)
@@ -1024,10 +1043,14 @@ function renderBornes(){
   const pMin=Math.min(...prices), pMax=Math.max(...prices);
 
   const scored=cat.bornes.map(b=>{
-    // ── Compatibilité technique (bloquante) ──
+    // ── Compatibilité PHASES (seule vraie incompatibilité bloquante) ──
+    // Une borne triphasée nécessite une installation triphasée. Une borne mono passe partout.
     const phaseOk=b.phases==='mono'||(b.phases==='tri'&&phases==='tri');
+    // ── Puissance kVA : insuffisante = augmentation d'abonnement nécessaire (NON bloquant) ──
     const kvaOk=kva>=b.kva;
-    const compat=phaseOk&&kvaOk;
+    const needUpgrade=!kvaOk; // borne compatible mais demande une montée en puissance
+    // La borne est compatible si les phases conviennent (le kVA se règle par augmentation)
+    const compat=phaseOk;
 
     // ── Score pondéré (100 pts max) ──
     let score=0;
@@ -1078,7 +1101,7 @@ function renderBornes(){
 
     // Badge
     const rec=compat&&score>=45;
-    return{...b,compat,rec,score};
+    return{...b,compat,rec,score,needUpgrade,kvaOk};
   }).sort((a,bx)=>bx.score-a.score);
 
   let html='<div class="borne-grid">';
@@ -1094,11 +1117,12 @@ function renderBornes(){
     const scorePct=Math.round(b.score);
     const scoreColor=b.score>=70?'var(--lime)':b.score>=45?'var(--amber)':'var(--coral)';
 
-    html+='<div class="bc'+(b.rec?' ':b.compat?' ':' incompat')+(sel?' sel':'')+'" onclick="selBorne(\''+b.id+'\',this)">';
+    html+='<div class="bc'+(b.compat?'':' incompat')+(sel?' sel':'')+'" onclick="selBorne(\''+b.id+'\',this)">';
 
-    // Badge recommandé/incompatible + score
+    // Badge recommandé / incompatible (phases) / augmentation kVA
     if(b.rec) html+='<span class="bc-badge bg-rec">★ Recommandé</span>';
-    else if(!b.compat) html+='<span class="bc-badge bg-inc">Incompatible</span>';
+    else if(!b.compat) html+='<span class="bc-badge bg-inc">Triphasé requis</span>';
+    if(b.compat&&b.needUpgrade) html+='<span class="bc-badge bg-upg">⚡ +'+b.kva+' kVA</span>';
 
     html+='<div class="bc-name">'+b.nom+'</div>';
     html+='<div class="bc-marque">'+b.marque+'</div>';
