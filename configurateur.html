@@ -538,7 +538,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
             <label class="ch"><input type="radio" name="pref-cable" value="7" onchange="renderBornes()"><div class="chi"><span class="ico">〰️</span><span class="lbl">Oui — 7m</span></div></label>
             <label class="ch"><input type="radio" name="pref-cable" value="10" onchange="renderBornes()"><div class="chi"><span class="ico">〰️</span><span class="lbl">Oui — 10m</span></div></label>
           </div>
-          <div class="al info" style="margin-top:10px;font-size:11.5px;">ℹ️ La prise T2 (sans câble) vous permet d'utiliser votre propre câble de recharge, souvent plus pratique pour plusieurs véhicules.</div>
+          <div class="al info" style="margin-top:10px;font-size:11.5px;">ℹ️ La prise T2 (sans câble) vous permet d'utiliser votre propre câble de recharge.</div>
         </div>
       </div>
     </div>
@@ -552,7 +552,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
 
   <!-- P6 CONTACT (anciennement P7) -->
   <div class="panel" id="p6">
-    <div class="shead"><div class="sstep">Étape 6 sur 7</div><div class="stitle">Vos coordonnées</div><div class="ssub">Renseignez vos coordonnées pour recevoir votre étude complète et votre devis par email.</div></div>
+    <div class="shead"><div class="sstep">Étape 6 sur 7</div><div class="stitle">Vos coordonnées</div><div class="ssub">Renseignez vos coordonnées pour recevoir votre étude tarifaire personnalisée par email.</div></div>
     <div class="g2">
       <div class="card">
         <div class="fld"><label>Prénom & Nom *</label><input type="text" id="c-nom" placeholder="Jean Dupont"></div>
@@ -563,8 +563,8 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
       <div class="card">
         <div class="fld"><label>Message complémentaire</label><textarea id="c-msg" placeholder="Informations complémentaires…"></textarea></div>
-        <div class="al info" style="margin-top:12px;">📧 Vous recevrez l'étude tarifaire + le devis IRVE par email.</div>
-        <div class="al ok" style="margin-top:8px;">🔒 Données utilisées uniquement pour votre devis (RGPD).</div>
+        <div class="al info" style="margin-top:12px;">📧 Vous recevrez votre étude tarifaire personnalisée par email. Il s'agit d'une <strong>simulation</strong> : un devis détaillé vous sera adressé sous 24h après notre prise de contact.</div>
+        <div class="al ok" style="margin-top:8px;">🔒 Données utilisées uniquement pour votre étude (RGPD).</div>
       </div>
     </div>
     <div class="btn-row">
@@ -577,7 +577,9 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
   <div class="panel" id="p7">
     <div id="spin-res" class="spin on"><div class="spini">⚡</div><p style="color:var(--muted);margin-top:11px;">Calcul en cours…</p></div>
     <div id="results" style="display:none;">
+      <div class="al info" style="margin-bottom:18px;">ℹ️ <strong>Ceci est une simulation</strong> destinée à vous donner une estimation. Un devis détaillé et personnalisé vous sera édité sous 24h après notre prise de contact.</div>
       <div class="rhero" id="res-borne"></div>
+      <div class="al warn" id="res-kva-warn" style="display:none;margin-top:14px;"></div>
       <div style="font-family:'Cabinet Grotesk';font-size:17px;font-weight:900;color:var(--white);margin:26px 0 13px;">⚡ Meilleur abonnement</div>
       <div class="rhero" id="res-tarif"></div>
       <div class="card" style="margin-bottom:19px;">
@@ -891,6 +893,9 @@ function calcVE(){
 // CALCUL FACTURE
 // ═══════════════════════════════════════════════
 function facture(f,p){
+  return factureBase(f,p)+(p.surcoutAbo||0);
+}
+function factureBase(f,p){
   const{ct,hcv,hpv,ve,rh,bs}=p;
   let vhc=0,vhp=0;
   if(rh==='nuit'||rh==='intelligent')vhc=ve;
@@ -960,6 +965,12 @@ function getP(){
   const ve=Math.round(cve*km*365/100);
   // Lire carbu, thermo et roi depuis l'admin (catalogue localStorage)
   const adminTarifs=loadCat().tarifs||DEF_CAT.tarifs;
+  // Puissance souscrite : compteur actuel vs requis par la borne
+  const kvaActuel=parseInt(document.getElementById('kva').value)||6;
+  const kvaRequis=_sel&&_sel.kva?_sel.kva:kvaActuel;
+  const kvaUpgrade=kvaRequis>kvaActuel; // augmentation d'abonnement nécessaire
+  // Surcoût annuel réel basé sur les écarts d'abonnement de tarifs.json (TURPE réglementé)
+  const surcoutAbo=kvaUpgrade?surcoutAbonnement(kvaActuel,kvaRequis):0;
   return{
     ct,hcv,hpv,ve,cve,km,
     rh:document.querySelector('input[name="rech"]:checked').value,
@@ -974,6 +985,7 @@ function getP(){
     ctype:document.querySelector('input[name="ctype"]:checked').value,
     nbB:parseInt(document.getElementById('nb-bornes').value)||1,
     coutB:_devis?_devis.net:0,
+    kvaActuel,kvaRequis,kvaUpgrade,surcoutAbo,
   };
 }
 
@@ -1211,7 +1223,32 @@ async function majTarifs(){
     const fod=F.find(x=>x.id==='oct_drive');
     if(fod&&t.octopus?.drive_pack?.forfait_ve) fod.df=t.octopus.drive_pack.forfait_ve;
     if(t.meta?.date_maj) document.getElementById('tarif-date').textContent='Mis à jour le '+t.meta.date_maj;
+    // Écarts d'abonnement réels entre paliers kVA (TURPE réglementé, identique tous fournisseurs)
+    // Source : EDF base dans tarifs.json
+    var eb=t.edf&&t.edf.base?t.edf.base:null;
+    if(eb&&eb.abo_6kva){
+      _ecartsKva={
+        9:(eb.abo_9kva?Math.round((eb.abo_9kva-eb.abo_6kva)*100)/100:18.6),
+        12:(eb.abo_12kva?Math.round((eb.abo_12kva-eb.abo_6kva)*100)/100:44.4)
+      };
+    }
   }catch(e){document.getElementById('tarif-date').textContent=TB.date+' (intégrés)';}
+}
+// Écarts d'abonnement réels par palier kVA (chargés depuis tarifs.json)
+var _ecartsKva={9:18.6,12:44.4};
+// Surcoût annuel d'abonnement pour passer de kvaActuel à kvaRequis
+function surcoutAbonnement(kvaActuel,kvaRequis){
+  if(kvaRequis<=kvaActuel)return 0;
+  // Écart cumulé depuis 6 kVA (référence des tarifs)
+  var ecart=function(k){
+    if(k<=6)return 0;
+    if(k<=9)return _ecartsKva[9];
+    if(k<=12)return _ecartsKva[12];
+    // Au-delà de 12 kVA : extrapolation linéaire sur la base de l'écart 9->12
+    var pas=(_ecartsKva[12]-_ecartsKva[9])/3; // par kVA au-delà de 9
+    return _ecartsKva[12]+(k-12)*pas;
+  };
+  return Math.round((ecart(kvaRequis)-ecart(kvaActuel))*100)/100;
 }
 
 // ═══════════════════════════════════════════════
@@ -1271,8 +1308,16 @@ async function lancerAnalyse(){
     '<div class="metrics">'+
     '<div class="metric"><div class="mv g">'+_devis.net.toLocaleString('fr')+' € TTC</div><div class="ml">'+labelPrix+'</div></div>'+
     '<div class="metric"><div class="mv">'+_devis.ht.toLocaleString('fr')+' € HT</div><div class="ml">Total hors taxes</div></div>'+
-    '<div class="metric"><div class="mv b">'+(roiAns>0&&roiAns<50?roiAns.toFixed(1)+' ans':'> 10 ans')+'</div><div class="ml">Retour sur investissement</div></div>'+
+    '<div class="metric"><div class="mv b">'+(roiAns>0&&roiAns<50?roiAns.toFixed(1)+' '+anS(roiAns):'> 10 ans')+'</div><div class="ml">Retour sur investissement</div></div>'+
     '</div>';
+  // Avertissement augmentation de puissance (kVA) si nécessaire
+  var kvaWarnEl=document.getElementById('res-kva-warn');
+  if(_params.kvaUpgrade){
+    kvaWarnEl.style.display='block';
+    kvaWarnEl.innerHTML='⚡ <strong>Augmentation d\'abonnement nécessaire</strong><br>Votre compteur actuel ('+_params.kvaActuel+' kVA) est insuffisant pour une borne de '+_sel.kw+' kW. Il faudra passer à <strong>'+_params.kvaRequis+' kVA</strong> minimum. Ce changement se fait simplement auprès de votre fournisseur (sans intervention technique) et représente un surcoût d\'abonnement d\'environ <strong>'+_params.surcoutAbo+' €/an</strong>, déjà intégré aux estimations ci-dessous.';
+  }else{
+    kvaWarnEl.style.display='none';
+  }
   // Hero tarif
   document.getElementById('res-tarif').innerHTML=
     '<div class="wbadge">Meilleur abonnement</div>'+
@@ -1307,7 +1352,7 @@ async function lancerAnalyse(){
       borne: _sel.nom,
       devis: _devis.net.toLocaleString('fr'),
       tarif: top.n+' — '+top.o,
-      roi:   roiAns.toFixed(1)+' ans',
+      roi:   roiAns.toFixed(1)+' '+anS(roiAns),
       msg:   document.getElementById('c-msg').value||'',
     };
     fetch(VERCEL_API_URL.replace('/api/send-email','/api/save-lead'), {
@@ -1368,21 +1413,13 @@ async function envoyerEmail(nom, email, top, roiAns, c100){
   if(!window.docx)  { console.error('docx non chargé'); }
 
   // Générer les 3 fichiers
-  var etudeB64    = null;
-  var devisPdfB64 = null;
-  var docxB64     = null;
-  try { etudeB64    = generatePDF();       } catch(e){ console.error('generatePDF erreur:', e.message, e.stack); }
-  try { devisPdfB64 = generateDevisPDF();  } catch(e){ console.error('generateDevisPDF erreur:', e.message, e.stack); }
-  try { docxB64     = await generateDocx();} catch(e){ console.error('generateDocx erreur:', e.message, e.stack); }
+  var etudeB64 = null;
+  try { etudeB64 = generatePDF(); } catch(e){ console.error('generatePDF erreur:', e.message, e.stack); }
 
-  // Log des tailles avant envoi
   console.log('generatePDF:', etudeB64 ? Math.round(etudeB64.length/1024)+'KB' : 'NULL');
-  console.log('generateDevisPDF:', devisPdfB64 ? Math.round(devisPdfB64.length/1024)+'KB' : 'NULL');
-  console.log('generateDocx:', docxB64 ? Math.round(docxB64.length/1024)+'KB' : 'NULL');
-  statusEl.innerHTML = '<div class="al info">Fichiers: etude='+(etudeB64?Math.round(etudeB64.length/1024)+'KB':'NULL')+' devis='+(devisPdfB64?Math.round(devisPdfB64.length/1024)+'KB':'NULL')+' word='+(docxB64?Math.round(docxB64.length/1024)+'KB':'NULL')+'</div>';
 
-  if(!etudeB64 && !devisPdfB64 && !docxB64) {
-    statusEl.innerHTML = '<div class="al warn">Erreur generation fichiers. Reessayez.</div>';
+  if(!etudeB64) {
+    statusEl.innerHTML = '<div class="al warn">Erreur génération de l\'étude. Réessayez.</div>';
     return;
   }
 
@@ -1431,18 +1468,15 @@ async function envoyerEmail(nom, email, top, roiAns, c100){
       tarif_off:    top.o,
       facture_an:   top.ft.toLocaleString('fr'),
       diff_actuel:  (diff>=0?'+':'')+diff,
-      roi:          roiAns.toFixed(1)+' ans',
+      roi:          roiAns.toFixed(1)+' '+anS(roiAns),
       c100km:       c100,
       date_etude:   today,
       classement:   classement,
       mon_email:    MON_EMAIL,
       client_email: email,
       entreprise_nom: ENTREPRISE.nom,
-      // Fichiers client : étude PDF + devis PDF
-      etude_pdf_b64:     etudeB64    || '',
-      devis_pdf_b64:     devisPdfB64 || '',
-      // Fichiers admin : étude PDF + devis PDF + devis Word
-      docx_b64:          docxB64     || '',
+      // Fichier client : étude PDF uniquement (le devis sera édité séparément via logiciel de facturation)
+      etude_pdf_b64:     etudeB64 || '',
     };
 
     var payloadStr = JSON.stringify(payload);
@@ -1462,9 +1496,9 @@ async function envoyerEmail(nom, email, top, roiAns, c100){
       throw new Error(result.error || 'HTTP '+resp.status);
     }
 
-    statusEl.innerHTML = '<div class="al ok">Votre etude a ete envoyee a <strong>'+email+'</strong> ! (PDF etude + PDF devis joints)</div>';
+    statusEl.innerHTML = '<div class="al ok">Votre étude a été envoyée à <strong>'+email+'</strong>.<br>Pensez à vérifier vos spams si vous ne voyez pas l\'e-mail.</div>';
 
-    // Dépôt automatique sur Google Drive (Année / Statut / Mois / Client)
+    // Dépôt automatique de l'ÉTUDE sur Google Drive (suivi interne, non visible client)
     try{
       var dNow=new Date();
       var anneeD=dNow.getFullYear();
@@ -1473,24 +1507,16 @@ async function envoyerEmail(nom, email, top, roiAns, c100){
       var villeClean=(document.getElementById('c-ville').value||'').replace(/[^a-zA-Z0-9 \-_]/g,'').replace(/\s+/g,'-');
       var clientVille=clientClean+(villeClean?'-'+villeClean:'');
       var dateStr=dNow.toLocaleDateString('fr-FR').replace(/\//g,'-');
-      var montantTTC=Math.round(top.ttc||0);
-      // Arborescence : Année / Mois / Statut(Nouveau) / Chantiers directs / Client-Ville / Devis-etude
+      // Arborescence : Année / Mois / Nouveau / Chantiers directs / Client-Ville / Devis-etude
       var basePath=[String(anneeD),moisFR,'Nouveau','Chantiers directs',clientVille,'Devis-etude'];
-      var uploads=[
-        {data:etudeB64,name:'Etude-'+clientClean+'-'+dateStr+'.pdf',mime:'application/pdf'},
-        {data:devisPdfB64,name:'Devis-'+clientClean+'-'+dateStr+'-'+montantTTC+'EUR.pdf',mime:'application/pdf'},
-        {data:docxB64,name:'Devis-'+clientClean+'-'+dateStr+'-'+montantTTC+'EUR.docx',mime:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}
-      ];
-      for(var u=0;u<uploads.length;u++){
-        if(!uploads[u].data)continue;
+      if(etudeB64){
         try{
           await fetch(VERCEL_API_URL.replace('/api/send-email','/api/drive?action=upload'),{
             method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer irve2024'},
-            body:JSON.stringify({fileName:uploads[u].name,fileData:uploads[u].data,mimeType:uploads[u].mime,path:basePath})
+            body:JSON.stringify({fileName:'Etude-'+clientClean+'-'+dateStr+'.pdf',fileData:etudeB64,mimeType:'application/pdf',path:basePath})
           });
-        }catch(e){console.log('Upload Drive '+uploads[u].name+' échoué:',e);}
+        }catch(e){console.log('Upload Drive étude échoué:',e);}
       }
-      statusEl.innerHTML += '<div class="al info" style="margin-top:8px;">Documents archivés sur Google Drive.</div>';
     }catch(e){console.log('Archivage Drive échoué:',e);}
 
   } catch(err){
@@ -1535,7 +1561,7 @@ function generateDevisPDF(){
       ?((_tD.df||0)*12/(p.km*365/100)).toFixed(2)+' EUR/100km'
       :(_tvD&&p.cve)?(p.cve*_tvD).toFixed(2)+' EUR/100km':'-';
     var _eT=p.km*365*(p.thermo||7)/100*(p.carbu||1.75)-(_tD.t==='drive'?(_tD.df||0)*12:(p.ve*(_tvD||0.18)));
-    var roiD=p.coutB>0?(p.coutB/Math.max((_factA-_tD.ft)+_eT,1)).toFixed(1)+' ans':'-';
+    var roiD=p.coutB>0?(p.coutB/Math.max((_factA-_tD.ft)+_eT,1)).toFixed(1)+' '+anS(p.coutB/Math.max((_factA-_tD.ft)+_eT,1)):'-';
 
     // Nettoyage caractères (critique pour jsPDF)
     var s=function(v){
@@ -1774,12 +1800,17 @@ function generatePDF(){
     // Header
     bg.apply(null,N);doc.rect(0,0,W,28,'F');
     bg.apply(null,LM);doc.rect(0,26,W,2,'F');
-    fw('bold');doc.setFontSize(14);tc.apply(null,BL);dt('IRVE Studio - Etude Tarifaire',14,16);
+    fw('bold');doc.setFontSize(14);tc.apply(null,BL);dt('VoltExpert - Etude Tarifaire',14,16);
     doc.setFontSize(8);tc.apply(null,G);
     dt('Genere le '+new Date().toLocaleDateString('fr-FR'),14,23);
     dt(document.getElementById('c-nom').value||'-',W-14,23,{align:'right'});
 
-    var y=36;
+    var y=34;
+    // Bandeau simulation
+    bg(235,245,255);doc.rect(0,28,W,6,'F');
+    fw('italic');doc.setFontSize(7);tc(70,100,140);
+    dt('Document indicatif (simulation). Un devis detaille sera edite sous 24h apres prise de contact.',W/2,32,{align:'center'});
+    y=40;
 
     // Hero borne
     bg(20,30,45);doc.roundedRect(12,y,W-24,22,2,2,'F');
@@ -1818,6 +1849,19 @@ function generatePDF(){
       tc(100,120,140);dt(r[0],col,row);tc(20,40,60);dt(s(r[1]),col+42,row);
     });
     y+=32;
+
+    // Avertissement augmentation de puissance (kVA) si nécessaire
+    if(p.kvaUpgrade){
+      if(y>250){doc.addPage();bg(255,255,255);doc.rect(0,0,W,297,'F');y=18;}
+      bg(255,243,205);doc.rect(14,y-2,W-28,20,'F');
+      doc.setDrawColor(230,180,40);doc.setLineWidth(0.4);doc.rect(14,y-2,W-28,20,'S');
+      fw('bold');doc.setFontSize(9);tc(150,100,0);dt('AUGMENTATION DE PUISSANCE A PREVOIR',17,y+3);
+      fw('normal');doc.setFontSize(7.8);tc(90,70,20);
+      var kvaTxt='Votre compteur ('+p.kvaActuel+' kVA) est insuffisant pour une borne de '+b.kw+' kW. Passage a '+p.kvaRequis+' kVA conseille (demarche aupres de votre fournisseur, sans travaux). Surcout abonnement : ~'+p.surcoutAbo+' EUR/an, deja integre aux estimations.';
+      var kvaLines=doc.splitTextToSize(s(kvaTxt),W-36);
+      var ky=y+8;kvaLines.forEach(function(l){dt(l,17,ky);ky+=4;});
+      y+=24;
+    }
 
     // Analyse — fond blanc
     bg(245,248,252);doc.rect(14,y-2,W-28,8,'F');
@@ -1981,7 +2025,7 @@ async function generateDocx(){
   const econoThermo  = p.km*365*p.thermo/100*p.carbu;
   const coutElecVE   = _top.t==='drive'?(_top.df||0)*12:(p.ve*(tvE||0.18));
   const econoTot     = Math.max(((_factA-_top.ft)+(econoThermo-coutElecVE)),1);
-  const roiDirect    = p.coutB>0 ? (p.coutB/econoTot).toFixed(1)+' ans' : '-';
+  const roiDirect    = p.coutB>0 ? (p.coutB/econoTot).toFixed(1)+' '+anS(p.coutB/econoTot) : '-';
   const isCopro    = p.itype === 'particulier_copro';
 
   // ── Helpers ─────────────────────────────────
@@ -2342,13 +2386,15 @@ function renderROI(eF,eC,eTot){
     '<div style="font-family:\'Cabinet Grotesk\';font-size:19px;font-weight:900;color:var(--lime);">'+Math.round(eTot).toLocaleString('fr')+' €/an</div>'+
     '<div style="font-size:11px;color:var(--muted);">contrat ('+Math.round(eF)+' €) + carburant ('+Math.round(eC)+' €)</div></div></div>'+
     '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'+
-    '<span style="font-size:12px;color:var(--muted);">Progression sur '+p.roiDur+' an'+(p.roiDur>1?'s':'')+'</span>'+
-    '<span style="font-size:12px;font-weight:700;color:'+(ans<=p.roiDur?'var(--lime)':'var(--amber)')+';">'+ans.toFixed(1)+' ans</span></div>'+
+    '<span style="font-size:12px;color:var(--muted);">Progression sur '+p.roiDur+' an'+(p.roiDur>=2?'s':'')+'</span>'+
+    '<span style="font-size:12px;font-weight:700;color:'+(ans<=p.roiDur?'var(--lime)':'var(--amber)')+';">'+ans.toFixed(1)+' '+anS(ans)+'</span></div>'+
     '<div class="rbt"><div class="rbf" style="width:'+pct+'%"></div></div>'+
     '<div class="al '+(ans<=p.roiDur?'ok':'warn')+'" style="margin-top:10px;">'+
-    (ans<=p.roiDur?'✅ Objectif atteint avant '+p.roiDur+' ans. Retour sur investissement : '+ans.toFixed(1)+' ans.':
-    '⚠️ Retour sur investissement estimé à '+ans.toFixed(1)+' ans (objectif : '+p.roiDur+' ans).')+'</div>';
+    (ans<=p.roiDur?'✅ Objectif atteint avant '+p.roiDur+' '+anS(p.roiDur)+'. Retour sur investissement : '+ans.toFixed(1)+' '+anS(ans)+'.':
+    '⚠️ Retour sur investissement estimé à '+ans.toFixed(1)+' '+anS(ans)+' (objectif : '+p.roiDur+' '+anS(p.roiDur)+').')+'</div>';
 }
+// Pluriel correct : "an" si < 2, "ans" si >= 2
+function anS(n){return (parseFloat(n)>=2)?'ans':'an';}
 
 function renderTable(){
   const rh=_params.rh,cve=_params.cve;
@@ -2425,7 +2471,7 @@ function exportRapport(){
       var nomC=document.getElementById('c-nom').value||'Client';
       var emailC=document.getElementById('c-email').value||'';
       var dateS=document.getElementById('tarif-date').textContent||'Mai 2026';
-      var roiT=document.getElementById('roi-detail').innerText.split('ans')[0].trim().split(' ').pop()+' ans';
+      var roiT=d.roi||'-';
       var css='@media print{.noprint{display:none;}body{margin:0;}}'
         +'*{box-sizing:border-box;margin:0;padding:0;}'
         +'body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a2e;padding:24px;}'

@@ -6,82 +6,182 @@
   },
   "edf": {
     "base": {
-      "kwh": 0.1940,
-      "abo_6kva": 187.80,
-      "abo_9kva": 206.40,
-      "abo_12kva": 232.20
+      "kwh": 0.194,
+      "abo_6kva": 187.8,
+      "abo_9kva": 206.4,
+      "abo_12kva": 232.2
     },
     "hchp": {
       "kwh_hc": 0.1579,
       "kwh_hp": 0.2065,
       "abo_6kva": 188.89,
       "abo_9kva": 208.08,
-      "abo_12kva": 234.60
+      "abo_12kva": 234.6
     },
     "tempo": {
       "abo_6kva": 174.72,
-      "bleu_hc": 0.1325, "bleu_hp": 0.1749,
-      "blanc_hc": 0.1487, "blanc_hp": 0.2335,
-      "rouge_hc": 0.1727, "rouge_hp": 0.7060,
-      "jours_rouge": 22, "jours_blanc": 43, "jours_bleu": 300
+      "bleu_hc": 0.1325,
+      "bleu_hp": 0.1749,
+      "blanc_hc": 0.1487,
+      "blanc_hp": 0.2335,
+      "rouge_hc": 0.1727,
+      "rouge_hp": 0.706,
+      "jours_rouge": 22,
+      "jours_blanc": 43,
+      "jours_bleu": 300,
+      "abo_9kva": 193.32,
+      "abo_12kva": 219.12
     },
     "ejp": {
-      "abo_6kva": 189.00,
+      "abo_6kva": 189.0,
       "kwh_normal": 0.1762,
-      "kwh_pointe": 0.6680,
-      "jours_pointe": 22
+      "kwh_pointe": 0.668,
+      "jours_pointe": 22,
+      "abo_9kva": 207.6,
+      "abo_12kva": 233.4
     },
     "zen_fixe": {
       "kwh": 0.1908,
-      "abo_6kva": 187.80
+      "abo_6kva": 187.8,
+      "abo_9kva": 206.4,
+      "abo_12kva": 232.2
     }
   },
   "engie": {
-    "base": { "kwh": 0.1902, "abo_6kva": 183.60 },
-    "hchp": { "kwh_hc": 0.1540, "kwh_hp": 0.2010, "abo_6kva": 185.00 }
+    "base": {
+      "kwh": 0.1902,
+      "abo_6kva": 183.6,
+      "abo_9kva": 202.2,
+      "abo_12kva": 228.0
+    },
+    "hchp": {
+      "kwh_hc": 0.154,
+      "kwh_hp": 0.201,
+      "abo_6kva": 185.0,
+      "abo_9kva": 203.6,
+      "abo_12kva": 229.4
+    }
   },
   "totalenergies": {
-    "heures_eco_base": { "kwh": 0.1783, "abo_6kva": 187.80 },
-    "heures_eco_hchp": { "kwh_hc": 0.1490, "kwh_hp": 0.1940, "abo_6kva": 187.80 },
-    "heures_eco_plus": {
-      "abo_6kva": 182.00,
-      "eco_hc": 0.1325, "eco_hp": 0.1720,
-      "peak_hc": 0.1487, "peak_hp": 0.4800,
-      "jours_peak": 20
+    "heures_eco_base": {
+      "kwh": 0.1783,
+      "abo_6kva": 187.8,
+      "abo_9kva": 206.4,
+      "abo_12kva": 232.2
     },
-    "fixe_2ans": { "kwh": 0.1908, "abo_6kva": 187.80 }
+    "heures_eco_hchp": {
+      "kwh_hc": 0.149,
+      "kwh_hp": 0.194,
+      "abo_6kva": 187.8,
+      "abo_9kva": 206.4,
+      "abo_12kva": 232.2
+    },
+    "heures_eco_plus": {
+      "abo_6kva": 182.0,
+      "eco_hc": 0.1325,
+      "eco_hp": 0.172,
+      "peak_hc": 0.1487,
+      "peak_hp": 0.48,
+      "jours_peak": 20,
+      "abo_9kva": 200.6,
+      "abo_12kva": 226.4
+    },
+    "fixe_2ans": {
+      "kwh": 0.1908,
+      "abo_6kva": 187.8,
+      "abo_9kva": 206.4,
+      "abo_12kva": 232.2
+    }
   },
   "ohm": {
-    "base": { "kwh": 0.1703, "abo_6kva": 174.00 },
-    "hchp": { "kwh_hc": 0.1410, "kwh_hp": 0.1880, "abo_6kva": 174.00 }
+    "base": {
+      "kwh": 0.1703,
+      "abo_6kva": 174.0,
+      "abo_9kva": 192.6,
+      "abo_12kva": 218.4
+    },
+    "hchp": {
+      "kwh_hc": 0.141,
+      "kwh_hp": 0.188,
+      "abo_6kva": 174.0,
+      "abo_9kva": 192.6,
+      "abo_12kva": 218.4
+    }
   },
   "mint": {
-    "base": { "kwh": 0.1767, "abo_6kva": 179.40 },
-    "hchp": { "kwh_hc": 0.1470, "kwh_hp": 0.1920, "abo_6kva": 179.40 }
+    "base": {
+      "kwh": 0.1767,
+      "abo_6kva": 179.4,
+      "abo_9kva": 198.0,
+      "abo_12kva": 223.8
+    },
+    "hchp": {
+      "kwh_hc": 0.147,
+      "kwh_hp": 0.192,
+      "abo_6kva": 179.4,
+      "abo_9kva": 198.0,
+      "abo_12kva": 223.8
+    }
   },
   "primeo": {
-    "confort_plus": { "kwh": 0.1625, "abo_6kva": 180.00 }
+    "confort_plus": {
+      "kwh": 0.1625,
+      "abo_6kva": 180.0,
+      "abo_9kva": 198.6,
+      "abo_12kva": 224.4
+    }
   },
   "octopus": {
-    "go": { "kwh_hc": 0.1272, "kwh_hp": 0.2150, "abo_6kva": 187.80 },
-    "intelligent": {
-      "kwh_hc": 0.1580, "kwh_hp": 0.2060,
-      "abo_6kva": 187.80, "bonus_ve": 0.12
+    "go": {
+      "kwh_hc": 0.1272,
+      "kwh_hp": 0.215,
+      "abo_6kva": 187.8,
+      "abo_9kva": 206.4,
+      "abo_12kva": 232.2
     },
-    "drive_pack": { "kwh": 0.1909, "abo_6kva": 187.80, "forfait_ve": 49.90 }
+    "intelligent": {
+      "kwh_hc": 0.158,
+      "kwh_hp": 0.206,
+      "abo_6kva": 187.8,
+      "bonus_ve": 0.12,
+      "abo_9kva": 206.4,
+      "abo_12kva": 232.2
+    },
+    "drive_pack": {
+      "kwh": 0.1909,
+      "abo_6kva": 187.8,
+      "forfait_ve": 49.9,
+      "abo_9kva": 206.4,
+      "abo_12kva": 232.2
+    }
   },
   "ekwateur": {
-    "hchp": { "kwh_hc": 0.1500, "kwh_hp": 0.1960, "abo_6kva": 180.00 }
+    "hchp": {
+      "kwh_hc": 0.15,
+      "kwh_hp": 0.196,
+      "abo_6kva": 180.0,
+      "abo_9kva": 198.6,
+      "abo_12kva": 224.4
+    }
   },
   "ilek": {
-    "base": { "kwh": 0.1830, "abo_6kva": 182.00 }
+    "base": {
+      "kwh": 0.183,
+      "abo_6kva": 182.0,
+      "abo_9kva": 200.6,
+      "abo_12kva": 226.4
+    }
   },
   "eni": {
     "agile": {
-      "abo_6kva": 178.00,
-      "eco_hc": 0.1340, "eco_hp": 0.1730,
-      "peak_hc": 0.1510, "peak_hp": 0.5200,
-      "jours_peak": 22
+      "abo_6kva": 178.0,
+      "eco_hc": 0.134,
+      "eco_hp": 0.173,
+      "peak_hc": 0.151,
+      "peak_hp": 0.52,
+      "jours_peak": 22,
+      "abo_9kva": 196.6,
+      "abo_12kva": 222.4
     }
   }
 }
