@@ -105,19 +105,28 @@ def fetch_tarifs(current: dict) -> dict:
     print("📡 Appel Anthropic API avec web search...")
     response = client.messages.create(
         model=MODEL,
-        max_tokens=2000,
+        max_tokens=8000,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
         messages=[{"role": "user", "content": PROMPT}]
     )
 
-    # Extraire le texte de la réponse
-    text_blocks = [b.text for b in response.content if hasattr(b, "text")]
+    # Diagnostic : type des blocs reçus et raison d'arrêt
+    block_types = [getattr(b, "type", "?") for b in response.content]
+    print(f"🔎 Blocs reçus : {block_types} | stop_reason : {response.stop_reason}")
+
+    # Extraire le texte de la réponse (en ignorant les blocs d'outils web_search)
+    text_blocks = [b.text for b in response.content if getattr(b, "type", None) == "text"]
     raw = "\n".join(text_blocks).strip()
 
     # Nettoyer les balises markdown si présentes
     raw = raw.replace("```json", "").replace("```", "").strip()
+    # Garder uniquement du premier { au dernier } (sécurité si texte parasite autour)
+    if "{" in raw and "}" in raw:
+        raw = raw[raw.index("{"): raw.rindex("}") + 1]
 
     print(f"📥 Réponse reçue ({len(raw)} caractères)")
+    if not raw:
+        raise ValueError("Aucun texte JSON dans la réponse (le modèle a peut-être atteint max_tokens pendant les recherches). Augmentez max_tokens.")
 
     # Parser le JSON
     new_tarifs = json.loads(raw)
@@ -211,4 +220,3 @@ def main():
         raise SystemExit(1)
 
 if __name__ == "__main__":
-    main()
