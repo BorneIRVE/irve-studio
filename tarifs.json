@@ -1,6 +1,6 @@
 {
   "meta": {
-    "date_maj": "2026-06-20",
+    "date_maj": "2026-06-22",
     "source": "Mis à jour automatiquement via GitHub Actions + Anthropic API",
     "prochaine_revision_cre": "2026-08-01"
   },
@@ -8,8 +8,8 @@
     "base": {
       "kwh": 0.194,
       "abo_6kva": 187.8,
-      "abo_9kva": 206.4,
-      "abo_12kva": 232.2
+      "abo_9kva": 234.72,
+      "abo_12kva": 279.84
     },
     "hchp": {
       "kwh_hc": 0.1579,
@@ -41,7 +41,7 @@
       "jours_pointe": 22
     },
     "zen_fixe": {
-      "kwh": 0.185,
+      "kwh": 0.1695,
       "abo_6kva": 187.8,
       "abo_9kva": 206.4,
       "abo_12kva": 232.2
@@ -116,11 +116,11 @@
       "abo_12kva": 232.2
     },
     "hchp": {
-      "kwh_hc": 0.147,
-      "kwh_hp": 0.192,
-      "abo_6kva": 187.8,
-      "abo_9kva": 206.4,
-      "abo_12kva": 232.2
+      "kwh_hc": 0.1579,
+      "kwh_hp": 0.2065,
+      "abo_6kva": 189.96,
+      "abo_9kva": 208.56,
+      "abo_12kva": 234.36
     }
   },
   "primeo": {
@@ -152,7 +152,7 @@
       "abo_6kva": 187.8,
       "abo_9kva": 206.4,
       "abo_12kva": 232.2,
-      "forfait_ve": 29.99
+      "forfait_ve": 44.99
     }
   },
   "ekwateur": {
