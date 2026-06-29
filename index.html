@@ -35,10 +35,18 @@ function closeMenu(){
   if(dd){dd.style.opacity='0';dd.style.pointerEvents='none';dd.style.transform='translateY(-8px)';}
 }
 function showTab(id,btn){
-  document.querySelectorAll('.tab-content').forEach(function(t){t.style.display='none';});
+  document.querySelectorAll('.tab-content').forEach(function(t){
+    t.classList.remove('active');
+    t.style.display='none';
+  });
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
   var target=document.getElementById('tab-'+id);
-  if(target)target.style.display='block';
+  if(target){
+    target.style.display='block';
+    // Forcer le reflow avant d'ajouter la classe pour déclencher l'animation CSS
+    target.offsetHeight;
+    target.classList.add('active');
+  }
   if(btn)btn.classList.add('active');
 }
 function toggleFaq(el){
@@ -46,10 +54,12 @@ function toggleFaq(el){
   if(!item)return;
   var ans=item.querySelector('.faq-a');
   var arr=item.querySelector('.faq-arr');
-  var isOpen=ans&&ans.style.display==='block';
-  document.querySelectorAll('.faq-a').forEach(function(a){a.style.display='none';});
+  var isOpen=ans&&ans.classList.contains('faq-open');
+  // Fermer tous
+  document.querySelectorAll('.faq-a').forEach(function(a){a.classList.remove('faq-open');});
   document.querySelectorAll('.faq-arr').forEach(function(a){a.style.transform='';});
-  if(!isOpen&&ans){ans.style.display='block';if(arr)arr.style.transform='rotate(180deg)';}
+  document.querySelectorAll('.faq-item').forEach(function(i){i.classList.remove('faq-open');});
+  if(!isOpen&&ans){ans.classList.add('faq-open');item.classList.add('faq-open');if(arr)arr.style.transform='rotate(180deg)';}
 }
 document.addEventListener('click',function(e){if(!e.target.closest||(!e.target.closest('#hamburger-btn')&&!e.target.closest('#nav-dropdown')))closeMenu();});
 </script>
@@ -346,9 +356,134 @@ footer{background:var(--ink-dark);border-top:1px solid var(--border);padding:40p
 .nd-txt strong{display:block;font-weight:600;font-size:13px;color:var(--white);line-height:1.2;}
 .nd-txt span{font-size:11px;color:var(--muted);}
 
+
+/* ═══════════════════════════════════════════════════
+   VISUAL UPGRADE — Transitions Énergétiques Pro
+   ═══════════════════════════════════════════════════ */
+
+/* Aurora blobs animés */
+@keyframes aurora1{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(42px,-28px) scale(1.09);}66%{transform:translate(-24px,36px) scale(0.93);}}
+@keyframes aurora2{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(-46px,22px) scale(1.11);}66%{transform:translate(30px,-40px) scale(0.89);}}
+@keyframes aurora3{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(26px,26px) scale(1.06);}}
+.aurora-blob{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0;will-change:transform;}
+.ab1{width:min(720px,100vw);height:min(720px,100vw);background:radial-gradient(ellipse,rgba(194,247,62,.072),transparent 70%);top:-22%;left:-18%;animation:aurora1 24s ease-in-out infinite;}
+.ab2{width:min(620px,90vw);height:min(620px,90vw);background:radial-gradient(ellipse,rgba(77,141,255,.085),transparent 70%);top:22%;right:-18%;animation:aurora2 30s ease-in-out infinite;}
+.ab3{width:min(520px,80vw);height:min(520px,80vw);background:radial-gradient(ellipse,rgba(165,240,197,.048),transparent 70%);bottom:-14%;left:30%;animation:aurora3 22s ease-in-out infinite;}
+@media(prefers-reduced-motion:reduce){.aurora-blob{animation:none!important;}.hero-card{animation:none!important;}.particle{animation:none!important;}.steps-row::before{animation:none!important;}.hero-badge{animation:none!important;}}
+
+/* Barre progression scroll */
+.scroll-progress{position:fixed;top:0;left:0;height:2px;width:0%;z-index:201;border-radius:0 2px 2px 0;background:linear-gradient(90deg,var(--volt),var(--electric),var(--glow));}
+
+/* Hero card — flottement doux */
+@keyframes heroFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+.hero-card{animation:heroFloat 7s ease-in-out infinite;background:linear-gradient(155deg,rgba(20,34,62,.72),rgba(13,20,40,.78))!important;backdrop-filter:blur(32px) saturate(155%)!important;-webkit-backdrop-filter:blur(32px) saturate(155%)!important;}
+
+/* Bordure gradient animée sur hero-card */
+.hero-card::before{
+  background:linear-gradient(90deg,var(--volt),rgba(77,141,255,.8),var(--glow),var(--volt))!important;
+  background-size:300% 100%!important;
+  animation:borderFlow 5s linear infinite!important;
+  opacity:.7!important;height:1px!important;
+}
+@keyframes borderFlow{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+
+/* FAQ — accordion smooth max-height */
+.faq-a{display:block!important;max-height:0!important;overflow:hidden;padding:0 18px!important;transition:max-height .44s cubic-bezier(.16,1,.3,1),padding .34s;}
+.faq-a.faq-open{max-height:450px!important;padding:12px 18px 16px!important;}
+.faq-item.faq-open{border-color:rgba(194,247,62,.22)!important;}
+.faq-arr{transition:transform .32s cubic-bezier(.16,1,.3,1);}
+
+/* Tabs — animation d'entrée */
+.tab-content.active{animation:tabSlideIn .42s cubic-bezier(.16,1,.3,1);}
+@keyframes tabSlideIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.tab-btn{transition:all .24s cubic-bezier(.16,1,.3,1)!important;}
+.tab-btn.active{box-shadow:0 0 32px rgba(194,247,62,.28),0 4px 16px rgba(0,0,0,.28)!important;}
+
+/* Hero badge pulse */
+@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(194,247,62,0);}50%{box-shadow:0 0 22px 2px rgba(194,247,62,.22);}}
+.hero-badge{animation:badgePulse 3.2s ease-in-out infinite;}
+
+/* Particles hero */
+@keyframes pFloat{0%{opacity:0;transform:translate(0,0);}10%{opacity:.75;}50%{transform:translate(var(--px,20px),var(--py,-55px));}90%{opacity:.2;}100%{opacity:0;transform:translate(var(--px2,38px),var(--py2,-110px));}}
+.particle-field{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.particle{position:absolute;width:2px;height:2px;border-radius:50%;background:var(--volt);animation:pFloat var(--dur,9s) var(--del,0s) ease-in-out infinite;}
+.particle.blue{background:var(--electric);}
+.particle.glow{width:3px;height:3px;box-shadow:0 0 4px var(--volt);}
+
+/* Steps connector animé */
+.steps-row::before{background:linear-gradient(90deg,var(--volt),var(--electric),var(--glow),var(--volt))!important;background-size:200% 100%!important;animation:connFlow 5s linear infinite!important;}
+@keyframes connFlow{0%{background-position:0%;}100%{background-position:200%;}}
+
+/* Cards hover amélioré */
+.borne-card{transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s,border-color .3s;}
+.borne-card:hover{transform:translateY(-5px);box-shadow:0 0 36px rgba(194,247,62,.1),0 24px 64px rgba(0,0,0,.5)!important;border-color:rgba(194,247,62,.22)!important;}
+.opti-item{transition:transform .32s cubic-bezier(.16,1,.3,1),background .28s,border-color .28s,box-shadow .28s;}
+.opti-item:hover{transform:translateY(-6px);background:var(--ink2)!important;border-color:rgba(194,247,62,.2)!important;box-shadow:0 12px 40px rgba(0,0,0,.4)!important;}
+.aide-item{transition:transform .28s cubic-bezier(.16,1,.3,1),border-color .28s,background .28s;}
+.aide-item:hover{transform:scale(1.04);border-color:rgba(194,247,62,.3)!important;background:rgba(255,255,255,.1)!important;}
+.avis-card{transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s,border-color .3s;}
+.avis-card:hover{transform:translateY(-5px);box-shadow:0 16px 52px rgba(0,0,0,.38)!important;border-color:rgba(194,247,62,.14)!important;}
+.galerie-item{transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s;}
+.galerie-item:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,.42)!important;}
+
+/* Check & step icons */
+.check-ico{transition:transform .32s cubic-bezier(.34,1.56,.64,1);}
+.checklist li:hover .check-ico{transform:scale(1.22) rotate(5deg);}
+.step-n{transition:transform .32s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;}
+.step:hover .step-n.g{box-shadow:0 0 28px rgba(194,247,62,.5)!important;}
+.step:hover .step-n{transform:scale(1.12);}
+
+/* Logo */
+.logo-icon{transition:transform .36s cubic-bezier(.34,1.56,.64,1),box-shadow .3s!important;}
+.logo:hover .logo-icon{transform:rotate(-8deg) scale(1.1)!important;box-shadow:0 0 44px rgba(194,247,62,.62)!important;}
+
+/* FAQ item */
+.faq-item{transition:border-color .25s;}
+.faq-q{cursor:pointer;}
+
+/* Btn shimmer speed */
+.btn-primary::after{transition:left .55s cubic-bezier(.16,1,.3,1)!important;}
+
+/* CTA section glow */
+.cta-final{position:relative;overflow:hidden;}
+.cta-final::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 55% at 50% 50%,rgba(194,247,62,.055),transparent 70%);z-index:0;}
+.cta-final>*{position:relative;z-index:1;}
+
+/* Avantages bar — scroll ticker */
+@keyframes tickerScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.avantages-track{animation:tickerScroll 32s linear infinite;display:flex;gap:0;width:max-content;}
+.avantages-track:hover{animation-play-state:paused;}
+
+/* Stat values count-up */
+.stat-v{transition:color .4s;}
+
+/* FAQ états visuels */
+.faq-item.faq-open .faq-q{background:var(--ink3);color:var(--volt);}
+.faq-item.faq-open .faq-arr{color:var(--volt);}
+
+/* Aides block glassmorphism */
+.aides-block{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
+
+/* Opti block glass */
+.opti-block{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+
+/* Section label line glow */
+.section-label::before,.section-label::after{box-shadow:0 0 8px rgba(194,247,62,.4);}
+
+/* Scroll doux entre sections */
+html{scroll-behavior:smooth;}
+
+/* Hero card foot glass */
+.hc-foot{background:rgba(77,141,255,.06)!important;}
 </style>
 </head>
 <body>
+<!-- Aurora blobs de fond -->
+<div class="aurora-blob ab1" aria-hidden="true"></div>
+<div class="aurora-blob ab2" aria-hidden="true"></div>
+<div class="aurora-blob ab3" aria-hidden="true"></div>
+<!-- Barre de progression -->
+<div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
 <div class="energy-flow" aria-hidden="true"></div>
 <!-- NAV -->
 <nav>
@@ -403,6 +538,8 @@ footer{background:var(--ink-dark);border-top:1px solid var(--border);padding:40p
 
 <!-- HERO -->
 <section class="hero">
+  <!-- Particules flottantes -->
+  <div class="particle-field" aria-hidden="true" id="hero-particles"></div>
   <div class="hero-inner">
     <div>
       <div class="hero-badge"><span class="dot"></span> Spécialiste IRVE certifié</div>
@@ -426,9 +563,9 @@ footer{background:var(--ink-dark);border-top:1px solid var(--border);padding:40p
         <div class="stat"><span class="stat-l">Coût installation estimé</span><span class="stat-v">1 100 – 1 900 €</span></div>
         <div class="stat"><span class="stat-l">TVA réduite 5,5% incluse</span><span class="stat-v g">− 55 à 100 €</span></div>
         <div class="stat"><span class="stat-l">Meilleure offre tarifaire</span><span class="stat-v">Octopus Energy HC/HP</span></div>
-        <div class="stat"><span class="stat-l">Économie vs tarif actuel</span><span class="stat-v g">− 180 €/an</span></div>
-        <div class="stat"><span class="stat-l">Coût recharge / 100 km</span><span class="stat-v a">0,85 €</span></div>
-        <div class="stat"><span class="stat-l">Retour sur investissement</span><span class="stat-v g">< 1 an</span></div>
+        <div class="stat"><span class="stat-l">Économie vs tarif actuel</span><span class="stat-v g" data-count="180" data-prefix="− " data-suffix=" €/an">− 180 €/an</span></div>
+        <div class="stat"><span class="stat-l">Coût recharge / 100 km</span><span class="stat-v a" data-count="0.85" data-suffix=" €" data-decimals="2">0,85 €</span></div>
+        <div class="stat"><span class="stat-l">Retour sur investissement</span><span class="stat-v g">&lt; 1 an</span></div>
       </div>
       <div class="hc-foot">
         <span style="font-size:18px;">💡</span>
@@ -1824,5 +1961,164 @@ function chargerAvisGoogle(placeId){
   else document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
+<script>
+/* ═══ ANIMATIONS PRO — VoltExpert ═══ */
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  /* ── Barre de progression scroll ── */
+  var bar = document.getElementById('scroll-progress');
+  if(bar && !reduce){
+    window.addEventListener('scroll', function(){
+      var pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+      bar.style.width = Math.min(pct, 100) + '%';
+    }, {passive:true});
+  }
+
+  /* ── Particules héro ── */
+  if(!reduce){
+    var field = document.getElementById('hero-particles');
+    if(field){
+      var colors = ['volt','volt','volt','blue','glow'];
+      var types = ['','','','blue','glow'];
+      for(var i=0; i<28; i++){
+        var p = document.createElement('div');
+        p.className = 'particle ' + (types[i % types.length] || '');
+        var x1 = (Math.random()*80 - 40).toFixed(1);
+        var y1 = (Math.random()*40 + 30).toFixed(1);
+        var x2 = (Math.random()*120 - 60).toFixed(1);
+        var y2 = (Math.random()*80 + 60).toFixed(1);
+        p.style.cssText =
+          'left:' + (Math.random()*100).toFixed(1) + '%;' +
+          'top:' + (Math.random()*100).toFixed(1) + '%;' +
+          '--px:' + x1 + 'px;--py:-' + y1 + 'px;' +
+          '--px2:' + x2 + 'px;--py2:-' + y2 + 'px;' +
+          '--dur:' + (7 + Math.random()*8).toFixed(1) + 's;' +
+          '--del:' + (Math.random()*8).toFixed(1) + 's;' +
+          'opacity:0;';
+        field.appendChild(p);
+      }
+    }
+  }
+
+  /* ── Compteurs animés améliorés (data-count + data-prefix + data-decimals) ── */
+  function animateCounters(){
+    if(reduce) return;
+    var els = document.querySelectorAll('[data-count]');
+    if(!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(!en.isIntersecting) return;
+        var el = en.target; io.unobserve(el);
+        var target = parseFloat(el.getAttribute('data-count'));
+        var suffix = el.getAttribute('data-suffix') || '';
+        var prefix = el.getAttribute('data-prefix') || '';
+        var decimals = parseInt(el.getAttribute('data-decimals')) || 0;
+        var dur = 1400;
+        var start = performance.now();
+        function tick(now){
+          var p = Math.min((now - start) / dur, 1);
+          var eased = 1 - Math.pow(1 - p, 3);
+          var val = target * eased;
+          el.textContent = prefix + (decimals > 0 ? val.toFixed(decimals) : Math.round(val)) + suffix;
+          if(p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }, {threshold: .5});
+    els.forEach(function(e){ io.observe(e); });
+  }
+  animateCounters();
+
+  /* ── Effet magnétique sur boutons CTA ── */
+  if(!reduce){
+    document.querySelectorAll('.btn-primary, .btn-secondary').forEach(function(btn){
+      btn.addEventListener('mousemove', function(e){
+        var r = btn.getBoundingClientRect();
+        var dx = (e.clientX - r.left - r.width/2) * 0.2;
+        var dy = (e.clientY - r.top - r.height/2) * 0.2;
+        btn.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) translateY(-2px)';
+      });
+      btn.addEventListener('mouseleave', function(){
+        btn.style.transform = '';
+        btn.style.transition = 'transform .45s cubic-bezier(.16,1,.3,1), box-shadow .25s';
+        setTimeout(function(){ btn.style.transition = ''; }, 450);
+      });
+    });
+  }
+
+  /* ── Ripple sur clic bouton primary ── */
+  document.querySelectorAll('.btn-primary').forEach(function(btn){
+    btn.style.overflow = 'hidden';
+    btn.addEventListener('click', function(e){
+      var r = btn.getBoundingClientRect();
+      var rip = document.createElement('span');
+      rip.style.cssText =
+        'position:absolute;border-radius:50%;width:6px;height:6px;' +
+        'background:rgba(255,255,255,.45);transform:scale(0);' +
+        'left:' + (e.clientX - r.left - 3) + 'px;top:' + (e.clientY - r.top - 3) + 'px;' +
+        'animation:rippleOut .6s linear forwards;pointer-events:none;';
+      btn.appendChild(rip);
+      setTimeout(function(){ rip.remove(); }, 650);
+    });
+  });
+
+  /* ── Avantages items — shimmer séquentiel ── */
+  if(!reduce){
+    var avItems = document.querySelectorAll('.av-item');
+    avItems.forEach(function(item, idx){
+      item.style.transition = 'opacity .3s';
+      item.style.animation = 'avShimmer 4s ease-in-out ' + (idx * 0.6) + 's infinite';
+    });
+  }
+
+  /* ── Stagger reveal amélioré pour les grilles ── */
+  if(!reduce){
+    var grids = document.querySelectorAll('.bornes-grid, .opti-grid, .aides-grid, .steps-row, .avis-grid');
+    var revIo = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(!en.isIntersecting) return;
+        revIo.unobserve(en.target);
+        var children = en.target.children;
+        Array.prototype.forEach.call(children, function(child, idx){
+          child.style.opacity = '0';
+          child.style.transform = 'translateY(24px)';
+          child.style.transition = 'opacity .6s cubic-bezier(.16,1,.3,1) ' + (idx * 80) + 'ms, transform .6s cubic-bezier(.16,1,.3,1) ' + (idx * 80) + 'ms';
+          setTimeout(function(){
+            child.style.opacity = '1';
+            child.style.transform = 'none';
+          }, 30);
+        });
+      });
+    }, {threshold: .1});
+    grids.forEach(function(g){ revIo.observe(g); });
+  }
+
+  /* ── Highlight actif nav au scroll ── */
+  var sections = document.querySelectorAll('section[id]');
+  if(sections.length){
+    var navLinks = document.querySelectorAll('nav ul a');
+    var secIo = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          navLinks.forEach(function(l){
+            if(l.getAttribute('href') === '#' + en.target.id){
+              l.style.color = 'var(--white)';
+            } else {
+              l.style.color = '';
+            }
+          });
+        }
+      });
+    }, {threshold: .3});
+    sections.forEach(function(s){ secIo.observe(s); });
+  }
+
+})();
+</script>
+<style>
+@keyframes rippleOut{to{transform:scale(80);opacity:0;}}
+@keyframes avShimmer{0%,100%{opacity:.7;}50%{opacity:1;}}
+</style>
 </body>
 </html>
