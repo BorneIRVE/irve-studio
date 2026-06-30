@@ -38,14 +38,20 @@ function showTab(id,btn){
   document.querySelectorAll('.tab-content').forEach(function(t){
     t.classList.remove('active');
     t.style.display='none';
+    // Reset animations for next show
+    t.querySelectorAll('.tab-block-reveal').forEach(function(b){b.classList.remove('visible');});
   });
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
   var target=document.getElementById('tab-'+id);
   if(target){
     target.style.display='block';
-    // Forcer le reflow avant d'ajouter la classe pour déclencher l'animation CSS
     target.offsetHeight;
     target.classList.add('active');
+    // Stagger reveal blocks inside the newly shown tab
+    var blocks=target.querySelectorAll('.tab-block-reveal');
+    blocks.forEach(function(block,idx){
+      setTimeout(function(){ block.classList.add('visible'); }, 80 + idx * 90);
+    });
   }
   if(btn)btn.classList.add('active');
 }
@@ -365,6 +371,68 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
   .how-block,.aides-block,.opti-block,.faq-block{padding:20px 16px;}
 }
 
+
+/* ── Hero entrance (page load, not scroll) ── */
+.hero-badge{animation:hIn .65s cubic-bezier(.16,1,.3,1) .2s both;}
+.hero-sub{animation:hIn .7s cubic-bezier(.16,1,.3,1) .48s both;}
+.hero-ctas{animation:hIn .7s cubic-bezier(.16,1,.3,1) .68s both;}
+.hero-card{animation:hCardIn .85s cubic-bezier(.16,1,.3,1) .32s both;}
+@keyframes hIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+@keyframes hCardIn{from{opacity:0;transform:translateX(36px);}to{opacity:1;transform:none;}}
+
+/* ── Hero scene SVG background ── */
+.hero-scene{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;opacity:.82;}
+.hero-svg{position:absolute;bottom:0;left:0;width:100%;height:100%;}
+@media(max-width:768px){.hero-scene{opacity:.35;}}
+
+/* ── SVG component animations ── */
+@keyframes panelSh{0%,100%{stroke:rgba(74,222,128,.3);}50%{stroke:rgba(74,222,128,.7);filter:drop-shadow(0 0 4px rgba(74,222,128,.5));}}
+.s-panel{animation:panelSh 2.6s ease-in-out infinite;}
+.panel-grp .s-panel:nth-child(1){animation-delay:0s;}
+
+@keyframes solD{0%,100%{opacity:.2;r:3;}50%{opacity:1;r:5;filter:drop-shadow(0 0 6px #4ade80);}}
+.sol-dot{animation:solD 1.9s ease-in-out infinite;}
+
+@keyframes winG{0%,100%{fill-opacity:.04;}50%{fill-opacity:.14;}}
+.win-gl{animation:winG 3.5s ease-in-out infinite;}
+
+@keyframes bSeg{0%,100%{opacity:.3;}50%{opacity:.95;filter:drop-shadow(0 0 3px #4ade80);}}
+.b-seg{animation:bSeg 1.4s ease-in-out infinite;}
+
+@keyframes chD{0%,100%{r:3.5;opacity:.8;}50%{r:5.5;opacity:1;filter:drop-shadow(0 0 6px #4ade80);}}
+.charge-dot{animation:chD .95s ease-in-out infinite;}
+
+@keyframes cBatt{0%{width:10px;}100%{width:76px;}}
+.car-batt{animation:cBatt 4s ease-out infinite alternate;}
+
+@keyframes chTxt{0%,100%{fill-opacity:.6;}50%{fill-opacity:1;}}
+.charge-txt{animation:chTxt 1.5s ease-in-out infinite;}
+
+@keyframes tlP{0%,100%{fill-opacity:.2;}50%{fill-opacity:.55;}}
+.tail-light{animation:tlP 2s ease-in-out infinite;}
+
+@keyframes hlF{0%,100%{fill-opacity:.3;}50%{fill-opacity:.65;}}
+.headlight-f{animation:hlF 3s ease-in-out infinite;}
+
+@keyframes haP{0%,100%{opacity:.5;}50%{opacity:.85;}}
+.house-aura{animation:haP 3.2s ease-in-out infinite;}
+
+@keyframes caP{0%,100%{opacity:.55;}50%{opacity:.9;}}
+.car-aura{animation:caP 2s ease-in-out infinite;}
+
+@keyframes twinkle{0%,100%{opacity:.1;}50%{opacity:.55;}}
+.star{animation:twinkle 3s ease-in-out infinite;}
+
+@keyframes cableDash{to{stroke-dashoffset:-32;}}
+.cable-dash{stroke-dasharray:6 14;animation:cableDash 1.2s linear infinite;}
+
+/* ── avShimmer (ticker) ── */
+@keyframes avShimmer{0%,100%{opacity:.75;}50%{opacity:1;}}
+
+/* ── Stagger reveals inside tabs ── */
+.tab-block-reveal{opacity:0;transform:translateY(18px);transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1);}
+.tab-block-reveal.visible{opacity:1;transform:none;}
+
 </style>
 </head>
 <body>
@@ -430,6 +498,228 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
 <section class="hero">
   <!-- Particules flottantes -->
   <div class="particle-field" aria-hidden="true" id="hero-particles"></div>
+
+<!-- Scène animée maison + voiture + flux énergie -->
+<div class="hero-scene" aria-hidden="true">
+  <svg class="hero-svg" viewBox="0 0 1440 560" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+    <defs>
+      <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#010802"/>
+        <stop offset="100%" stop-color="#021104"/>
+      </linearGradient>
+      <radialGradient id="houseAura" cx="50%" cy="100%" r="70%">
+        <stop offset="0%" stop-color="#4ade80" stop-opacity=".12"/>
+        <stop offset="100%" stop-color="#4ade80" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="carAura" cx="50%" cy="100%" r="70%">
+        <stop offset="0%" stop-color="#4ade80" stop-opacity=".16"/>
+        <stop offset="100%" stop-color="#4ade80" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="gf" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="4" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <linearGradient id="battG" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#22c55e"/>
+        <stop offset="100%" stop-color="#86efac"/>
+      </linearGradient>
+      <linearGradient id="groundG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#051406"/>
+        <stop offset="100%" stop-color="#020804"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Ciel -->
+    <rect width="1440" height="560" fill="url(#skyG)"/>
+
+    <!-- Collines lointaines -->
+    <path d="M-10 420 Q180 340 380 378 Q560 410 700 355 Q870 295 1060 358 Q1230 410 1450 380 L1450 560 L-10 560Z" fill="#031006" opacity=".65"/>
+    <path d="M-10 455 Q220 395 430 425 Q620 448 750 408 Q900 366 1110 428 Q1290 462 1450 442 L1450 560 L-10 560Z" fill="#040e05" opacity=".55"/>
+
+    <!-- Sol -->
+    <rect x="0" y="512" width="1440" height="48" fill="url(#groundG)"/>
+    <line x1="0" y1="512" x2="1440" y2="512" stroke="rgba(74,222,128,.07)" stroke-width="1"/>
+
+    <!-- Étoiles / particules ciels -->
+    <circle cx="740" cy="58" r="1.2" fill="rgba(74,222,128,.28)" class="star" style="animation-delay:0s"/>
+    <circle cx="890" cy="32" r="1.5" fill="rgba(74,222,128,.18)" class="star" style="animation-delay:.7s"/>
+    <circle cx="1060" cy="75" r="1" fill="rgba(74,222,128,.22)" class="star" style="animation-delay:1.4s"/>
+    <circle cx="1180" cy="44" r="1.2" fill="rgba(187,247,208,.18)" class="star" style="animation-delay:.3s"/>
+    <circle cx="620" cy="50" r="1" fill="rgba(74,222,128,.14)" class="star" style="animation-delay:1.1s"/>
+    <circle cx="1280" cy="88" r="1.5" fill="rgba(74,222,128,.16)" class="star" style="animation-delay:.5s"/>
+
+    <!-- Halo solaire discret (haut-droite) -->
+    <circle cx="1330" cy="70" r="38" fill="#fde68a" opacity=".028"/>
+    <circle cx="1330" cy="70" r="60" fill="#fde68a" opacity=".012"/>
+
+    <!-- ════ MAISON ════ -->
+    <g class="house-group">
+      <!-- Aura de la maison -->
+      <ellipse cx="385" cy="518" rx="195" ry="38" fill="url(#houseAura)" class="house-aura"/>
+
+      <!-- Fondations -->
+      <rect x="242" y="498" width="284" height="14" rx="2" fill="#030c04"/>
+
+      <!-- Corps de la maison -->
+      <rect x="244" y="295" width="276" height="203" rx="2" fill="#071508"/>
+      <rect x="244" y="295" width="276" height="203" fill="none" stroke="rgba(74,222,128,.11)" stroke-width="1" rx="2"/>
+
+      <!-- Toit (triangle) -->
+      <polygon points="220,295 382,168 544,295" fill="#050f06"/>
+      <polygon points="220,295 382,168 544,295" fill="none" stroke="rgba(74,222,128,.09)" stroke-width="1"/>
+
+      <!-- Cheminée -->
+      <rect x="462" y="180" width="28" height="50" rx="2" fill="#040c05"/>
+      <rect x="459" y="173" width="34" height="10" rx="2" fill="#040c05" stroke="rgba(74,222,128,.07)" stroke-width="1"/>
+
+      <!-- Panneau solaire 1 (versant gauche, incliné ~-39deg) -->
+      <g class="panel-grp" transform="rotate(-39 286 248)">
+        <rect x="258" y="233" width="56" height="30" rx="2" fill="#0c2916" stroke="rgba(74,222,128,.38)" stroke-width="1.5" class="s-panel"/>
+        <line x1="276" y1="233" x2="276" y2="263" stroke="rgba(74,222,128,.18)" stroke-width=".7"/>
+        <line x1="295" y1="233" x2="295" y2="263" stroke="rgba(74,222,128,.18)" stroke-width=".7"/>
+        <line x1="258" y1="248" x2="314" y2="248" stroke="rgba(74,222,128,.18)" stroke-width=".7"/>
+      </g>
+
+      <!-- Panneau solaire 2 (versant gauche, plus haut) -->
+      <g class="panel-grp" style="animation-delay:.55s" transform="rotate(-39 328 213)">
+        <rect x="300" y="198" width="56" height="30" rx="2" fill="#0c2916" stroke="rgba(74,222,128,.38)" stroke-width="1.5" class="s-panel"/>
+        <line x1="318" y1="198" x2="318" y2="228" stroke="rgba(74,222,128,.18)" stroke-width=".7"/>
+        <line x1="337" y1="198" x2="337" y2="228" stroke="rgba(74,222,128,.18)" stroke-width=".7"/>
+        <line x1="300" y1="213" x2="356" y2="213" stroke="rgba(74,222,128,.18)" stroke-width=".7"/>
+      </g>
+
+      <!-- Points de lumière émanant des panneaux -->
+      <circle cx="280" cy="245" r="4" fill="#4ade80" filter="url(#gf)" class="sol-dot" style="animation-delay:0s"/>
+      <circle cx="326" cy="210" r="4" fill="#4ade80" filter="url(#gf)" class="sol-dot" style="animation-delay:.42s"/>
+      <circle cx="260" cy="236" r="2.5" fill="#86efac" class="sol-dot" style="animation-delay:.85s"/>
+      <circle cx="348" cy="200" r="2.5" fill="#86efac" class="sol-dot" style="animation-delay:1.28s"/>
+
+      <!-- Fenêtre gauche -->
+      <rect x="266" y="340" width="68" height="56" rx="3" fill="#0a2010" stroke="rgba(74,222,128,.14)" stroke-width="1"/>
+      <line x1="300" y1="340" x2="300" y2="396" stroke="rgba(74,222,128,.09)" stroke-width="1"/>
+      <line x1="266" y1="368" x2="334" y2="368" stroke="rgba(74,222,128,.09)" stroke-width="1"/>
+      <rect x="266" y="340" width="68" height="56" rx="3" fill="rgba(253,230,138,.04)" class="win-gl"/>
+
+      <!-- Fenêtre droite -->
+      <rect x="428" y="340" width="68" height="56" rx="3" fill="#0a2010" stroke="rgba(74,222,128,.14)" stroke-width="1"/>
+      <line x1="462" y1="340" x2="462" y2="396" stroke="rgba(74,222,128,.09)" stroke-width="1"/>
+      <line x1="428" y1="368" x2="496" y2="368" stroke="rgba(74,222,128,.09)" stroke-width="1"/>
+      <rect x="428" y="340" width="68" height="56" rx="3" fill="rgba(253,230,138,.04)" class="win-gl" style="animation-delay:1.2s"/>
+
+      <!-- Porte -->
+      <rect x="342" y="408" width="80" height="90" rx="2" fill="#050e06" stroke="rgba(74,222,128,.09)" stroke-width="1"/>
+      <circle cx="404" cy="455" r="3" fill="rgba(74,222,128,.32)"/>
+
+      <!-- Batterie murale (côté droit de la maison) -->
+      <rect x="508" y="358" width="24" height="58" rx="4" fill="#061008" stroke="rgba(74,222,128,.3)" stroke-width="1.5"/>
+      <rect x="512" y="362" width="16" height="7" rx="1.5" fill="rgba(74,222,128,.55)" class="b-seg" style="animation-delay:0s"/>
+      <rect x="512" y="372" width="16" height="7" rx="1.5" fill="rgba(74,222,128,.55)" class="b-seg" style="animation-delay:.25s"/>
+      <rect x="512" y="382" width="16" height="7" rx="1.5" fill="rgba(74,222,128,.5)" class="b-seg" style="animation-delay:.5s"/>
+      <rect x="512" y="392" width="16" height="7" rx="1.5" fill="rgba(74,222,128,.28)" class="b-seg" style="animation-delay:.75s"/>
+      <rect x="514" y="354" width="8" height="6" rx="1" fill="rgba(74,222,128,.3)"/>
+    </g>
+
+    <!-- ════ FLUX D'ÉNERGIE : PANNEAUX → BATTERIE ════ -->
+    <path id="sp1" d="M 280 247 C 280 290 340 320 400 355 C 440 378 485 400 516 415" fill="none" stroke="rgba(74,222,128,.08)" stroke-width="2"/>
+    <circle r="4" fill="#4ade80" opacity=".85" filter="url(#gf)">
+      <animateMotion dur="1.9s" repeatCount="indefinite" begin="0.1s"><mpath href="#sp1"/></animateMotion>
+    </circle>
+    <circle r="3" fill="#86efac" opacity=".6">
+      <animateMotion dur="1.9s" repeatCount="indefinite" begin="1.05s"><mpath href="#sp1"/></animateMotion>
+    </circle>
+
+    <path id="sp2" d="M 326 212 C 326 256 356 300 400 340 C 440 372 480 400 518 418" fill="none" stroke="rgba(74,222,128,.07)" stroke-width="2"/>
+    <circle r="3.5" fill="#4ade80" opacity=".8" filter="url(#gf)">
+      <animateMotion dur="1.9s" repeatCount="indefinite" begin="0.55s"><mpath href="#sp2"/></animateMotion>
+    </circle>
+
+    <!-- ════ CÂBLE ÉNERGIE : BATTERIE → VOITURE ════ -->
+    <!-- Câble visible sur le sol -->
+    <path id="ep" d="M 532 418 C 608 418 660 498 722 500 C 784 502 826 488 860 472" fill="none" stroke="rgba(74,222,128,.16)" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- Lueur du câble -->
+    <path d="M 532 418 C 608 418 660 498 722 500 C 784 502 826 488 860 472" fill="none" stroke="rgba(74,222,128,.05)" stroke-width="10" stroke-linecap="round"/>
+    <!-- Pointillés animés -->
+    <path d="M 532 418 C 608 418 660 498 722 500 C 784 502 826 488 860 472" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="6 14" class="cable-dash"/>
+
+    <!-- Particules d'énergie sur le câble -->
+    <circle r="7" fill="#4ade80" opacity=".9" filter="url(#gf)">
+      <animateMotion dur="2.3s" repeatCount="indefinite" begin="0s"><mpath href="#ep"/></animateMotion>
+    </circle>
+    <circle r="5" fill="#86efac" opacity=".75">
+      <animateMotion dur="2.3s" repeatCount="indefinite" begin="0.57s"><mpath href="#ep"/></animateMotion>
+    </circle>
+    <circle r="6" fill="#4ade80" opacity=".85" filter="url(#gf)">
+      <animateMotion dur="2.3s" repeatCount="indefinite" begin="1.15s"><mpath href="#ep"/></animateMotion>
+    </circle>
+    <circle r="4" fill="#bbf7d0" opacity=".65">
+      <animateMotion dur="2.3s" repeatCount="indefinite" begin="1.72s"><mpath href="#ep"/></animateMotion>
+    </circle>
+
+    <!-- ════ VOITURE ÉLECTRIQUE ════ -->
+    <g class="car-group">
+      <!-- Aura sous la voiture -->
+      <ellipse cx="1002" cy="520" rx="218" ry="36" fill="url(#carAura)" class="car-aura"/>
+
+      <!-- Ombre au sol -->
+      <ellipse cx="998" cy="511" rx="190" ry="16" fill="#010502" opacity=".65"/>
+
+      <!-- Carrosserie principale -->
+      <path d="M 842 480 L 842 450 Q 843 434 860 426 L 892 402 Q 912 391 944 389 L 1052 389 Q 1092 389 1114 401 Q 1135 414 1144 446 L 1150 460 L 1154 480 Z"
+        fill="#091d0a" stroke="rgba(74,222,128,.18)" stroke-width="1.5"/>
+
+      <!-- Habitacle / toit -->
+      <path d="M 895 400 Q 907 384 932 379 L 1050 379 Q 1078 379 1096 391 L 1110 400 Z"
+        fill="#071408" stroke="rgba(74,222,128,.1)" stroke-width="1"/>
+
+      <!-- Pare-brise avant -->
+      <path d="M 938 381 Q 948 373 962 371 L 1047 371 Q 1060 371 1070 377 L 1084 400 L 939 400 Z"
+        fill="rgba(74,222,128,.07)" stroke="rgba(74,222,128,.14)" stroke-width=".8"/>
+
+      <!-- Vitre arrière -->
+      <path d="M 897 400 Q 903 388 914 383 L 936 381 L 940 400 Z"
+        fill="rgba(74,222,128,.06)" stroke="rgba(74,222,128,.1)" stroke-width=".8"/>
+
+      <!-- Sous-caisse / seuil -->
+      <rect x="842" y="476" width="312" height="12" rx="3" fill="#061008"/>
+
+      <!-- Feu arrière -->
+      <rect x="842" y="448" width="8" height="20" rx="2" fill="rgba(239,68,68,.28)" class="tail-light"/>
+
+      <!-- Phare avant -->
+      <path d="M 1142 434 L 1152 438 L 1152 454 L 1142 458 Z" fill="rgba(253,230,138,.38)" class="headlight-f"/>
+      <ellipse cx="1152" cy="446" rx="3" ry="10" fill="rgba(253,230,138,.18)" class="headlight-f"/>
+
+      <!-- Prise de charge (côté arrière-gauche) -->
+      <rect x="842" y="425" width="22" height="17" rx="3" fill="#061008" stroke="rgba(74,222,128,.48)" stroke-width="1.5"/>
+      <circle cx="853" cy="433" r="4" fill="#4ade80" class="charge-dot"/>
+
+      <!-- Indicateur batterie sur carrosserie -->
+      <rect x="930" y="424" width="86" height="11" rx="2" fill="rgba(0,0,0,.58)" stroke="rgba(74,222,128,.22)" stroke-width="1"/>
+      <rect x="931" y="425" width="10" height="9" rx="1.5" fill="url(#battG)" class="car-batt"/>
+      <text x="973" y="432" font-family="'JetBrains Mono',monospace" font-size="6.5" fill="rgba(74,222,128,.65)" text-anchor="middle" class="charge-txt">CHARGE EN COURS</text>
+
+      <!-- Roue arrière -->
+      <circle cx="904" cy="494" r="31" fill="#030804" stroke="rgba(74,222,128,.15)" stroke-width="2"/>
+      <circle cx="904" cy="494" r="19" fill="#060e07" stroke="rgba(74,222,128,.08)" stroke-width="1.5"/>
+      <circle cx="904" cy="494" r="7" fill="rgba(74,222,128,.13)"/>
+      <line x1="904" y1="475" x2="904" y2="513" stroke="rgba(74,222,128,.1)" stroke-width="1.5"/>
+      <line x1="886" y1="494" x2="922" y2="494" stroke="rgba(74,222,128,.1)" stroke-width="1.5"/>
+      <line x1="891" y1="481" x2="917" y2="507" stroke="rgba(74,222,128,.1)" stroke-width="1.5"/>
+      <line x1="917" y1="481" x2="891" y2="507" stroke="rgba(74,222,128,.1)" stroke-width="1.5"/>
+
+      <!-- Roue avant -->
+      <circle cx="1092" cy="494" r="31" fill="#030804" stroke="rgba(74,222,128,.15)" stroke-width="2"/>
+      <circle cx="1092" cy="494" r="19" fill="#060e07" stroke="rgba(74,222,128,.08)" stroke-width="1.5"/>
+      <circle cx="1092" cy="494" r="7" fill="rgba(74,222,128,.13)"/>
+      <line x1="1092" y1="475" x2="1092" y2="513" stroke="rgba(74,222,128,.1)" stroke-width="1.5"/>
+      <line x1="1074" y1="494" x2="1110" y2="494" stroke="rgba(74,222,128,.1)" stroke-width="1.5"/>
+      <line x1="1079" y1="481" x2="1105" y2="507" stroke="rgba(74,222,128,.1)" stroke-width="1.5"/>
+      <line x1="1105" y1="481" x2="1079" y2="507" stroke="rgba(74,222,128,.1)" stroke-width="1.5"/>
+    </g>
+
+  </svg>
+</div>
+
   <div class="hero-inner">
     <div>
       <div class="hero-badge"><span class="dot"></span> Spécialiste IRVE certifié</div>
@@ -466,7 +756,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
 </section>
 
 <!-- BARRE AVANTAGES -->
-<div class="avantages">
+<div class="avantages reveal">
   <div class="avantages-inner">
     <div class="av-item"><span class="check">✓</span><p>TVA 5,5% sur votre installation</p></div>
     <div class="av-item"><span class="check">✓</span><p>Prime ADVENIR jusqu'à <strong>1 000 €</strong> en copropriété</p></div>
@@ -509,7 +799,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="how-block">
+      <div class="how-block tab-block-reveal">
         <h4>Comment ça se passe ?</h4>
         <div class="steps-row">
           <div class="step"><div class="step-n g">1</div><h5>Configurez en ligne</h5><p>2 minutes pour renseigner votre profil et vos habitudes de recharge.</p></div>
@@ -519,7 +809,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="aides-block" id="aides">
+      <div class="aides-block tab-block-reveal" id="aides">
         <div class="aides-text">
           <h4>Aides disponibles en 2026 — Particulier</h4>
           <p>Les particuliers en maison individuelle ne sont pas éligibles à la prime ADVENIR. La TVA à taux réduit reste l'aide principale applicable.</p>
@@ -533,7 +823,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
       </div>
 
 
-      <div class="opti-block">
+      <div class="opti-block tab-block-reveal">
         <h4>🎯 Notre différence : l'optimisation tarifaire incluse</h4>
         <p class="desc">La plupart des installateurs posent la borne et repartent. Nous, nous allons plus loin : nous analysons votre profil de consommation et de recharge pour vous recommander le fournisseur d'énergie le plus rentable.</p>
         <div class="opti-grid">
@@ -543,7 +833,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="faq-block">
+      <div class="faq-block tab-block-reveal">
         <h4>Questions fréquentes — Particulier</h4>
         <div class="faq-item">
           <div class="faq-q" onclick="toggleFaq(this)">Quelle puissance de borne choisir ? <span class="faq-arr">▾</span></div>
@@ -584,7 +874,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="how-block">
+      <div class="how-block tab-block-reveal">
         <h4>Comment ça se passe en copropriété ?</h4>
         <div class="steps-row">
           <div class="step"><div class="step-n g">1</div><h5>Demande en ligne</h5><p>Configurez votre projet et recevez votre étude gratuite.</p></div>
@@ -594,7 +884,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="aides-block">
+      <div class="aides-block tab-block-reveal">
         <div class="aides-text">
           <h4>Aides copropriété 2026</h4>
           <p>La prime ADVENIR est la plus avantageuse pour les copropriétés. Revalorisée en avril 2026, nous gérons le dossier intégralement — vous n'avancez rien.</p>
@@ -607,7 +897,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="opti-block">
+      <div class="opti-block tab-block-reveal">
         <h4>🎯 Optimisation tarifaire collective incluse</h4>
         <p class="desc">En copropriété, la gestion de l'énergie est encore plus importante. Nous vous recommandons les meilleures offres et la meilleure configuration de recharge pour minimiser les coûts de chaque résident.</p>
         <div class="opti-grid">
@@ -617,7 +907,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="faq-block">
+      <div class="faq-block tab-block-reveal">
         <h4>Questions fréquentes — Copropriété</h4>
         <div class="faq-item">
           <div class="faq-q" onclick="toggleFaq(this)">Le syndic peut-il s'opposer à mon installation ? <span class="faq-arr">▾</span></div>
@@ -654,7 +944,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="how-block">
+      <div class="how-block tab-block-reveal">
         <h4>Comment ça se passe en entreprise ?</h4>
         <div class="steps-row">
           <div class="step"><div class="step-n g">1</div><h5>Audit de site</h5><p>Visite technique gratuite pour évaluer votre installation électrique.</p></div>
@@ -664,7 +954,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="aides-block">
+      <div class="aides-block tab-block-reveal">
         <div class="aides-text">
           <h4>Aides entreprise 2026</h4>
           <p>Les entreprises cumulent ADVENIR + avantages fiscaux. Nous gérons l'intégralité du dossier pour maximiser votre aide.</p>
@@ -677,7 +967,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="opti-block">
+      <div class="opti-block tab-block-reveal">
         <h4>🎯 Optimisation énergie pour votre flotte incluse</h4>
         <p class="desc">Pour les entreprises, le coût de la recharge de flotte peut représenter des milliers d'euros par an. Nous négocions et optimisons votre contrat d'énergie professionnel pour maximiser vos économies.</p>
         <div class="opti-grid">
@@ -687,7 +977,7 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
         </div>
       </div>
 
-      <div class="faq-block">
+      <div class="faq-block tab-block-reveal">
         <h4>Questions fréquentes — Entreprise</h4>
         <div class="faq-item">
           <div class="faq-q" onclick="toggleFaq(this)">La borne est-elle un avantage en nature imposable pour les salariés ? <span class="faq-arr">▾</span></div>
@@ -736,9 +1026,9 @@ input:focus,textarea:focus,select:focus{border-color:rgba(74,222,128,.4);box-sha
 
 <!-- CTA FINAL -->
 <section class="cta-final" id="configurateur">
-  <h2>Prêt à installer votre borne ?</h2>
-  <p>Obtenez votre étude complète gratuite — devis d'installation + recommandation tarifaire personnalisée.</p>
-  <div class="cta-btns">
+  <h2 class="reveal">Prêt à installer votre borne ?</h2>
+  <p class="reveal" data-d="1">Obtenez votre étude complète gratuite — devis d'installation + recommandation tarifaire personnalisée.</p>
+  <div class="cta-btns reveal" data-d="2">
     <a href="https://borneirve.github.io/irve-studio/configurateur.html" class="btn-primary" style="font-size:16px;padding:15px 32px;">⚡ Démarrer mon étude gratuite</a>
     <a href="tel:+33600000000" class="btn-ghost">📞 Parler à un expert</a>
   </div>
@@ -1846,7 +2136,17 @@ function chargerAvisGoogle(placeId){
     nums.forEach(function(e){io.observe(e);});
   }
 
-  function init(){ setupReveal(); setupNav(); animateCounters(); }
+  function init(){
+    setupReveal(); setupNav(); animateCounters();
+    // Reveal blocks in the initially active tab
+    var initialTab=document.querySelector('.tab-content.active');
+    if(initialTab){
+      var blocks=initialTab.querySelectorAll('.tab-block-reveal');
+      blocks.forEach(function(b,i){
+        setTimeout(function(){ b.classList.add('visible'); }, 300 + i * 90);
+      });
+    }
+  }
   if(document.readyState!=='loading') init();
   else document.addEventListener('DOMContentLoaded', init);
 })();
@@ -1869,22 +2169,17 @@ function chargerAvisGoogle(placeId){
   if(!reduce){
     var field = document.getElementById('hero-particles');
     if(field){
-      var colors = ['volt','volt','volt','blue','glow'];
-      var types = ['','','','blue','glow'];
-      for(var i=0; i<28; i++){
+      for(var i=0; i<22; i++){
         var p = document.createElement('div');
-        p.className = 'particle ' + (types[i % types.length] || '');
-        var x1 = (Math.random()*80 - 40).toFixed(1);
-        var y1 = (Math.random()*40 + 30).toFixed(1);
-        var x2 = (Math.random()*120 - 60).toFixed(1);
-        var y2 = (Math.random()*80 + 60).toFixed(1);
+        p.className = 'particle';
+        var size = (2 + Math.random()*3).toFixed(1);
         p.style.cssText =
           'left:' + (Math.random()*100).toFixed(1) + '%;' +
           'top:' + (Math.random()*100).toFixed(1) + '%;' +
-          '--px:' + x1 + 'px;--py:-' + y1 + 'px;' +
-          '--px2:' + x2 + 'px;--py2:-' + y2 + 'px;' +
+          'width:' + size + 'px;height:' + size + 'px;' +
+          '--op:' + (0.18 + Math.random()*0.28).toFixed(2) + ';' +
           '--dur:' + (7 + Math.random()*8).toFixed(1) + 's;' +
-          '--del:' + (Math.random()*8).toFixed(1) + 's;' +
+          '--delay:' + (Math.random()*8).toFixed(1) + 's;' +
           'opacity:0;';
         field.appendChild(p);
       }
@@ -1964,7 +2259,7 @@ function chargerAvisGoogle(placeId){
 
   /* ── Stagger reveal amélioré pour les grilles ── */
   if(!reduce){
-    var grids = document.querySelectorAll('.bornes-grid, .opti-grid, .aides-grid, .steps-row, .avis-grid');
+    var grids = document.querySelectorAll('.bornes-grid, .opti-grid, .aides-grid, .steps-row, .avis-grid, .checklist, .aides-grid .aide-item');
     var revIo = new IntersectionObserver(function(entries){
       entries.forEach(function(en){
         if(!en.isIntersecting) return;
