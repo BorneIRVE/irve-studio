@@ -122,6 +122,30 @@ nav ul a:hover{color:var(--white);}
 
 /* HERO */
 .hero{padding:130px 6vw 72px;background:transparent;position:relative;overflow:hidden;z-index:1;}
+/* ═══ Scène animée « maison solaire » en fond du hero ═══ */
+.hero-scene{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#050b14;}
+.hero-scene .hs-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;pointer-events:none;user-select:none;-webkit-user-drag:none;backface-visibility:hidden;will-change:opacity;z-index:1;}
+.hero-scene .hs-day{animation:hsDayFade 12s linear infinite;}
+.hero-scene .hs-night{animation:hsNightFade 12s linear infinite;}
+.hero-scene .hs-dusk{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(to bottom,rgba(15,33,62,0) 0%,rgba(15,33,62,.08) 45%,rgba(15,33,62,.18) 100%);mix-blend-mode:multiply;opacity:0;animation:hsDuskFade 12s linear infinite;}
+.hero-scene .hs-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:3;pointer-events:none;}
+/* Voile de lisibilité : sombre à gauche (texte) + fondus haut/bas pour se fondre dans le thème */
+.hero-scene .hs-scrim{position:absolute;inset:0;z-index:4;pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(10,14,26,.96) 0%,rgba(10,14,26,.86) 30%,rgba(10,14,26,.5) 58%,rgba(10,14,26,.32) 100%),
+    linear-gradient(180deg,rgba(10,14,26,.9) 0%,rgba(10,14,26,0) 24%,rgba(10,14,26,0) 60%,rgba(10,14,26,.96) 100%);}
+.hero-inner{position:relative;z-index:3;}
+@keyframes hsDayFade{0%,37.5%{opacity:1;}50%,87.5%{opacity:0;}100%{opacity:1;}}
+@keyframes hsNightFade{0%,37.5%{opacity:0;}50%,87.5%{opacity:1;}100%{opacity:0;}}
+@keyframes hsDuskFade{0%,33%{opacity:0;}43%{opacity:.18;}50%{opacity:0;}83%{opacity:0;}93%{opacity:.10;}100%{opacity:0;}}
+@media(max-width:900px){
+  .hero-scene .hs-scrim{background:linear-gradient(180deg,rgba(10,14,26,.94) 0%,rgba(10,14,26,.9) 34%,rgba(10,14,26,.52) 62%,rgba(10,14,26,.46) 82%,rgba(10,14,26,.97) 100%);}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-scene .hs-day,.hero-scene .hs-night,.hero-scene .hs-dusk{animation:none!important;}
+  .hero-scene .hs-day{opacity:0;}
+  .hero-scene .hs-night{opacity:1;}
+}
 .hero-inner{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr 410px;gap:60px;align-items:center;}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(194,247,62,.08);border:1px solid rgba(194,247,62,.28);color:var(--volt);font-size:11.5px;font-weight:600;padding:6px 15px;border-radius:30px;margin-bottom:26px;text-transform:uppercase;letter-spacing:.6px;font-family:var(--font-mono);}
 .hero-badge .dot{width:6px;height:6px;background:var(--volt);border-radius:50%;box-shadow:0 0 8px var(--volt);animation:pulse 1.6s infinite;}
@@ -538,6 +562,14 @@ html{scroll-behavior:smooth;}
 
 <!-- HERO -->
 <section class="hero">
+  <!-- Scène animée « maison solaire » (fond du hero) -->
+  <div class="hero-scene" id="hero-scene" aria-hidden="true">
+    <img class="hs-layer hs-day" src="scene-day.webp" alt="" loading="eager" decoding="async" />
+    <img class="hs-layer hs-night" src="scene-night.webp" alt="" loading="eager" decoding="async" />
+    <div class="hs-dusk"></div>
+    <canvas class="hs-canvas" id="hero-energy-canvas"></canvas>
+    <div class="hs-scrim"></div>
+  </div>
   <!-- Particules flottantes -->
   <div class="particle-field" aria-hidden="true" id="hero-particles"></div>
   <div class="hero-inner">
@@ -2120,5 +2152,143 @@ function chargerAvisGoogle(placeId){
 @keyframes rippleOut{to{transform:scale(80);opacity:0;}}
 @keyframes avShimmer{0%,100%{opacity:.7;}50%{opacity:1;}}
 </style>
+<script>
+/* ═══ Flux d'énergie animés — scène « maison solaire » du hero ═══ */
+(() => {
+  const scene  = document.getElementById("hero-scene");
+  const canvas = document.getElementById("hero-energy-canvas");
+  if (!scene || !canvas) return;
+  const ctx = canvas.getContext("2d");
+  const DESIGN_W = 1672, DESIGN_H = 941, CYCLE = 12000;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const STYLE = {
+    jitter:1.55, baseOuter:7.5, baseMid:3.8, baseInner:1.35,
+    pulseLength:54, pulseSpacing:230, pulseStep:9, pulseSpeed:95, pulseOpacity:0.42
+  };
+
+  const dayPaths = [
+    { id:"p1p2",  pts:[{x:821,y:340},{x:822,y:461}] },
+    { id:"p3p4",  pts:[{x:823,y:527},{x:823,y:569}] },
+    { id:"main",  pts:[{x:856,y:478},{x:1526,y:477},{x:1525,y:516}] },
+    { id:"charge",pts:[{x:1523,y:578},{x:1523,y:629},{x:1466,y:631}] }
+  ];
+  const nightPaths = [
+    { id:"p3p4",  pts:[{x:823,y:569},{x:823,y:527}] },
+    { id:"main",  pts:[{x:856,y:480},{x:1525,y:479},{x:1525,y:516}] },
+    { id:"charge",pts:[{x:1523,y:578},{x:1523,y:625},{x:1468,y:625}] }
+  ];
+
+  function resize() {
+    const rect = scene.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width  = Math.round(rect.width  * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    canvas.style.width  = rect.width  + "px";
+    canvas.style.height = rect.height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  /* Mapping « object-fit: cover » : garde les câbles collés à l'image même recadrée */
+  function cover() {
+    const cw = canvas.clientWidth, ch = canvas.clientHeight;
+    const s = Math.max(cw / DESIGN_W, ch / DESIGN_H);
+    return { s, ox:(cw - DESIGN_W * s) / 2, oy:(ch - DESIGN_H * s) / 2 };
+  }
+  function toCanvas(p){ const c = cover(); return { x:c.ox + p.x*c.s, y:c.oy + p.y*c.s }; }
+  function polyToCanvas(points){ return points.map(toCanvas); }
+
+  function polyLength(points){
+    let len = 0;
+    for (let i=0;i<points.length-1;i++) len += Math.hypot(points[i+1].x-points[i].x, points[i+1].y-points[i].y);
+    return len;
+  }
+  function pointAt(points, dist){
+    let remain = dist;
+    for (let i=0;i<points.length-1;i++){
+      const a=points[i], b=points[i+1], dx=b.x-a.x, dy=b.y-a.y, seg=Math.hypot(dx,dy);
+      if (remain<=seg || i===points.length-2){ const t=seg===0?0:Math.max(0,Math.min(1,remain/seg)); return {x:a.x+dx*t,y:a.y+dy*t}; }
+      remain -= seg;
+    }
+    return points[points.length-1];
+  }
+  function orientationAt(points, dist){
+    let remain = dist;
+    for (let i=0;i<points.length-1;i++){
+      const a=points[i], b=points[i+1], dx=b.x-a.x, dy=b.y-a.y, seg=Math.hypot(dx,dy);
+      if (remain<=seg || i===points.length-2) return {dx,dy};
+      remain -= seg;
+    }
+    return {dx:1,dy:0};
+  }
+  function buildElectricLine(rawPts, ms, offset=0){
+    const pts = polyToCanvas(rawPts), len = polyLength(pts), out = [];
+    for (let d=0; d<=len; d+=13){
+      const p = pointAt(pts, d); let jx=0, jy=0;
+      if (d>8 && d<len-8){
+        const o = orientationAt(pts, d);
+        const horizontal = Math.abs(o.dx) > Math.abs(o.dy);
+        const w = Math.sin(d*0.11+ms*0.008+offset) + Math.cos(d*0.17-ms*0.007+offset);
+        if (horizontal) jy = w*STYLE.jitter; else jx = w*STYLE.jitter;
+      }
+      out.push({x:p.x+jx, y:p.y+jy});
+    }
+    out.push(pts[pts.length-1]);
+    return out;
+  }
+  function strokePolyline(points, width, color, blur, alpha){
+    if (!points.length) return;
+    ctx.save(); ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y);
+    for (let i=1;i<points.length;i++) ctx.lineTo(points[i].x, points[i].y);
+    ctx.lineCap="round"; ctx.lineJoin="round"; ctx.lineWidth=width;
+    ctx.strokeStyle=color; ctx.globalAlpha=alpha; ctx.shadowBlur=blur; ctx.shadowColor=color;
+    ctx.stroke(); ctx.restore();
+  }
+  function drawBase(rawPts, ms, opacity){
+    const line1 = buildElectricLine(rawPts, ms, 0);
+    const line2 = buildElectricLine(rawPts, ms, 120);
+    strokePolyline(line1, STYLE.baseOuter, "rgba(84,118,255,1)", 14, 0.16*opacity);
+    strokePolyline(line2, STYLE.baseMid,   "rgba(80,190,255,1)", 10, 0.46*opacity);
+    strokePolyline(line1, STYLE.baseInner, "rgba(235,252,255,1)", 4, 0.70*opacity);
+  }
+  function drawDirectionalGlow(rawPts, ms, opacity, phaseOffset=0){
+    const pts = polyToCanvas(rawPts), len = polyLength(pts);
+    if (len<=0) return;
+    const headBase = ((ms/1000)*STYLE.pulseSpeed + phaseOffset) % STYLE.pulseSpacing;
+    for (let k=-1; k<Math.ceil(len/STYLE.pulseSpacing)+2; k++){
+      const head = headBase + k*STYLE.pulseSpacing;
+      const start = Math.max(0, head - STYLE.pulseLength), end = Math.min(len, head);
+      if (end<=0 || start>=len || end<=start) continue;
+      const pulse = [];
+      for (let d=start; d<=end; d+=STYLE.pulseStep) pulse.push(pointAt(pts, d));
+      pulse.push(pointAt(pts, end));
+      strokePolyline(pulse, 8.5, "rgba(118,135,255,1)", 14, 0.11*opacity*STYLE.pulseOpacity);
+      strokePolyline(pulse, 4.0, "rgba(115,215,255,1)", 9, 0.28*opacity*STYLE.pulseOpacity);
+      strokePolyline(pulse, 1.5, "rgba(255,255,255,1)", 3, 0.55*opacity*STYLE.pulseOpacity);
+    }
+  }
+  function drawPath(path, ms, opacity, offset){
+    if (opacity<=0.001) return;
+    drawBase(path.pts, ms, opacity);
+    drawDirectionalGlow(path.pts, ms, opacity, offset);
+  }
+  function tCycle(ms){ return (ms%CYCLE)/CYCLE; }
+  function dayOpacity(t){ if(t<0.375)return 1; if(t<0.50)return 1-(t-0.375)/0.125; if(t<0.875)return 0; return (t-0.875)/0.125; }
+  function nightOpacity(t){ if(t<0.375)return 0; if(t<0.50)return (t-0.375)/0.125; if(t<0.875)return 1; return 1-(t-0.875)/0.125; }
+
+  function render(ms){
+    const t = tCycle(ms), dOp = dayOpacity(t), nOp = nightOpacity(t);
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    dayPaths.forEach((p,i)   => drawPath(p, ms, dOp, i*29));
+    nightPaths.forEach((p,i) => drawPath(p, ms, nOp, 75+i*29));
+    if (!reduce) requestAnimationFrame(render);
+  }
+
+  window.addEventListener("resize", resize, { passive:true });
+  resize();
+  if (reduce) render(CYCLE * 0.7);           // image nuit figée + câbles statiques
+  else        requestAnimationFrame(render); // cycle jour/nuit animé
+})();
+</script>
 </body>
 </html>
