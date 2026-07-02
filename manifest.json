@@ -1,6 +1,6 @@
 {
-  "name": "VoltExpert CRM",
-  "short_name": "VoltExpert",
+  "name": "AEROHM CRM",
+  "short_name": "AEROHM",
   "description": "Gestion IRVE - CRM, chantiers, finances",
   "start_url": "./index.html?app=1",
   "display": "standalone",

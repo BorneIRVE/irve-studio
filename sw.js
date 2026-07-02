@@ -1,4 +1,4 @@
-// Service Worker VoltExpert CRM
+// Service Worker AEROHM CRM
 const CACHE = 'voltexpert-v27';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 

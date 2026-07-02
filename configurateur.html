@@ -227,8 +227,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
 
 <header class="hdr">
   <a href="https://borneirve.github.io/irve-studio/" class="logo-wrap">
-    <div class="logo">⚡</div>
-    <span class="logo-t">Volt<span>Expert</span></span>
+    <img class="logo-img" src="aerohm-wordmark.png" alt="AEROHM" style="height:26px;width:auto;display:block;" />
   </a>
   <div class="hdr-r">
     <div class="pill"><span class="dot"></span><span id="tarif-date">Tarifs à jour</span></div>
@@ -1824,7 +1823,7 @@ function generatePDF(){
     // Header
     bg.apply(null,N);doc.rect(0,0,W,28,'F');
     bg.apply(null,LM);doc.rect(0,26,W,2,'F');
-    fw('bold');doc.setFontSize(14);tc.apply(null,BL);dt('VoltExpert - Etude Tarifaire',14,16);
+    fw('bold');doc.setFontSize(14);tc.apply(null,BL);dt('AEROHM - Etude Tarifaire',14,16);
     doc.setFontSize(8);tc.apply(null,G);
     dt('Genere le '+new Date().toLocaleDateString('fr-FR'),14,23);
     dt(document.getElementById('c-nom').value||'-',W-14,23,{align:'right'});
@@ -1995,7 +1994,7 @@ function generatePDF(){
 
 // ── INFOS ENTREPRISE — À MODIFIER ──────────────
 const ENTREPRISE = {
-  nom:            'VoltExpert',
+  nom:            'AEROHM',
   forme:          'EURL',                          // SAS, SARL, EURL, EI...
   capital:        '1000',                          // capital social en EUR
   adresse:        '12 rue de l\'Electricité',
