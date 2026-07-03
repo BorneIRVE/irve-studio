@@ -1,5 +1,5 @@
 // Service Worker AEROHM CRM
-const CACHE = 'voltexpert-v28';
+const CACHE = 'voltexpert-v29';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
