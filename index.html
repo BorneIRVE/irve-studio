@@ -125,6 +125,12 @@ nav ul a:hover{color:var(--white);}
 /* HERO */
 .hero{padding:130px 6vw 72px;background:transparent;position:relative;overflow:hidden;z-index:1;}
 /* ═══ Scène animée « maison solaire » en fond du hero ═══ */
+/* ═══ Film de fond piloté au scroll ═══ */
+#film-bg{position:fixed;inset:0;z-index:0;width:100%;height:100%;display:block;pointer-events:none;background:#050b14;}
+#film-scrim{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,14,26,.80) 0%,rgba(10,14,26,.52) 26%,rgba(10,14,26,.36) 55%,rgba(10,14,26,.58) 100%);}
+.aurora-blob{display:none!important;}
+
 .hero-scene{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#050b14;}
 .hero-scene .hs-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;pointer-events:none;user-select:none;-webkit-user-drag:none;backface-visibility:hidden;will-change:opacity;z-index:1;}
 .hero-scene .hs-day{animation:hsDayFade 12s linear infinite;}
@@ -316,7 +322,7 @@ nav ul a:hover{color:var(--white);}
 .btn-ghost:hover{border-color:var(--white);background:rgba(255,255,255,.1);}
 
 /* GALERIE & AVIS */
-.galerie-section,.avis-section{padding:64px 6vw;max-width:1100px;margin:0 auto;}
+.galerie-section,.avis-section{padding:64px 6vw;max-width:1100px;margin:0 auto;position:relative;z-index:1;}
 .avis-section{background:var(--ink2);max-width:none;}
 .avis-section .sec-head,.avis-section .avis-grid{max-width:1100px;margin-left:auto;margin-right:auto;}
 .sec-head{text-align:center;margin-bottom:40px;}
@@ -504,10 +510,9 @@ html{scroll-behavior:smooth;}
 </style>
 </head>
 <body>
-<!-- Aurora blobs de fond -->
-<div class="aurora-blob ab1" aria-hidden="true"></div>
-<div class="aurora-blob ab2" aria-hidden="true"></div>
-<div class="aurora-blob ab3" aria-hidden="true"></div>
+<!-- ═══ Film de fond piloté au scroll (plan-séquence AEROHM) ═══ -->
+<canvas id="film-bg" aria-hidden="true"></canvas>
+<div id="film-scrim" aria-hidden="true"></div>
 <!-- Barre de progression -->
 <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
 <div class="energy-flow" aria-hidden="true"></div>
@@ -546,7 +551,7 @@ html{scroll-behavior:smooth;}
     <!-- Configurateur -->
     <div class="nd-sec">
       <div class="nd-lbl">Action</div>
-      <a href="https://borneirve.github.io/irve-studio/configurateur.html" class="nd-item" onclick="closeMenu()" style="background:rgba(0,200,117,.06);">
+      <a href="configurateur.html" class="nd-item" onclick="closeMenu()" style="background:rgba(0,200,117,.06);">
         <span class="nd-ico" style="background:rgba(0,200,117,.15);">⚡</span>
         <div class="nd-txt"><strong style="color:var(--green2);">Démarrer mon étude</strong><span>Devis + analyse tarifaire gratuits</span></div>
       </a>
@@ -563,14 +568,7 @@ html{scroll-behavior:smooth;}
 
 <!-- HERO -->
 <section class="hero">
-  <!-- Scène animée « maison solaire » (fond du hero) -->
-  <div class="hero-scene" id="hero-scene" aria-hidden="true">
-    <img class="hs-layer hs-day" src="scene-day.webp" alt="" loading="eager" decoding="async" />
-    <img class="hs-layer hs-night" src="scene-night.webp" alt="" loading="eager" decoding="async" />
-    <div class="hs-dusk"></div>
-    <canvas class="hs-canvas" id="hero-energy-canvas"></canvas>
-    <div class="hs-scrim"></div>
-  </div>
+  <!-- (Ancienne scène jour/nuit remplacée par le film de fond piloté au scroll) -->
   <!-- Particules flottantes -->
   <div class="particle-field" aria-hidden="true" id="hero-particles"></div>
   <div class="hero-inner">
@@ -882,7 +880,7 @@ html{scroll-behavior:smooth;}
   <h2>Prêt à installer votre borne ?</h2>
   <p>Obtenez votre étude complète gratuite — devis d'installation + recommandation tarifaire personnalisée.</p>
   <div class="cta-btns">
-    <a href="https://borneirve.github.io/irve-studio/configurateur.html" class="btn-primary" style="font-size:16px;padding:15px 32px;">⚡ Démarrer mon étude gratuite</a>
+    <a href="configurateur.html" class="btn-primary" style="font-size:16px;padding:15px 32px;">⚡ Démarrer mon étude gratuite</a>
     <a href="tel:+33600000000" class="btn-ghost">📞 Parler à un expert</a>
   </div>
 </section>
@@ -957,7 +955,7 @@ html{scroll-behavior:smooth;}
       <p class="sub" id="crm-subtitle">Tableau de bord</p>
     </div>
     <div class="ch-btns">
-      <a href="https://borneirve.github.io/irve-studio/configurateur.html#admin" class="bgreen">⚙️ Catalogue</a>
+      <a href="configurateur.html#admin" class="bgreen">⚙️ Catalogue</a>
       <button onclick="closeCRM()" class="bsec">✕</button>
     </div>
   </div>
@@ -1114,7 +1112,7 @@ html{scroll-behavior:smooth;}
     <p id="crm-pwd-err" style="color:#dc3545;font-size:12px;margin-top:8px;display:none;">Mot de passe incorrect</p>
   </div>
 </div>
-<footer style="background:var(--ink);border-top:1px solid var(--border);padding:32px 6vw;">
+<footer style="background:var(--ink);border-top:1px solid var(--border);padding:32px 6vw;position:relative;z-index:1;">
   <div style="max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
     <a href="#" style="display:flex;align-items:center;text-decoration:none;">
       <img src="aerohm-logo.png" alt="AEROHM — Votre énergie, notre savoir-faire" style="height:46px;width:auto;display:block;" />
@@ -2152,6 +2150,81 @@ function chargerAvisGoogle(placeId){
 @keyframes rippleOut{to{transform:scale(80);opacity:0;}}
 @keyframes avShimmer{0%,100%{opacity:.7;}50%{opacity:1;}}
 </style>
+<script>
+/* ═══ Film de fond piloté au scroll — plan-séquence AEROHM ═══ */
+(function(){
+"use strict";
+var FRAME_COUNT = 211;
+var FRAME_PATH = function(i){ return "frames/frame_" + String(i).padStart(4,"0") + ".webp"; };
+var SMOOTHING = 6;
+
+var canvas=document.getElementById("film-bg");
+if(!canvas) return;
+var ctx=canvas.getContext("2d");
+var reduceMotion=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var DPR=Math.min(window.devicePixelRatio||1,2);
+function sizeCanvas(){
+  canvas.width=Math.round(window.innerWidth*DPR);
+  canvas.height=Math.round(window.innerHeight*DPR);
+}
+sizeCanvas();
+
+var frames=new Array(FRAME_COUNT), loaded=0, firstDrawn=false;
+function loadFrame(i,cb){
+  if(frames[i]){ cb&&cb(); return; }
+  var img=new Image();
+  img.onload=function(){ frames[i]=img; loaded++; if(!firstDrawn&&frames[0]){firstDrawn=true;lastIndex=-1;} cb&&cb(); };
+  img.onerror=function(){ loaded++; cb&&cb(); };
+  img.src=FRAME_PATH(i+1);
+}
+(function preload(){
+  var order=[],i;
+  for(i=0;i<FRAME_COUNT;i+=6) order.push(i);
+  for(i=0;i<FRAME_COUNT;i+=2) if(i%6) order.push(i);
+  for(i=1;i<FRAME_COUNT;i+=2) order.push(i);
+  var idx=0, PAR=6;
+  function next(){ if(idx>=order.length) return; loadFrame(order[idx++],next); }
+  for(var k=0;k<PAR;k++) next();
+})();
+function nearestFrame(i){
+  if(frames[i]) return frames[i];
+  for(var d=1;d<FRAME_COUNT;d++){
+    if(frames[i-d]) return frames[i-d];
+    if(frames[i+d]) return frames[i+d];
+  }
+  return null;
+}
+var lastIndex=-1;
+function draw(index){
+  var img=nearestFrame(index);
+  if(!img) return;
+  var cw=canvas.width, ch=canvas.height;
+  var iw=img.naturalWidth, ih=img.naturalHeight;
+  var s=Math.max(cw/iw,ch/ih), dw=iw*s, dh=ih*s;
+  ctx.clearRect(0,0,cw,ch);
+  ctx.drawImage(img,(cw-dw)/2,(ch-dh)/2,dw,dh);
+  lastIndex=index;
+}
+var clampN=function(v,a,b){return Math.max(a,Math.min(b,v));};
+var targetP=0, smoothP=0;
+function onScroll(){
+  var max=document.documentElement.scrollHeight-window.innerHeight;
+  targetP=max>0?clampN(window.scrollY/max,0,1):0;
+}
+window.addEventListener("scroll",onScroll,{passive:true});
+window.addEventListener("resize",function(){ sizeCanvas(); lastIndex=-1; onScroll(); });
+onScroll();
+var lastT=performance.now();
+function loop(now){
+  requestAnimationFrame(loop);
+  var dt=Math.min((now-lastT)/1000,0.05); lastT=now;
+  smoothP+=(targetP-smoothP)*(reduceMotion?1:Math.min(1,dt*SMOOTHING));
+  var index=Math.round(smoothP*(FRAME_COUNT-1));
+  if(index!==lastIndex) draw(index);
+}
+requestAnimationFrame(loop);
+})();
+</script>
 <script>
 /* ═══ Flux d'énergie animés — scène « maison solaire » du hero ═══ */
 (() => {
