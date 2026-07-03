@@ -108,6 +108,10 @@ h1,h2,h3,h4,h5{font-family:var(--font-display);line-height:1.1;letter-spacing:-.
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,14,26,.72);backdrop-filter:blur(20px) saturate(140%);border-bottom:1px solid var(--border);padding:0 6vw;padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:space-between;height:66px;box-sizing:content-box;transition:background .3s,border-color .3s;}
+.nav-cats{display:flex;gap:30px;align-items:center;}
+.nav-cat{font-family:var(--font-display,inherit);font-size:14.5px;font-weight:600;color:var(--muted);text-decoration:none;transition:color .2s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;}
+.nav-cat:hover{color:#c2f73e;}
+@media(max-width:820px){.nav-cats{display:none;}}
 nav.scrolled{background:rgba(10,14,26,.92);border-bottom-color:var(--border2);}
 .logo{display:flex;align-items:center;gap:11px;text-decoration:none;}
 .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--volt),var(--green2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 0 24px rgba(194,247,62,.4);position:relative;}
@@ -522,6 +526,11 @@ html{scroll-behavior:smooth;}
     <img class="logo-img" src="aerohm-wordmark.png" alt="AEROHM" />
   </a>
 
+  <div class="nav-cats">
+    <a href="#solutions" class="nav-cat">⚡ Bornes de recharge</a>
+    <a href="#pompe-chaleur" class="nav-cat">🔥 Pompe à chaleur</a>
+  </div>
+
   <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
     <div class="bars">
       <span class="bar"></span>
@@ -532,20 +541,32 @@ html{scroll-behavior:smooth;}
   </button>
 
   <div class="nav-dropdown" id="nav-dropdown">
-    <!-- Section principale -->
+    <!-- Catégorie Bornes -->
     <div class="nd-sec">
-      <div class="nd-lbl">Navigation</div>
+      <div class="nd-lbl">⚡ Bornes de recharge</div>
       <a href="#solutions" class="nd-item" onclick="closeMenu()">
         <span class="nd-ico">🏠</span>
-        <div class="nd-txt"><strong>Nos solutions</strong><span>Particulier, copropriété, entreprise</span></div>
-      </a>
-      <a href="#aides" class="nd-item" onclick="closeMenu()">
-        <span class="nd-ico">💶</span>
-        <div class="nd-txt"><strong>Aides 2026</strong><span>ADVENIR, TVA réduite</span></div>
+        <div class="nd-txt"><strong>Nos solutions borne</strong><span>Particulier, copropriété, entreprise</span></div>
       </a>
       <a href="#solutions" class="nd-item" onclick="closeMenu()">
         <span class="nd-ico">🎯</span>
         <div class="nd-txt"><strong>Optimisation tarifaire</strong><span>Réduire le coût de la recharge</span></div>
+      </a>
+      <a href="#aides" class="nd-item" onclick="closeMenu()">
+        <span class="nd-ico">💶</span>
+        <div class="nd-txt"><strong>Aides borne 2026</strong><span>ADVENIR, TVA 5,5 %</span></div>
+      </a>
+    </div>
+    <!-- Catégorie Pompe à chaleur -->
+    <div class="nd-sec">
+      <div class="nd-lbl">🔥 Pompe à chaleur air/air</div>
+      <a href="#pompe-chaleur" class="nd-item" onclick="closeMenu()">
+        <span class="nd-ico">🔥</span>
+        <div class="nd-txt"><strong>La pompe à chaleur</strong><span>Chauffage &amp; climatisation réversible</span></div>
+      </a>
+      <a href="#pompe-chaleur" class="nd-item" onclick="closeMenu()">
+        <span class="nd-ico">💶</span>
+        <div class="nd-txt"><strong>Aides PAC 2026</strong><span>Prime CEE, TVA 10 %</span></div>
       </a>
     </div>
     <!-- Configurateur -->
@@ -573,13 +594,17 @@ html{scroll-behavior:smooth;}
   <div class="particle-field" aria-hidden="true" id="hero-particles"></div>
   <div class="hero-inner">
     <div>
-      <div class="hero-badge"><span class="dot"></span> Spécialiste IRVE certifié</div>
+      <div class="hero-badge"><span class="dot"></span> Bornes de recharge · Pompes à chaleur air/air</div>
       <h1>
-        <span class="line"><span>Installez votre borne</span></span>
-        <span class="line"><span>et <em>réduisez votre facture</em></span></span>
-        <span class="line"><span>en même temps.</span></span>
+        <span class="line"><span>Bornes de recharge</span></span>
+        <span class="line"><span>&amp; <em>pompes à chaleur</em>.</span></span>
+        <span class="line"><span>Réduisez vos factures.</span></span>
       </h1>
-      <p class="hero-sub">Nous ne faisons pas que poser une borne. Nous analysons votre consommation et vous guidons vers le meilleur contrat d'électricité pour que chaque kilomètre vous coûte le moins possible.</p>
+      <p class="hero-sub">Nous ne faisons pas que poser une borne. Nous analysons votre consommation et vous guidons vers le meilleur contrat d'électricité pour que chaque kilomètre vous coûte le moins possible. Et parce que l'énergie de votre maison ne s'arrête pas à la voiture, nous installons aussi votre <strong>pompe à chaleur air/air</strong> — chauffage l'hiver, climatisation l'été.</p>
+      <div class="hero-services" style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 24px;">
+        <a href="#solutions" style="display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:1px solid rgba(194,247,62,.4);border-radius:999px;background:rgba(194,247,62,.07);color:#eef3fa;font-weight:600;font-size:14px;text-decoration:none;transition:background .2s;">⚡ Bornes de recharge</a>
+        <a href="#pompe-chaleur" style="display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:1px solid rgba(194,247,62,.4);border-radius:999px;background:rgba(194,247,62,.07);color:#eef3fa;font-weight:600;font-size:14px;text-decoration:none;transition:background .2s;">🔥 Pompe à chaleur air/air</a>
+      </div>
       <div class="hero-ctas">
         <a href="#configurateur" class="btn-primary">⚡ Obtenir mon étude gratuite</a>
         <a href="tel:+33600000000" class="btn-secondary">📞 Nous appeler</a>
@@ -591,12 +616,14 @@ html{scroll-behavior:smooth;}
         <div class="live"><span class="dot"></span> Exemple client</div>
       </div>
       <div class="hc-body">
+        <div style="font-family:var(--font-display,inherit);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#c2f73e;font-weight:700;margin:0 0 6px;">⚡ Borne de recharge</div>
         <div class="stat"><span class="stat-l">Coût installation estimé</span><span class="stat-v">1 100 – 1 900 €</span></div>
-        <div class="stat"><span class="stat-l">TVA réduite 5,5% incluse</span><span class="stat-v g">− 55 à 100 €</span></div>
-        <div class="stat"><span class="stat-l">Meilleure offre tarifaire</span><span class="stat-v">Octopus Energy HC/HP</span></div>
-        <div class="stat"><span class="stat-l">Économie vs tarif actuel</span><span class="stat-v g" data-count="180" data-prefix="− " data-suffix=" €/an">− 180 €/an</span></div>
-        <div class="stat"><span class="stat-l">Coût recharge / 100 km</span><span class="stat-v a" data-count="0.85" data-suffix=" €" data-decimals="2">0,85 €</span></div>
-        <div class="stat"><span class="stat-l">Retour sur investissement</span><span class="stat-v g">&lt; 1 an</span></div>
+        <div class="stat"><span class="stat-l">Économie carburant</span><span class="stat-v g">− 180 €/an</span></div>
+        <div class="stat"><span class="stat-l">Coût recharge / 100 km</span><span class="stat-v a">0,85 €</span></div>
+        <div style="font-family:var(--font-display,inherit);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#c2f73e;font-weight:700;margin:16px 0 6px;">🔥 Pompe à chaleur air/air</div>
+        <div class="stat"><span class="stat-l">Chauffage + climatisation</span><span class="stat-v">1 seul appareil</span></div>
+        <div class="stat"><span class="stat-l">Économies chauffage</span><span class="stat-v g">jusqu'à ~40 %</span></div>
+        <div class="stat"><span class="stat-l">Prime CEE</span><span class="stat-v g">sans condition</span></div>
       </div>
       <div class="hc-foot">
         <span style="font-size:18px;">💡</span>
@@ -612,6 +639,8 @@ html{scroll-behavior:smooth;}
     <div class="av-item"><span class="check">✓</span><p>TVA 5,5% sur votre installation</p></div>
     <div class="av-item"><span class="check">✓</span><p>Prime ADVENIR jusqu'à <strong>1 000 €</strong> en copropriété</p></div>
     <div class="av-item"><span class="check">✓</span><p>Certification IRVE RGE QualiChargie</p></div>
+    <div class="av-item"><span class="check">✓</span><p>Pompe à chaleur air/air — <strong>chaud &amp; froid</strong></p></div>
+    <div class="av-item"><span class="check">✓</span><p>Prime CEE + RGE QualiPAC pour votre PAC</p></div>
     <div class="av-item"><span class="check">✓</span><p>Optimisation fournisseur énergie <strong>incluse</strong> <a href="#aides" class="av-link">Voir toutes les aides 2026 →</a></p></div>
   </div>
 </div>
@@ -849,6 +878,73 @@ html{scroll-behavior:smooth;}
   </div>
 </section>
 
+<!-- ══════════ POMPE À CHALEUR AIR/AIR ══════════ -->
+<section class="tabs-section" id="pompe-chaleur">
+  <div class="tabs-inner">
+    <div class="tabs-header reveal">
+      <div class="section-label">Pompe à chaleur</div>
+      <h2 class="section-title">Le confort, hiver comme été</h2>
+      <p class="section-sub">Le même artisan, la même exigence — chauffez l'hiver, rafraîchissez l'été, avec une seule installation réversible.</p>
+    </div>
+
+    <div class="tab-grid" style="grid-template-columns:1fr;">
+      <div class="tab-intro">
+        <h3>Pompe à chaleur air/air</h3>
+        <p class="desc">La pompe à chaleur air/air puise les calories de l'air extérieur pour chauffer l'hiver, puis s'inverse pour rafraîchir l'été. Sobre, discrète et confortable — pour les particuliers comme pour les professionnels.</p>
+        <ul class="checklist">
+          <li><span class="check-ico">✓</span>Réversible : chauffage l'hiver, climatisation l'été</li>
+          <li><span class="check-ico">✓</span>Jusqu'à ~40 % d'économies face à de vieux radiateurs électriques</li>
+          <li><span class="check-ico">✓</span>Étude thermique et dimensionnement (SCOP, surface, pièces)</li>
+          <li><span class="check-ico">✓</span>Prime CEE sans condition de ressources</li>
+          <li><span class="check-ico">✓</span>TVA 10 % sur la pose</li>
+          <li><span class="check-ico">✓</span>Pose par un installateur certifié RGE QualiPAC</li>
+        </ul>
+        <a href="#configurateur" class="btn-primary">🔥 Obtenir mon étude pompe à chaleur</a>
+      </div>
+    </div>
+
+    <div class="how-block">
+      <h4>Comment ça se passe ?</h4>
+      <div class="steps-row">
+        <div class="step"><div class="step-n g">1</div><h5>Visite &amp; étude</h5><p>Bilan de vos pièces, de l'isolation et du dimensionnement adapté.</p></div>
+        <div class="step"><div class="step-n d">2</div><h5>Devis clair</h5><p>Chiffrage détaillé, prime CEE déduite, sans engagement.</p></div>
+        <div class="step"><div class="step-n d">3</div><h5>Installation</h5><p>Pose soignée par nos équipes certifiées RGE QualiPAC.</p></div>
+        <div class="step"><div class="step-n g">4</div><h5>Mise en service</h5><p>Réglages, prise en main et entretien dans la durée.</p></div>
+      </div>
+    </div>
+
+    <div class="aides-block">
+      <div class="aides-text">
+        <h4>Aides disponibles en 2026 — Pompe à chaleur air/air</h4>
+        <p>Installée seule, la PAC air/air n'ouvre pas droit à MaPrimeRénov' « par geste » : la prime CEE (via un installateur RGE, à demander avant la signature du devis) est alors l'aide de référence. Nous vérifions votre éligibilité dès l'étude.</p>
+      </div>
+      <div class="aides-grid">
+        <div class="aide-item"><span class="aide-val">CEE</span><span class="aide-lbl">Prime CEE (BAR-TH-129) — sans condition de ressources</span></div>
+        <div class="aide-item"><span class="aide-val">10%</span><span class="aide-lbl">TVA réduite sur la pose (main-d'œuvre)</span></div>
+        <div class="aide-item"><span class="aide-val">réno</span><span class="aide-lbl">MaPrimeRénov' — uniquement en rénovation d'ampleur</span></div>
+        <div class="aide-item"><span class="aide-val">~40%</span><span class="aide-lbl">d'économies vs radiateurs électriques</span></div>
+      </div>
+    </div>
+
+    <div class="faq-block">
+      <h4>Questions fréquentes — Pompe à chaleur</h4>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Un seul appareil pour chauffer ET climatiser ? <span class="faq-arr">▾</span></div>
+        <div class="faq-a">Oui. La pompe à chaleur air/air est réversible : elle chauffe l'hiver et rafraîchit l'été. Une seule installation couvre les deux besoins.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Ai-je droit à MaPrimeRénov' ? <span class="faq-arr">▾</span></div>
+        <div class="faq-a">Pour une PAC air/air posée seule, non : MaPrimeRénov' « par geste » ne couvre pas l'air/air. En revanche la prime CEE s'applique sans condition de ressources, et MaPrimeRénov' redevient possible si la PAC s'intègre à une rénovation d'ampleur. On fait le point ensemble à l'étude.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Quelles économies puis-je espérer ? <span class="faq-arr">▾</span></div>
+        <div class="faq-a">Face à d'anciens convecteurs électriques, une PAC air/air bien dimensionnée peut réduire la facture de chauffage de l'ordre de 40 %. Le gain réel dépend de votre logement, de son isolation et de vos usages — nous l'estimons lors de l'étude.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <!-- GALERIE RÉALISATIONS (masquée tant que pas de photos) -->
 <section class="galerie-section" id="realisations" style="display:none;">
   <div class="sec-head reveal">
@@ -877,8 +973,8 @@ html{scroll-behavior:smooth;}
 
 <!-- CTA FINAL -->
 <section class="cta-final" id="configurateur">
-  <h2>Prêt à installer votre borne ?</h2>
-  <p>Obtenez votre étude complète gratuite — devis d'installation + recommandation tarifaire personnalisée.</p>
+  <h2>Prêt à équiper votre maison ?</h2>
+  <p>Borne de recharge, pompe à chaleur — ou les deux. Obtenez votre étude complète gratuite : devis d'installation + recommandation personnalisée.</p>
   <div class="cta-btns">
     <a href="configurateur.html" class="btn-primary" style="font-size:16px;padding:15px 32px;">⚡ Démarrer mon étude gratuite</a>
     <a href="tel:+33600000000" class="btn-ghost">📞 Parler à un expert</a>
