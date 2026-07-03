@@ -169,6 +169,8 @@ nav ul a:hover{color:var(--white);}
 .hero h1 .line:nth-child(3)>span{animation-delay:.24s;}
 @keyframes lineUp{to{transform:none;}}
 .hero-sub{font-size:16.5px;color:var(--muted);margin-bottom:32px;max-width:480px;font-weight:400;line-height:1.7;}
+.hero-h1-slogan{font-size:clamp(30px,4.6vw,52px)!important;line-height:1.14!important;}
+.hero h1 .grad{background:linear-gradient(90deg,var(--volt) 0%,var(--glow) 45%,var(--electric) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;}
 .hero-ctas{display:flex;gap:13px;flex-wrap:wrap;}
 .btn-primary{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(135deg,var(--volt),var(--green2));color:var(--void);font-family:var(--font-display);font-weight:600;font-size:15px;padding:15px 28px;border-radius:10px;text-decoration:none;transition:all .25s;box-shadow:0 0 30px rgba(194,247,62,.3);position:relative;overflow:hidden;}
 .btn-primary::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);transition:left .6s;}
@@ -196,7 +198,11 @@ nav ul a:hover{color:var(--white);}
 .hc-foot p{font-size:11.5px;color:var(--muted);line-height:1.45;}
 
 /* BARRE AVANTAGES */
-.avantages{background:rgba(18,26,46,.5);backdrop-filter:blur(8px);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:13px 4vw;overflow-x:auto;white-space:nowrap;position:relative;z-index:1;}
+.avantages{background:rgba(18,26,46,.5);backdrop-filter:blur(8px);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:13px 0;overflow:hidden;white-space:nowrap;position:relative;z-index:1;}
+.av-marquee{display:inline-flex;gap:34px;width:max-content;animation:avScroll 28s linear infinite;padding:0 17px;}
+.avantages:hover .av-marquee{animation-play-state:paused;}
+@keyframes avScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+@media(prefers-reduced-motion:reduce){.av-marquee{animation:none!important;}}
 .avantages-inner{max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:0;}
 .av-item{display:inline-flex;align-items:center;gap:7px;padding:4px 18px 4px 0;border-right:1px solid var(--border);margin-right:18px;white-space:nowrap;flex-shrink:0;}
 .av-item:last-child{border:none;margin:0;padding-right:0;}
@@ -211,6 +217,8 @@ nav ul a:hover{color:var(--white);}
 .section-label{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--volt);margin-bottom:14px;display:inline-flex;align-items:center;gap:8px;}
 .section-label::before,.section-label::after{content:'';width:24px;height:1px;background:linear-gradient(90deg,transparent,var(--volt));}
 .section-label::after{background:linear-gradient(90deg,var(--volt),transparent);}
+.section-label--xl{font-size:clamp(22px,3.4vw,32px);letter-spacing:3px;font-weight:800;margin-bottom:18px;}
+.section-label--xl::before,.section-label--xl::after{width:44px;height:2px;}
 .section-title{font-size:clamp(1.9rem,3.2vw,2.6rem);font-weight:700;color:var(--white);margin-bottom:14px;letter-spacing:-.03em;}
 .section-sub{font-size:15.5px;color:var(--muted);font-weight:400;max-width:560px;margin:0 auto;}
 .tab-btns{display:flex;border:1px solid var(--border2);border-radius:14px;overflow:hidden;width:100%;margin:0 auto 48px;background:rgba(18,26,46,.5);padding:5px;gap:5px;}
@@ -594,13 +602,13 @@ html{scroll-behavior:smooth;}
   <div class="particle-field" aria-hidden="true" id="hero-particles"></div>
   <div class="hero-inner">
     <div>
-      <div class="hero-badge"><span class="dot"></span> Bornes de recharge · Pompes à chaleur air/air</div>
-      <h1>
-        <span class="line"><span>Bornes de recharge</span></span>
-        <span class="line"><span>&amp; <em>pompes à chaleur</em>.</span></span>
-        <span class="line"><span>Réduisez vos factures.</span></span>
+            <h1 class="hero-h1-slogan">
+        <span class="line"><span><span class="grad">Borne de recharge</span></span></span>
+        <span class="line"><span>&amp; <span class="grad">pompe à chaleur</span>&nbsp;:</span></span>
+        <span class="line"><span>équipez votre maison pour demain,</span></span>
+        <span class="line"><span>économisez dès aujourd'hui.</span></span>
       </h1>
-      <p class="hero-sub">Nous ne faisons pas que poser une borne. Nous analysons votre consommation et vous guidons vers le meilleur contrat d'électricité pour que chaque kilomètre vous coûte le moins possible. Et parce que l'énergie de votre maison ne s'arrête pas à la voiture, nous installons aussi votre <strong>pompe à chaleur air/air</strong> — chauffage l'hiver, climatisation l'été.</p>
+      <p class="hero-sub">Installation de bornes de recharge et de pompes à chaleur pour particuliers et professionnels.</p>
       <div class="hero-services" style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 24px;">
         <a href="#solutions" style="display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:1px solid rgba(194,247,62,.4);border-radius:999px;background:rgba(194,247,62,.07);color:#eef3fa;font-weight:600;font-size:14px;text-decoration:none;transition:background .2s;">⚡ Bornes de recharge</a>
         <a href="#pompe-chaleur" style="display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:1px solid rgba(194,247,62,.4);border-radius:999px;background:rgba(194,247,62,.07);color:#eef3fa;font-weight:600;font-size:14px;text-decoration:none;transition:background .2s;">🔥 Pompe à chaleur air/air</a>
@@ -635,7 +643,7 @@ html{scroll-behavior:smooth;}
 
 <!-- BARRE AVANTAGES -->
 <div class="avantages">
-  <div class="avantages-inner">
+  <div class="avantages-inner av-marquee">
     <div class="av-item"><span class="check">✓</span><p>TVA 5,5% sur votre installation</p></div>
     <div class="av-item"><span class="check">✓</span><p>Prime ADVENIR jusqu'à <strong>1 000 €</strong> en copropriété</p></div>
     <div class="av-item"><span class="check">✓</span><p>Certification IRVE RGE QualiChargie</p></div>
@@ -649,7 +657,7 @@ html{scroll-behavior:smooth;}
 <section class="tabs-section" id="solutions">
   <div class="tabs-inner">
     <div class="tabs-header reveal">
-      <div class="section-label">Nos solutions</div>
+      <div class="section-label section-label--xl">Borne de recharge</div>
       <h2 class="section-title">Choisissez votre situation</h2>
       <p class="section-sub">Chaque solution est complète — installation, aides, bornes et optimisation tarifaire.</p>
     </div>
@@ -675,7 +683,7 @@ html{scroll-behavior:smooth;}
             <li><span class="check-ico">✓</span>Compatible toutes marques VE — prise Type 2 universelle</li>
             <li><span class="check-ico">✓</span>Analyse tarifaire personnalisée incluse</li>
           </ul>
-          <a href="#configurateur" class="btn-primary">⚡ Obtenir mon étude et mon devis</a>
+          <a href="#configurateur" class="btn-primary">⚡ Obtenir mon étude borne de recharge</a>
         </div>
       </div>
 
@@ -750,7 +758,7 @@ html{scroll-behavior:smooth;}
             <li><span class="check-ico">✓</span>Comptage individuel — vous ne payez que votre consommation</li>
             <li><span class="check-ico">✓</span>Optimisation tarifaire copropriété incluse</li>
           </ul>
-          <a href="#configurateur" class="btn-primary">⚡ Obtenir mon étude et mon devis</a>
+          <a href="#configurateur" class="btn-primary">⚡ Obtenir mon étude borne de recharge</a>
         </div>
       </div>
 
@@ -820,7 +828,7 @@ html{scroll-behavior:smooth;}
             <li><span class="check-ico">✓</span>Avantage en nature optimisé pour la charge au bureau</li>
             <li><span class="check-ico">✓</span>Optimisation contrat d'énergie pro incluse</li>
           </ul>
-          <a href="#configurateur" class="btn-primary">⚡ Obtenir mon étude et mon devis</a>
+          <a href="#configurateur" class="btn-primary">⚡ Obtenir mon étude borne de recharge</a>
         </div>
       </div>
 
@@ -882,7 +890,7 @@ html{scroll-behavior:smooth;}
 <section class="tabs-section" id="pompe-chaleur">
   <div class="tabs-inner">
     <div class="tabs-header reveal">
-      <div class="section-label">Pompe à chaleur</div>
+      <div class="section-label section-label--xl">Pompe à chaleur</div>
       <h2 class="section-title">Le confort, hiver comme été</h2>
       <p class="section-sub">Le même artisan, la même exigence — chauffez l'hiver, rafraîchissez l'été, avec une seule installation réversible.</p>
     </div>
@@ -2246,6 +2254,14 @@ function chargerAvisGoogle(placeId){
 @keyframes rippleOut{to{transform:scale(80);opacity:0;}}
 @keyframes avShimmer{0%,100%{opacity:.7;}50%{opacity:1;}}
 </style>
+<script>
+/* Bandeau avantages : duplication du contenu pour un défilement en boucle continue */
+(function(){
+  var m=document.querySelector(".av-marquee");
+  if(!m) return;
+  m.innerHTML+=m.innerHTML;
+})();
+</script>
 <script>
 /* ═══ Film de fond piloté au scroll — plan-séquence AEROHM (paysage + portrait) ═══ */
 (function(){
