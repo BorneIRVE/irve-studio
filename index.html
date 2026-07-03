@@ -2155,7 +2155,9 @@ function chargerAvisGoogle(placeId){
 (function(){
 "use strict";
 var FRAME_COUNT = 211;
-var FRAME_PATH = function(i){ return "frames/frame_" + String(i).padStart(4,"0") + ".webp"; };
+/* Auto-détection : cherche d'abord dans frames/, sinon à la racine */
+var FRAME_DIR = "frames/";
+var FRAME_PATH = function(i){ return FRAME_DIR + "frame_" + String(i).padStart(4,"0") + ".webp"; };
 var SMOOTHING = 6;
 
 var canvas=document.getElementById("film-bg");
@@ -2184,7 +2186,12 @@ function loadFrame(i,cb){
   for(i=1;i<FRAME_COUNT;i+=2) order.push(i);
   var idx=0, PAR=6;
   function next(){ if(idx>=order.length) return; loadFrame(order[idx++],next); }
-  for(var k=0;k<PAR;k++) next();
+  function start(){ for(var k=0;k<PAR;k++) next(); }
+  /* Sonde : frames/ existe-t-il ? Sinon, images à la racine. */
+  var probe=new Image();
+  probe.onload=function(){ start(); };
+  probe.onerror=function(){ FRAME_DIR=""; start(); };
+  probe.src=FRAME_DIR+"frame_0001.webp";
 })();
 function nearestFrame(i){
   if(frames[i]) return frames[i];
