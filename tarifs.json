@@ -183,5 +183,12 @@
       "abo_9kva": 196.6,
       "abo_12kva": 222.4
     }
+  },
+  "energies": {
+    "gaz_kwh": 0.115,
+    "fioul_kwh": 0.125,
+    "granules_kwh": 0.095,
+    "buches_kwh": 0.055,
+    "date_maj": "2026-07-04 (valeurs initiales)"
   }
 }

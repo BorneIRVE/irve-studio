@@ -268,20 +268,23 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
 
 <main>
   <div class="prog-wrap">
-    <div class="prog-lbls">
-      <span class="pl on" id="pl1">Profil</span>
-      <span class="pl" id="pl2">Installation</span>
-      <span class="pl" id="pl3">Véhicule</span>
-      <span class="pl" id="pl4">Énergie</span>
-      <span class="pl" id="pl5">Borne</span>
-      <span class="pl" id="pl6">Contact</span>
-      <span class="pl" id="pl7">Résultats</span>
+    <div class="prog-lbls" id="prog-lbls"></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:4%"></div></div>
+  </div>
+
+  <!-- P0 CHOIX DU PROJET -->
+  <div class="panel on" id="p0">
+    <div class="shead"><div class="sstep">Bienvenue</div><div class="stitle">Quel est votre projet ?</div><div class="ssub">Choisissez le type d'installation pour lancer votre étude personnalisée gratuite.</div></div>
+    <div class="choices c3" style="margin-bottom:8px;">
+      <label class="ch"><input type="radio" name="projmode" value="borne" onchange="setMode('borne')"><div class="chi" style="padding:26px 14px;"><span class="ico" style="font-size:34px;">⚡</span><span class="lbl" style="font-size:15px;">Borne de recharge</span><span class="sub">Rechargez votre véhicule électrique à domicile</span></div></label>
+      <label class="ch"><input type="radio" name="projmode" value="pac" onchange="setMode('pac')"><div class="chi" style="padding:26px 14px;"><span class="ico" style="font-size:34px;">🔥</span><span class="lbl" style="font-size:15px;">Pompe à chaleur</span><span class="sub">Chauffez et climatisez votre logement (air/air)</span></div></label>
+      <label class="ch"><input type="radio" name="projmode" value="both" onchange="setMode('both')"><div class="chi" style="padding:26px 14px;"><span class="ico" style="font-size:34px;">🏡</span><span class="lbl" style="font-size:15px;">Les deux</span><span class="sub">Borne + pompe à chaleur : la maison complète</span></div></label>
     </div>
-    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:12.5%"></div></div>
+    <div class="al info" style="margin-top:10px;">💡 Vous pourrez modifier votre choix à tout moment en revenant à cette étape.</div>
   </div>
 
   <!-- P1 PROFIL -->
-  <div class="panel on" id="p1">
+  <div class="panel" id="p1">
     <div class="shead"><div class="sstep">Étape 1 sur 8</div><div class="stitle">Votre profil</div><div class="ssub">Commençons par identifier votre situation pour adapter nos recommandations.</div></div>
     <div class="g2">
       <div class="card">
@@ -297,13 +300,13 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
           <div class="choices">
             <label class="ch"><input type="radio" name="itype" value="particulier_maison" checked><div class="chi"><span class="ico">🏡</span><span class="lbl">Maison individuelle</span></div></label>
             <label class="ch"><input type="radio" name="itype" value="particulier_copro"><div class="chi"><span class="ico">🏬</span><span class="lbl">Copropriété</span></div></label>
-            <label class="ch"><input type="radio" name="itype" value="pro_parking"><div class="chi"><span class="ico">🅿️</span><span class="lbl">Parking privé</span></div></label>
-            <label class="ch"><input type="radio" name="itype" value="pro_flotte"><div class="chi"><span class="ico">🚐</span><span class="lbl">Flotte véhicules</span></div></label>
+            <label class="ch itype-borne-only"><input type="radio" name="itype" value="pro_parking"><div class="chi"><span class="ico">🅿️</span><span class="lbl">Parking privé</span></div></label>
+            <label class="ch itype-borne-only"><input type="radio" name="itype" value="pro_flotte"><div class="chi"><span class="ico">🚐</span><span class="lbl">Flotte véhicules</span></div></label>
           </div>
         </div>
       </div>
       <div class="card">
-        <div class="fld">
+        <div class="fld fld-borne-only">
           <label>Nombre de bornes à installer</label>
           <input type="number" id="nb-bornes" value="1" min="1" max="50">
         </div>
@@ -311,7 +314,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
           <div class="fld"><label>Raison sociale</label><input type="text" id="raison" placeholder="Nom de l'entreprise"></div>
           <div class="div"></div>
         </div>
-        <div class="fld">
+        <div class="fld fld-borne-only">
           <label>Nombre de véhicules à recharger</label>
           <select id="nb-ve">
             <option value="1" selected>1 véhicule</option>
@@ -333,7 +336,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
         </div>
       </div>
     </div>
-    <div class="btn-row"><button class="btn btn-p" onclick="go(2)">Suivant →</button></div>
+    <div class="btn-row"><button class="btn btn-s" onclick="goPrev()">← Retour</button><button class="btn btn-p" onclick="goNext()">Suivant →</button></div>
   </div>
 
   <!-- P2 INSTALLATION -->
@@ -390,8 +393,8 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-s" onclick="go(1)">← Retour</button>
-      <button class="btn btn-p" onclick="go(3)">Suivant →</button>
+      <button class="btn btn-s" onclick="goPrev()">← Retour</button>
+      <button class="btn btn-p" onclick="goNext()">Suivant →</button>
     </div>
   </div>
 
@@ -471,8 +474,8 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-s" onclick="go(2)">← Retour</button>
-      <button class="btn btn-p" onclick="go(4)">Suivant →</button>
+      <button class="btn btn-s" onclick="goPrev()">← Retour</button>
+      <button class="btn btn-p" onclick="goNext()">Suivant →</button>
     </div>
   </div>
 
@@ -506,8 +509,8 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-s" onclick="go(3)">← Retour</button>
-      <button class="btn btn-p" onclick="go(5)">Suivant →</button>
+      <button class="btn btn-s" onclick="goPrev()">← Retour</button>
+      <button class="btn btn-p" onclick="goNext()">Suivant →</button>
     </div>
   </div>
 
@@ -543,8 +546,193 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
 
     <div id="borne-wrap"></div>
     <div class="btn-row">
-      <button class="btn btn-s" onclick="go(4)">← Retour</button>
-      <button class="btn btn-p" onclick="go(6)">Suivant →</button>
+      <button class="btn btn-s" onclick="goPrev()">← Retour</button>
+      <button class="btn btn-p" onclick="goNext()">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- PPAC1 LOGEMENT -->
+  <div class="panel" id="ppac1">
+    <div class="shead"><div class="sstep" id="ppac1-step">Étape PAC</div><div class="stitle">Votre logement</div><div class="ssub">L'année de construction et l'isolation déterminent les déperditions thermiques, donc la puissance nécessaire.</div></div>
+    <div class="al info" style="margin-bottom:16px;">📍 Étude calibrée pour les <strong>Hauts-de-France</strong> (zone climatique H1, température extérieure de base <strong>−9 °C</strong>).</div>
+    <div class="g2">
+      <div class="card">
+        <div class="fld">
+          <label>Année de construction</label>
+          <select id="pac-annee" onchange="pacIsoDefault()">
+            <option value="av1948">Avant 1948 (aucune norme)</option>
+            <option value="y4874">1948 – 1974 (aucune norme)</option>
+            <option value="y7581" selected>1975 – 1981 (1ʳᵉ réglementation 1974)</option>
+            <option value="y8289">1982 – 1989 (RT 1982)</option>
+            <option value="y9000">1990 – 2000 (RT 1988)</option>
+            <option value="y0105">2001 – 2005 (RT 2000)</option>
+            <option value="y0612">2006 – 2012 (RT 2005)</option>
+            <option value="rt2012">2013 – 2021 (RT 2012 / BBC)</option>
+            <option value="re2020">Depuis 2022 (RE 2020)</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Isolation du logement</label>
+          <select id="pac-iso">
+            <option value="origine" selected>D'origine (jamais rénovée)</option>
+            <option value="partielle">Rénovation partielle (fenêtres OU combles)</option>
+            <option value="complete">Rénovation complète (murs + combles + fenêtres)</option>
+            <option value="mauvaise">Mauvaise (courants d'air, simple vitrage)</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Surface totale habitable du logement (m²)</label>
+          <input type="number" id="pac-surftot" value="100" min="20" max="500">
+        </div>
+        <div class="fld">
+          <label>Hauteur sous plafond</label>
+          <select id="pac-hsp">
+            <option value="2.4">2,40 m</option>
+            <option value="2.5" selected>2,50 m (standard)</option>
+            <option value="2.7">2,70 m</option>
+            <option value="3.0">3,00 m et plus</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fld">
+          <label>Pièces à équiper — surface et sélection</label>
+          <div id="pieces-list"></div>
+          <button class="btn btn-s" style="margin-top:8px;width:100%;" onclick="addPiece()">+ Ajouter une pièce</button>
+          <div class="al info" style="margin-top:10px;font-size:11.5px;">ℹ️ Cochez uniquement les pièces à chauffer / climatiser. Surface au sol en m².</div>
+        </div>
+        <div class="rhero" id="pac-preview" style="display:none;padding:14px;margin-top:6px;"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-s" onclick="goPrev()">← Retour</button>
+      <button class="btn btn-p" onclick="goNext()">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- PPAC2 CONFORT -->
+  <div class="panel" id="ppac2">
+    <div class="shead"><div class="sstep" id="ppac2-step">Étape PAC</div><div class="stitle">Votre confort</div><div class="ssub">Usage, type de diffusion et pilotage : ces choix orientent le matériel recommandé.</div></div>
+    <div class="g2">
+      <div class="card">
+        <div class="fld">
+          <label>Usage souhaité</label>
+          <div class="choices c2">
+            <label class="ch"><input type="radio" name="pac-usage" value="chaud_froid" checked><div class="chi"><span class="ico">🔥❄️</span><span class="lbl">Chauffer & climatiser</span><span class="sub">Confort toute l'année</span></div></label>
+            <label class="ch"><input type="radio" name="pac-usage" value="froid"><div class="chi"><span class="ico">❄️</span><span class="lbl">Climatiser uniquement</span><span class="sub">Confort d'été</span></div></label>
+          </div>
+        </div>
+        <div class="fld">
+          <label>Type de diffusion</label>
+          <div class="choices c3">
+            <label class="ch"><input type="radio" name="pac-diff" value="split"><div class="chi"><span class="ico">📻</span><span class="lbl">Splits muraux</span><span class="sub">1 unité visible par pièce</span></div></label>
+            <label class="ch"><input type="radio" name="pac-diff" value="gainable"><div class="chi"><span class="ico">🌀</span><span class="lbl">Gainable</span><span class="sub">Invisible, grilles au plafond</span></div></label>
+            <label class="ch"><input type="radio" name="pac-diff" value="conseil" checked><div class="chi"><span class="ico">🤝</span><span class="lbl">Conseillez-moi</span></div></label>
+          </div>
+          <div class="al info" style="margin-top:10px;font-size:11.5px;">ℹ️ Le <strong>gainable</strong> exige des combles ou faux plafonds accessibles pour passer les gaines.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fld">
+          <label>Mode de chauffage actuel</label>
+          <select id="pac-chauf">
+            <option value="elec" selected>Électrique (convecteurs / radiateurs)</option>
+            <option value="gaz">Gaz</option>
+            <option value="fioul">Fioul</option>
+            <option value="bois">Bois / granulés</option>
+            <option value="pac">Pompe à chaleur existante</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Facture annuelle de chauffage (€ / an)</label>
+          <input type="number" id="pac-fact" value="1500" min="0" step="50">
+          <div class="al info" style="margin-top:8px;font-size:11.5px;">ℹ️ Sert à estimer vos <strong>économies annuelles</strong> après installation.</div>
+        </div>
+        <div class="fld">
+          <label>Pompe à chaleur connectée (pilotable via app) ?</label>
+          <div class="choices c3">
+            <label class="ch"><input type="radio" name="pac-connect" value="oui"><div class="chi"><span class="ico">📱</span><span class="lbl">Oui</span><span class="sub">Pilotage à distance</span></div></label>
+            <label class="ch"><input type="radio" name="pac-connect" value="non"><div class="chi"><span class="ico">🎛️</span><span class="lbl">Non</span><span class="sub">Télécommande simple</span></div></label>
+            <label class="ch"><input type="radio" name="pac-connect" value="indif" checked><div class="chi"><span class="ico">🤷</span><span class="lbl">Indifférent</span></div></label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-s" onclick="goPrev()">← Retour</button>
+      <button class="btn btn-p" onclick="goNext()">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- PPAC3 ÉNERGIE -->
+  <div class="panel" id="ppac3">
+    <div class="shead"><div class="sstep" id="ppac3-step">Étape PAC</div><div class="stitle">Votre énergie</div><div class="ssub">Votre contrat actuel nous permet de calculer la facture avec la PAC et de trouver l'abonnement le plus avantageux.</div></div>
+    <div class="g2">
+      <div class="card">
+        <div class="fld">
+          <label>Fournisseur & contrat actuel</label>
+          <select id="pac-fourni" onchange="onFourniPac()">
+            <optgroup label="EDF">
+              <option value="edf_base">EDF — Tarif Bleu Base</option>
+              <option value="edf_hchp">EDF — Tarif Bleu HC/HP</option>
+              <option value="edf_tempo">EDF — Option Tempo</option>
+              <option value="edf_ejp">EDF — Option EJP</option>
+              <option value="edf_zen">EDF — Zen Fixe</option>
+            </optgroup>
+            <optgroup label="Engie">
+              <option value="engie_base">Engie — Elec Online Base</option>
+              <option value="engie_hchp">Engie — Elec Online HC/HP</option>
+            </optgroup>
+            <optgroup label="TotalEnergies">
+              <option value="total_base">TotalEnergies — Heures Eco Base</option>
+              <option value="total_hchp">TotalEnergies — Heures Eco HC/HP</option>
+              <option value="total_plus">TotalEnergies — Heures Eco+</option>
+              <option value="total_fixe">TotalEnergies — Fixe 2 ans</option>
+            </optgroup>
+            <optgroup label="Alternatifs">
+              <option value="ohm_base">OHM — Extra Eco Base</option>
+              <option value="ohm_hchp">OHM — Extra Eco HC/HP</option>
+              <option value="mint_base">Mint — Online Green Base</option>
+              <option value="mint_hchp">Mint — Online Green HC/HP</option>
+              <option value="primeo">Primeo — Confort+</option>
+              <option value="oct_go">Octopus — Go HC/HP</option>
+              <option value="oct_int">Octopus — Intelligent</option>
+              <option value="oct_drive">Octopus — Drive Pack</option>
+              <option value="ekw">ekWateur — HC/HP</option>
+              <option value="ilek">Ilek — Base</option>
+              <option value="eni">Eni — Agile</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Puissance souscrite actuelle</label>
+          <select id="pac-kva">
+            <option value="3">3 kVA</option>
+            <option value="6" selected>6 kVA</option>
+            <option value="9">9 kVA</option>
+            <option value="12">12 kVA</option>
+            <option value="15">15 kVA</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fld">
+          <label>Consommation électricité du foyer / an (kWh, hors chauffage électrique)</label>
+          <div class="rv" id="pac-foyer-val">4 500 kWh</div>
+          <input type="range" id="pac-foyer" min="1000" max="20000" step="100" value="4500" oninput="document.getElementById('pac-foyer-val').textContent=parseInt(this.value).toLocaleString('fr')+' kWh'">
+          <div class="al info" style="margin-top:8px;font-size:11.5px;">ℹ️ Électroménager, eau chaude, éclairage… Si vous chauffez à l'électrique, ne comptez pas la part chauffage : elle sera remplacée par la PAC.</div>
+        </div>
+        <div id="pac-hchp-f" style="display:none;">
+          <div class="div"></div>
+          <div class="fld"><label>Dont Heures Creuses (kWh)</label><input type="number" id="pac-hc" value="1500" min="0"></div>
+          <div class="fld"><label>Dont Heures Pleines (kWh)</label><input type="number" id="pac-hp" value="3000" min="0"></div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-s" onclick="goPrev()">← Retour</button>
+      <button class="btn btn-p" onclick="goNext()">Suivant →</button>
     </div>
   </div>
 
@@ -566,7 +754,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-s" onclick="go(5)">← Retour</button>
+      <button class="btn btn-s" onclick="goPrev()">← Retour</button>
       <button class="btn btn-p" onclick="lancerAnalyse()">⚡ Générer mon étude</button>
     </div>
   </div>
@@ -576,9 +764,12 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
     <div id="spin-res" class="spin on"><div class="spini">⚡</div><p style="color:var(--muted);margin-top:11px;">Calcul en cours…</p></div>
     <div id="results" style="display:none;">
       <div class="al info" style="margin-bottom:18px;">ℹ️ <strong>Ceci est une simulation</strong> destinée à vous donner une estimation. Un devis détaillé et personnalisé vous sera édité sous 24h après notre prise de contact.</div>
+      <div id="res-pac" style="display:none;"></div>
+      <div id="res-borne-blocks">
       <div class="rhero" id="res-borne"></div>
       <div class="al warn" id="res-kva-warn" style="display:none;margin-top:14px;"></div>
-      <div style="font-family:'Cabinet Grotesk';font-size:17px;font-weight:900;color:var(--white);margin:26px 0 13px;">⚡ Meilleur abonnement</div>
+      <div id="res-roi-total" style="display:none;"></div>
+      <div style="font-family:'Cabinet Grotesk';font-size:17px;font-weight:900;color:var(--white);margin:26px 0 13px;">⚡ Meilleur abonnement <span id="abo-scope" style="display:none;font-size:11px;font-weight:600;color:var(--muted);">(borne + PAC confondus)</span></div>
       <div class="rhero" id="res-tarif"></div>
       <div class="card" style="margin-bottom:19px;">
         <div style="font-family:'Cabinet Grotesk';font-size:14px;font-weight:800;color:var(--white);margin-bottom:9px;">💡 Analyse</div>
@@ -586,7 +777,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
       <div style="font-family:'Cabinet Grotesk';font-size:15px;font-weight:900;color:var(--white);margin-bottom:11px;">Classement des offres</div>
       <div class="rlist" id="rlist"></div>
-      <div class="roicard"><div class="roititl">📊 Retour sur investissement</div><div id="roi-detail"></div></div>
+      <div class="roicard" id="roicard-borne"><div class="roititl">📊 Retour sur investissement</div><div id="roi-detail"></div></div>
       <div class="card" style="margin-top:19px;">
         <div class="roititl">📋 Tableau comparatif</div>
         <div style="overflow-x:auto;">
@@ -596,8 +787,9 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
           </tr></thead><tbody id="ctbody"></tbody></table>
         </div>
       </div>
+      </div><!-- /res-borne-blocks -->
       <div class="btn-row" style="margin-top:26px;">
-        <button class="btn btn-s" onclick="go(1)">↺ Nouvelle étude</button>
+        <button class="btn btn-s" onclick="restart()">↺ Nouvelle étude</button>
         <button class="btn btn-b" id="btn-rapport" onclick="exportRapport()">📄 Ouvrir le rapport</button>
       </div>
       <div id="email-status" style="display:none;margin-top:14px;"></div>
@@ -631,6 +823,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
       <div class="adm-tabs">
         <div class="adm-tab on" onclick="aTab('t-bornes',this)">Bornes</div>
+        <div class="adm-tab" onclick="aTab('t-pacs',this)">Pompes à chaleur</div>
         <div class="adm-tab" onclick="aTab('t-tarifs',this)">Tarifs</div>
         <div class="adm-tab" onclick="aTab('t-options',this)">Options</div>
         <div class="adm-tab" onclick="aTab('t-entreprise',this)">Entreprise</div>
@@ -638,6 +831,28 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
       <div class="atab on" id="t-bornes">
         <div class="asec"><div class="asec-t">Bornes du catalogue</div><div id="bornes-list"></div><button class="btn-add" onclick="addBorne()">+ Ajouter une borne</button></div>
+        <div style="display:flex;justify-content:flex-end;"><button class="btn-save" onclick="sauver()">💾 Sauvegarder</button></div>
+      </div>
+      <div class="atab" id="t-pacs">
+        <div class="asec"><div class="asec-t">Pompes à chaleur du catalogue</div>
+        <div class="al info" style="margin-bottom:12px;font-size:11px;">ℹ️ Renseignez vos unités extérieures. Pour un <strong>mono-split</strong>, mettez « UI max » à 1 et incluez l'unité intérieure dans le prix UE. Pour un <strong>multi-split</strong>, le prix « UI » est le prix moyen d'une unité intérieure.</div>
+        <div id="pacs-list"></div><button class="btn-add" onclick="addPac()">+ Ajouter une pompe à chaleur</button></div>
+        <div class="asec">
+          <div class="asec-t">Pose & TVA — pompes à chaleur (€ HT)</div>
+          <div class="g2a" style="margin-bottom:9px;">
+            <div><span class="adm-lbl">Pose mono-split (1 UI, liaison ≤ 3 m)</span><input type="number" id="a-pac-pose1" step="10"></div>
+            <div><span class="adm-lbl">Pose par UI supplémentaire</span><input type="number" id="a-pac-posesup" step="10"></div>
+          </div>
+          <div class="g2a" style="margin-bottom:9px;">
+            <div><span class="adm-lbl">Pose gainable (forfait, 4 bouches incl.)</span><input type="number" id="a-pac-posegain" step="10"></div>
+            <div><span class="adm-lbl">Bouche / grille supplémentaire</span><input type="number" id="a-pac-grille" step="5"></div>
+          </div>
+          <div class="g2a">
+            <div><span class="adm-lbl">TVA PAC air/air (%)</span><input type="number" id="a-pac-tva" step="0.1"></div>
+            <div></div>
+          </div>
+          <div class="al info" style="margin-top:10px;font-size:11px;">ℹ️ TVA 10 % si logement achevé depuis plus de 2 ans (air/air). Les PAC air/air sont éligibles aux <strong>primes CEE</strong> (BAR-TH-129) mais pas à MaPrimeRénov'.</div>
+        </div>
         <div style="display:flex;justify-content:flex-end;"><button class="btn-save" onclick="sauver()">💾 Sauvegarder</button></div>
       </div>
       <div class="atab" id="t-tarifs">
@@ -801,6 +1016,15 @@ const DEF_CAT={
     {id:'B004',nom:'Schneider EVlink 22kW Pro',marque:'Schneider',kw:22,phases:'tri',conn:'T2',smart:true,ocpp:true,cable:0,pht:1190,pp:600,pro:750,adv:0,gar:3,usage:['pro_parking','pro_flotte'],kmin:150,kmax:999,kva:12,desc:'Borne pro 22kW pour flottes et parkings.'},
     {id:'B005',nom:"Legrand Green'up 7kW",marque:'Legrand',kw:7.4,phases:'mono',conn:'T2',smart:false,ocpp:false,cable:5,pht:299,pp:320,pro:420,adv:300,gar:2,usage:['particulier_maison'],kmin:0,kmax:80,kva:6,desc:'Solution économique pour petits rouleurs.'},
   ],
+  pacs:[
+    {id:'PAC01',nom:'Daikin Perfera mono-split 3,5 kW',marque:'Daikin',diff:'split',kwC:4.0,kwF:3.5,maxUI:1,connect:true,scop:5.1,seer:8.65,phtUE:1290,phtUI:0,gar:3,desc:'Mono-split premium très silencieux (19 dB), Wi-Fi intégré.'},
+    {id:'PAC02',nom:'Daikin bi-split 2MXM50',marque:'Daikin',diff:'split',kwC:5.6,kwF:5.0,maxUI:2,connect:true,scop:4.6,seer:7.6,phtUE:1890,phtUI:520,gar:3,desc:'Bi-split pour 2 pièces, unités Perfera/Emura au choix.'},
+    {id:'PAC03',nom:'Daikin tri-split 3MXM68',marque:'Daikin',diff:'split',kwC:8.2,kwF:6.8,maxUI:3,connect:true,scop:4.5,seer:7.3,phtUE:2590,phtUI:520,gar:3,desc:'Tri-split, idéal séjour + 2 chambres.'},
+    {id:'PAC04',nom:'Mitsubishi MXZ-4F72VF',marque:'Mitsubishi',diff:'split',kwC:8.6,kwF:7.2,maxUI:4,connect:true,scop:4.3,seer:7.1,phtUE:2990,phtUI:540,gar:3,desc:'Quadri-split fiable et performant, gamme MSZ-AY.'},
+    {id:'PAC05',nom:'Atlantic Takao M3 multi',marque:'Atlantic (Fujitsu)',diff:'split',kwC:6.8,kwF:5.4,maxUI:3,connect:true,scop:4.2,seer:6.9,phtUE:2190,phtUI:430,gar:3,desc:'Multi-split rapport qualité/prix, fabrication Fujitsu.'},
+    {id:'PAC06',nom:'Daikin gainable FBA71 + UE',marque:'Daikin',diff:'gainable',kwC:8.0,kwF:7.1,maxUI:1,connect:true,scop:4.1,seer:6.6,phtUE:3690,phtUI:0,gar:3,desc:'Gainable moyenne pression, diffusion invisible jusqu à 6 bouches.'},
+    {id:'PAC07',nom:'Atlantic gainable Fujitsu 10 kW',marque:'Atlantic (Fujitsu)',diff:'gainable',kwC:11.2,kwF:10.0,maxUI:1,connect:true,scop:4.0,seer:6.4,phtUE:4490,phtUI:0,gar:3,desc:'Gainable grande maison, jusqu à 8 bouches.'},
+  ],
   options:[
     {id:'O1',nom:'Protection parafoudre',pht:89},
     {id:'O2',nom:'Rallonge câble +3m',pht:65},
@@ -808,10 +1032,10 @@ const DEF_CAT={
     {id:'O4',nom:'Gestion de charge dynamique',pht:290},
     {id:'O5',nom:'Mise en service + formation',pht:120},
   ],
-  tarifs:{pp:350,pro:450,ml:85,tab:380,lig:280,disj:95,carbu:1.75,thermo:7,roi:5}
+  tarifs:{pp:350,pro:450,ml:85,tab:380,lig:280,disj:95,carbu:1.75,thermo:7,roi:5,pacPose1:1290,pacPoseSup:590,pacPoseGain:3490,pacGrille:220,pacTva:10}
 };
 
-function loadCat(){try{const s=localStorage.getItem(CAT_KEY);return s?JSON.parse(s):JSON.parse(JSON.stringify(DEF_CAT));}catch(e){return JSON.parse(JSON.stringify(DEF_CAT));}}
+function loadCat(){try{const s=localStorage.getItem(CAT_KEY);var c=s?JSON.parse(s):JSON.parse(JSON.stringify(DEF_CAT));if(!c.pacs||!c.pacs.length)c.pacs=JSON.parse(JSON.stringify(DEF_CAT.pacs));return c;}catch(e){return JSON.parse(JSON.stringify(DEF_CAT));}}
 function saveCat(c){localStorage.setItem(CAT_KEY,JSON.stringify(c));CATALOGUE=c;saveCatVercel(c);}
 function getPwd(){return localStorage.getItem(PWD_KEY)||'irve2024';}
 
@@ -847,16 +1071,318 @@ let _sel=null, _devis=null, _params=null, _res=[], _factA=0;
 // ═══════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════
-function go(n){
-  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('on',i+1===n));
-  ['pl1','pl2','pl3','pl4','pl5','pl6','pl7'].forEach((id,i)=>{
-    const el=document.getElementById(id);
-    el.classList.toggle('on',i+1===n);
-    el.classList.toggle('done',i+1<n);
+// ═══ NAVIGATION PAR FLUX (borne / pac / les deux) ═══
+var MODE='borne';
+var STEP_LBL={p1:'Profil',p2:'Installation',p3:'Véhicule',p4:'Énergie',p5:'Borne',ppac1:'Logement',ppac2:'Confort PAC',ppac3:'Énergie',p6:'Contact',p7:'Résultats'};
+var FLOWS={
+  borne:['p1','p2','p3','p4','p5','p6','p7'],
+  pac:  ['p1','ppac1','ppac2','ppac3','p6','p7'],
+  both: ['p1','p2','p3','p4','p5','ppac1','ppac2','p6','p7']
+};
+var SEQ=FLOWS.borne, SEQI=-1; // -1 = écran p0
+
+function setMode(m){
+  MODE=m; SEQ=FLOWS[m];
+  document.querySelectorAll('.fld-borne-only').forEach(function(el){el.style.display=(m==='pac')?'none':'';});
+  document.querySelectorAll('.itype-borne-only').forEach(function(el){el.style.display=(m==='pac')?'none':'';});
+  if(m==='pac'){
+    var cur=document.querySelector('input[name="itype"]:checked');
+    if(cur&&(cur.value==='pro_parking'||cur.value==='pro_flotte')){
+      document.querySelector('input[name="itype"][value="particulier_maison"]').checked=true;
+    }
+  }
+  rdrProg();
+  SEQI=0; showPanel(SEQ[0]);
+}
+function rdrProg(){
+  var box=document.getElementById('prog-lbls'); if(!box) return;
+  box.innerHTML=SEQ.map(function(id,i){return '<span class="pl" id="pl-'+id+'">'+STEP_LBL[id]+'</span>';}).join('');
+}
+function showPanel(id){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('on',p.id===id);});
+  var idx=SEQ.indexOf(id);
+  SEQ.forEach(function(sid,i){
+    var el=document.getElementById('pl-'+sid); if(!el) return;
+    el.classList.toggle('on',i===idx);
+    el.classList.toggle('done',idx>-1&&i<idx);
   });
-  document.getElementById('prog-fill').style.width=(n/7*100)+'%';
-  if(n===5) renderBornes();
+  document.getElementById('prog-fill').style.width=(idx>-1?((idx+1)/SEQ.length*100):4)+'%';
+  if(id==='p5') renderBornes();
+  if(id==='ppac1'){rdrPieces();pacPreview();}
+  if(id==='ppac3'){onFourniPac();}
+  // Numérotation dynamique des étapes PAC
+  var s1=document.getElementById('ppac1-step'),s2=document.getElementById('ppac2-step');
+  if(s1){var i1=SEQ.indexOf('ppac1');if(i1>-1)s1.textContent='Étape '+(i1+1)+' sur '+SEQ.length;}
+  if(s2){var i2=SEQ.indexOf('ppac2');if(i2>-1)s2.textContent='Étape '+(i2+1)+' sur '+SEQ.length;}
+  var s3=document.getElementById('ppac3-step');
+  if(s3){var i3=SEQ.indexOf('ppac3');if(i3>-1)s3.textContent='Étape '+(i3+1)+' sur '+SEQ.length;}
   window.scrollTo({top:0,behavior:'smooth'});
+}
+function goNext(){
+  if(SEQ[SEQI]==='ppac1'&&!validerPieces()) return;
+  if(SEQI<SEQ.length-1){SEQI++;showPanel(SEQ[SEQI]);}
+}
+function goPrev(){
+  if(SEQI<=0){SEQI=-1;document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('on',p.id==='p0');});document.getElementById('prog-fill').style.width='4%';window.scrollTo({top:0,behavior:'smooth'});return;}
+  SEQI--;showPanel(SEQ[SEQI]);
+}
+function restart(){
+  SEQI=-1;
+  document.querySelectorAll('input[name="projmode"]').forEach(function(r){r.checked=false;});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('on',p.id==='p0');});
+  document.getElementById('prog-fill').style.width='4%';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+// Compatibilité : anciens appels go(n)
+function go(n){var id='p'+n;var i=SEQ.indexOf(id);if(i>-1){SEQI=i;}showPanel(id);}
+
+// ═══ MOTEUR PAC ═══
+var PIECES=[
+  {nom:'Salon / séjour',surf:30,sel:true},
+  {nom:'Chambre 1',surf:12,sel:true},
+  {nom:'Chambre 2',surf:12,sel:false},
+  {nom:'Cuisine',surf:12,sel:false}
+];
+function rdrPieces(){
+  var box=document.getElementById('pieces-list'); if(!box) return;
+  box.innerHTML=PIECES.map(function(p,i){
+    return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:7px;">'
+      +'<input type="checkbox" '+(p.sel?'checked':'')+' onchange="PIECES['+i+'].sel=this.checked;pacPreview()" style="width:auto;flex:0 0 auto;">'
+      +'<input type="text" value="'+p.nom.replace(/"/g,'&quot;')+'" onchange="PIECES['+i+'].nom=this.value" style="flex:1;min-width:0;">'
+      +'<input type="number" value="'+p.surf+'" min="4" max="120" onchange="PIECES['+i+'].surf=parseFloat(this.value)||10;pacPreview()" style="flex:0 0 74px;">'
+      +'<span style="font-size:11px;color:var(--muted);flex:0 0 auto;">m²</span>'
+      +'<button class="btn-del" style="position:static;flex:0 0 auto;" onclick="PIECES.splice('+i+',1);rdrPieces();pacPreview()">✕</button>'
+      +'</div>';
+  }).join('');
+}
+function addPiece(){PIECES.push({nom:'Pièce '+(PIECES.length+1),surf:12,sel:true});rdrPieces();pacPreview();}
+function validerPieces(){
+  var sel=PIECES.filter(function(p){return p.sel&&p.surf>=4;});
+  if(!sel.length){alert('Sélectionnez au moins une pièce à équiper.');return false;}
+  return true;
+}
+// Coefficient G (déperditions W/m³·K) selon époque + correction isolation
+var G_ANNEE={av1948:1.9,y4874:1.7,y7581:1.4,y8289:1.25,y9000:1.1,y0105:1.0,y0612:0.9,rt2012:0.7,re2020:0.55};
+var G_ISO={origine:0,partielle:-0.18,complete:-0.38,mauvaise:0.18};
+function pacIsoDefault(){
+  var a=document.getElementById('pac-annee').value;
+  var iso=document.getElementById('pac-iso');
+  if(a==='rt2012'||a==='re2020'||a==='y0612'){iso.value='origine';}
+  pacPreview();
+}
+var UI_PALIERS=[2.0,2.5,3.5,4.2,5.0,6.0,7.1];
+function computePac(){
+  var annee=document.getElementById('pac-annee').value;
+  var iso=document.getElementById('pac-iso').value;
+  var h=parseFloat(document.getElementById('pac-hsp').value)||2.5;
+  var usage=(document.querySelector('input[name="pac-usage"]:checked')||{}).value||'chaud_froid';
+  var diffPref=(document.querySelector('input[name="pac-diff"]:checked')||{}).value||'conseil';
+  var connect=(document.querySelector('input[name="pac-connect"]:checked')||{}).value||'indif';
+  var chauf=(document.getElementById('pac-chauf')||{}).value||'elec';
+  var fact=parseFloat((document.getElementById('pac-fact')||{}).value)||0;
+  var surfTotLog=parseFloat((document.getElementById('pac-surftot')||{}).value)||100;
+  var G=Math.max(0.5,(G_ANNEE[annee]||1.4)+(G_ISO[iso]||0));
+  var DT=28; // zone H1 Hauts-de-France : 19°C - (-9°C)
+  var rooms=PIECES.filter(function(p){return p.sel&&p.surf>=4;}).map(function(p){
+    var bc=G*p.surf*h*DT*1.15/1000;            // chauffage kW (relance +15%)
+    var bf=p.surf*(60+G*18)/1000;              // rafraîchissement kW
+    var dim=usage==='froid'?bf:Math.max(bc,bf*0.9);
+    var ui=UI_PALIERS.find(function(k){return k>=dim;})||UI_PALIERS[UI_PALIERS.length-1];
+    return {nom:p.nom,surf:p.surf,bc:bc,bf:bf,dim:dim,ui:ui};
+  });
+  var totDim=rooms.reduce(function(s,r){return s+r.dim;},0);
+  var totUI=rooms.reduce(function(s,r){return s+r.ui;},0);
+  var n=rooms.length;
+  // Choix de diffusion conseillé
+  var diff=diffPref==='conseil'?(n>=4?'gainable':'split'):diffPref;
+  var ue,grilles=0;
+  if(diff==='split'){ ue=n>1?totUI*0.78:totUI; }
+  else { ue=totDim*1.05; grilles=n; }
+  var surfSel=rooms.reduce(function(s,r){return s+r.surf;},0);
+  // ── Économies annuelles : calcul physique avec fourchette ──
+  // Coût PAC = facture × rendement × prix_élec / (prix_système × SCOP)
+  // Les prix gaz/fioul/bois viennent de tarifs.json (maj auto GitHub Actions), défauts sinon.
+  var EN=window._ENERGIES||{};
+  var pElec=window._ELEC_REF||0.25;
+  var scopB=[3.3,4.5]; // SCOP saisonnier réel air/air
+  var SYS={
+    gaz:  {p:[(EN.gaz_kwh||0.115)*0.88,(EN.gaz_kwh||0.115)*1.15], r:[0.85,0.95]},
+    fioul:{p:[(EN.fioul_kwh||0.125)*0.88,(EN.fioul_kwh||0.125)*1.15], r:[0.75,0.90]},
+    bois: {p:[(EN.buches_kwh||0.055),(EN.granules_kwh||0.095)*1.10], r:[0.70,0.85]}
+  };
+  var ratio=Math.min(1,surfSel/Math.max(surfSel,surfTotLog));
+  var ecoLow=0,ecoHigh=0;
+  if(usage!=='froid'&&fact>0){
+    if(chauf==='elec'){
+      // prix identique des deux côtés : la fourchette ne dépend que du SCOP
+      ecoLow =fact*(1-1/scopB[0]); ecoHigh=fact*(1-1/scopB[1]);
+    }else if(chauf==='pac'){ ecoLow=fact*0.05; ecoHigh=fact*0.15; }
+    else if(SYS[chauf]){
+      var s=SYS[chauf];
+      ecoLow =fact*(1-(s.r[1]*pElec)/(s.p[0]*scopB[0]));
+      ecoHigh=fact*(1-(s.r[0]*pElec)/(s.p[1]*scopB[1]));
+    }else{ ecoLow=fact*0.25; ecoHigh=fact*0.55; } // autre
+    ecoLow=Math.max(0,Math.round(ecoLow*ratio));
+    ecoHigh=Math.max(ecoLow,Math.round(ecoHigh*ratio));
+  }
+  var ecoAn=Math.round((ecoLow+ecoHigh)/2);
+  return {G:G,usage:usage,diff:diff,diffPref:diffPref,connect:connect,rooms:rooms,n:n,
+          totDim:totDim,totUI:totUI,ue:Math.ceil(ue*10)/10,grilles:grilles,
+          surfTot:surfSel,surfTotLog:surfTotLog,chauf:chauf,fact:fact,ratio:ratio,ecoAn:ecoAn,ecoLow:ecoLow,ecoHigh:ecoHigh};
+}
+function pacPreview(){
+  var el=document.getElementById('pac-preview'); if(!el) return;
+  var sel=PIECES.filter(function(p){return p.sel&&p.surf>=4;});
+  if(!sel.length){el.style.display='none';return;}
+  var c=computePac();
+  el.style.display='block';
+  el.innerHTML='<div style="font-size:12px;color:var(--muted);">Estimation des déperditions</div>'
+    +'<div style="font-size:20px;font-weight:900;color:var(--white);">'+c.totDim.toFixed(1).replace('.',',')+' kW <span style="font-size:12px;font-weight:400;color:var(--muted);">pour '+c.surfTot+' m² sélectionnés</span></div>'
+    +'<div style="font-size:11.5px;color:var(--muted);margin-top:4px;">Coefficient G = '+c.G.toFixed(2).replace('.',',')+' W/m³·K · ΔT = 28 K (zone H1)</div>';
+}
+function pacDim(){
+  var el=document.getElementById('pac-dim'); if(!el) return; /* pré-dimensionnement retiré : résultats après coordonnées */
+  var c=computePac();
+  el.style.display='block';
+  var lignes=c.rooms.map(function(r){return r.nom+' ('+r.surf+' m²) → '+(c.diff==='split'?('split '+r.ui.toFixed(1).replace('.',',')+' kW'):('bouche · '+r.dim.toFixed(1).replace('.',',')+' kW'));}).join('<br>');
+  el.innerHTML='<div style="font-size:12px;color:var(--muted);">Pré-dimensionnement</div>'
+    +'<div style="font-size:18px;font-weight:900;color:var(--white);margin-bottom:6px;">Unité extérieure ≈ '+c.ue.toFixed(1).replace('.',',')+' kW · '+(c.diff==='split'?(c.n+' split'+(c.n>1?'s':'')):('gainable · '+c.grilles+' bouches'))+'</div>'
+    +'<div style="font-size:12px;line-height:1.7;color:var(--text);">'+lignes+'</div>'
+    +(c.diffPref==='conseil'?'<div style="font-size:11.5px;color:var(--muted);margin-top:8px;">💡 Recommandation : '+(c.diff==='gainable'?'gainable (4 pièces et +, diffusion invisible)':'splits muraux (peu de pièces, pose simple)')+'.</div>':'');
+}
+function onFourniPac(){
+  var id=document.getElementById('pac-fourni').value;
+  var b=document.getElementById('pac-hchp-f');
+  if(b)b.style.display=HCHP_IDS.includes(id)?'':'none';
+}
+// Consommation électrique annuelle de la PAC — méthode DJU (Lille : DJU18 ≈ 2800)
+var PAC_DJU=2800, PAC_SCOP_REF=4.0, PAC_SEER_REF=6.5;
+function pacElecEstime(c){
+  var h=parseFloat(document.getElementById('pac-hsp').value)||2.5;
+  var chauffe=0, clim=0;
+  if(c.usage!=='froid'){
+    var utile=c.G*c.surfTot*h*PAC_DJU*24/1000*0.85; // kWh utiles/an (intermittence 0,85)
+    chauffe=utile/PAC_SCOP_REF;
+    clim=c.surfTot*12/PAC_SEER_REF;                 // rafraîchissement d'été modéré
+  }else{
+    clim=c.surfTot*25/PAC_SEER_REF;
+  }
+  return Math.round(chauffe+clim);
+}
+function getPPac(c){
+  var fid=document.getElementById('pac-fourni').value;
+  var isHC=HCHP_IDS.includes(fid);
+  var foyer=parseInt(document.getElementById('pac-foyer').value)||4500;
+  var pacE=pacElecEstime(c);
+  // Répartition : foyer selon déclaration (ou 35/65), PAC ~35% HC / 65% HP
+  var fhc=isHC?(parseInt(document.getElementById('pac-hc').value)||0):Math.round(foyer*.35);
+  var fhp=isHC?(parseInt(document.getElementById('pac-hp').value)||0):Math.round(foyer*.65);
+  var ct=foyer+pacE;
+  // Dimensionnement de l'abonnement : foyer (~4 kVA de pointe) + pointe PAC au plus froid
+  var kvaActuel=parseInt(document.getElementById('pac-kva').value)||6;
+  var kvaRequis=Math.max(palierKva(4+pacKvaBesoin(c)),kvaActuel===3?6:0);
+  var kvaUpgrade=kvaRequis>kvaActuel;
+  var surcoutAbo=kvaUpgrade?surcoutAbonnement(kvaActuel,kvaRequis):0;
+  return {
+    ct:ct, hcv:fhc+Math.round(pacE*.35), hpv:fhp+Math.round(pacE*.65),
+    ve:0, cve:0, km:0, rh:'nuit', bs:'non',
+    chauf:'pac', ecs:'autre',
+    fid:fid, pacE:pacE, foyer:foyer,
+    kvaActuel:kvaActuel, kvaRequis:Math.max(kvaRequis,kvaActuel), kvaUpgrade:kvaUpgrade,
+    surcoutAbo:surcoutAbo
+  };
+}
+function renderPacTarifs(c){
+  var p=getPPac(c);
+  var fA=TB.f.find(function(x){return x.id===p.fid;})||TB.f[0];
+  var factA=facture(fA,p);
+  var res=TB.f.map(function(f2){var o=Object.assign({},f2);o.ft=facture(f2,p);return o;})
+    .sort(function(a,b){return a.ft-b.ft;});
+  var loud=true; // une PAC = chauffage électrique : offres à pointes risquées
+  res.forEach(function(r){
+    r.warns=[];
+    if(r.tmp) r.warns.push('⚠️ Risqué chauffage élec.');
+    if(r.t==='ejp'||r.t==='tlike') r.warns.push('⚠️ Risqué jours de pointe');
+    if(r.id==='oct_int') r.warns.push('🔌 Réservé borne connectée');
+    if(r.t==='drive') r.warns.push('🚗 Réservé véhicule électrique');
+  });
+  var clean=res.filter(function(r){return !r.warns.length;});
+  var top=clean[0]||res[0];
+  var ecoAbo=Math.max(0,factA-top.ft);
+  // Tableau : mise en forme identique au comparatif bornes
+  var fmtK=function(v){return v!=null?(v*100).toFixed(1)+' c€':'—';};
+  var rows=res.map(function(r,i){
+    var diff=Math.round(r.ft-factA);
+    var hc='—',hp='—',base='—';
+    if(r.t==='base') base=fmtK(r.kb);
+    else if(r.t==='hchp'){hc=fmtK(r.hc);hp=fmtK(r.hp);}
+    else if(r.t==='tempo'){var j=r.tj,pp2=r.tp,tot=365;hc=fmtK((j.b*pp2.bh+j.w*pp2.wh+j.r*pp2.rh)/tot)+'*';hp=fmtK((j.b*pp2.bp+j.w*pp2.wp+j.r*pp2.rp)/tot)+'*';}
+    else if(r.t==='tlike'){var tot2=365;hc=fmtK((r.jp*r.pch+r.je*r.ech)/tot2)+'*';hp=fmtK((r.jp*r.php+r.je*r.ehp)/tot2)+'*';}
+    else if(r.t==='ejp') base=fmtK(r.en)+'*';
+    else if(r.t==='drive') base=fmtK(r.kb);
+    var isTop=r.id===top.id;
+    var note=r.id===p.fid?'📍 Votre offre':(r.warns.join(' ')||'');
+    return '<tr'+(isTop?' class="hl"':'')+'>'
+      +'<td style="font-weight:800;color:'+(isTop?'var(--lime)':'var(--muted)')+';">'+(isTop?'★':i+1)+'</td>'
+      +'<td><strong style="color:var(--white);">'+r.n+'</strong></td><td>'+r.o+'</td>'
+      +'<td>'+r.a.toFixed(0)+' €</td>'
+      +'<td style="color:var(--muted);">'+hc+'</td><td style="color:var(--muted);">'+hp+'</td><td style="color:var(--muted);">'+base+'</td>'
+      +'<td><strong style="color:'+(isTop?'var(--lime)':'var(--text)')+';">'+r.ft.toLocaleString('fr')+' €</strong></td>'
+      +'<td style="color:'+(diff<0?'var(--lime)':'var(--coral)')+';font-weight:700;">'+(diff>=0?'+':'')+diff+' €</td>'
+      +'<td style="font-size:10.5px;color:var(--muted);">'+note+'</td></tr>';
+  }).join('');
+  var totalEco=(c.ecoAn||0)+ecoAbo;
+  return {ecoAbo:ecoAbo,topNom:top.n,html:
+    '<div style="font-family:\'Cabinet Grotesk\';font-size:17px;font-weight:900;color:var(--white);margin:22px 0 13px;">⚡ Optimisation de votre abonnement</div>'
+    +(p.kvaUpgrade?('<div class="al warn" style="margin-bottom:14px;">⚡ <strong>Augmentation d\'abonnement conseillée : '+p.kvaActuel+' → '+p.kvaRequis+' kVA</strong><br>La pointe de la pompe à chaleur au plus froid s\'ajoute aux usages du foyer. Ce changement se fait auprès de votre fournisseur, sans travaux. Surcoût d\'environ <strong>'+p.surcoutAbo+' €/an</strong>, déjà intégré à toutes les factures ci-dessous.</div>'):'')
+    +'<div class="rhero" style="margin-bottom:14px;">'
+    +'<div style="font-size:12px;color:var(--muted);">Consommation projetée : '+p.foyer.toLocaleString('fr')+' kWh foyer + <strong>'+p.pacE.toLocaleString('fr')+' kWh PAC</strong> = '+p.ct.toLocaleString('fr')+' kWh/an'+(p.kvaUpgrade?' · abonnement '+p.kvaRequis+' kVA':'')+'</div>'
+    +'<div style="font-size:20px;font-weight:900;color:var(--white);margin:4px 0;">Meilleure offre : '+top.n+'</div>'
+    +'<div style="font-size:13px;color:var(--text);">Facture électricité estimée : <strong>'+top.ft.toLocaleString('fr')+' €/an</strong> avec la PAC.</div>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:16px;"><div class="roititl">📋 Tableau comparatif (avec la PAC)</div><div style="overflow-x:auto;"><table class="ctable"><thead><tr><th>#</th><th>Fournisseur</th><th>Offre</th><th>Abo./an</th><th>HC</th><th>HP</th><th>Base</th><th>Facture/an</th><th>Diff.</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div style="font-size:10.5px;color:var(--muted);margin-top:8px;">* Prix moyens pondérés sur l\'année (offres à pointes : la consommation de la PAC est concentrée sur les jours les plus froids).</div></div>'
+    +(totalEco>0?(function(){
+      var roiTot=null;
+      try{var mods=pacModeles(c);if(mods.length){var px=pacPrix(mods[0],c);roiTot=px.ttc/totalEco;}}catch(e){}
+      var tLow=(c.ecoLow||0)+ecoAbo, tHigh=(c.ecoHigh||0)+ecoAbo;
+      var range=(tLow!==tHigh)?(tLow.toLocaleString('fr')+' – '+tHigh.toLocaleString('fr')):totalEco.toLocaleString('fr');
+      return '<div class="rhero" style="margin-bottom:16px;border-color:var(--lime);background:linear-gradient(135deg,rgba(163,230,53,.08),rgba(56,189,248,.06));">'
+      +'<div style="font-size:12px;color:var(--muted);">💶 Économie totale sur votre facture</div>'
+      +'<div style="font-size:30px;font-weight:900;color:var(--lime);margin:4px 0;">'+range+' € / an</div>'
+      +'<div style="font-size:12px;color:var(--text);">Chauffage remplacé et abonnement optimisé confondus'+(roiTot?' · installation amortie en ≈ '+roiTot.toFixed(1).replace('.',',')+' ans':'')+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:6px;">Fourchette selon votre contrat d\'énergie actuel et le rendement saisonnier réel. Prix des énergies actualisés automatiquement.</div></div>';
+    })():'')
+  };
+}
+function pacModeles(c){
+  var cat=loadCat(), pacs=(cat.pacs&&cat.pacs.length?cat.pacs:DEF_CAT.pacs).slice();
+  var kwKey=c.usage==='froid'?'kwF':'kwC';
+  var list=pacs.filter(function(p){
+    if(p.diff!==c.diff) return false;
+    if(c.diff==='split'&&(p.maxUI||1)<c.n) return false;
+    if((p[kwKey]||0)<c.ue*0.92) return false;      // tolérance 8%
+    if(c.connect==='oui'&&!p.connect) return false;
+    return true;
+  }).sort(function(a,b){return (a[kwKey]-c.ue)-(b[kwKey]-c.ue);});
+  if(!list.length){
+    list=pacs.filter(function(p){return p.diff===c.diff;}).sort(function(a,b){return (b[kwKey]||0)-(a[kwKey]||0);}).slice(0,1);
+    list.forEach(function(p){p._warn=true;});
+  }
+  return list.slice(0,3);
+}
+function pacPrix(p,c){
+  var t=loadCat().tarifs||DEF_CAT.tarifs;
+  var pose,fourn;
+  if(c.diff==='split'){
+    fourn=(p.phtUE||0)+((p.maxUI||1)>1?(p.phtUI||0)*c.n:0);
+    pose=(t.pacPose1||1290)+(t.pacPoseSup||590)*Math.max(0,c.n-1);
+  }else{
+    fourn=(p.phtUE||0);
+    pose=(t.pacPoseGain||3490)+(t.pacGrille||220)*Math.max(0,c.grilles-4);
+  }
+  var ht=fourn+pose, tva=(t.pacTva!=null?t.pacTva:10)/100;
+  return {fourn:fourn,pose:pose,ht:ht,ttc:ht*(1+tva),tva:tva*100};
 }
 
 // ═══════════════════════════════════════════════
@@ -903,6 +1429,11 @@ function facture(f,p){
 }
 function factureBase(f,p){
   const{ct,hcv,hpv,ve,rh,bs}=p;
+  // Conso PAC : concentrée sur les jours les plus froids = jours rouges / pointe.
+  // Saison de chauffe ~150 j portant ~90% des kWh ; jour de pointe ~1,8× un jour d'hiver moyen.
+  const pacE=p.pacE||0, ctB=Math.max(0,ct-pacE);
+  const pacShare=function(nPointe,facteur){return Math.min(0.85,0.9*nPointe*facteur/150);};
+  const pacDay=function(hcPrix,hpPrix){return .35*hcPrix+.65*hpPrix;}; // la PAC tourne surtout en journée
   let vhc=0,vhp=0;
   if(rh==='nuit'||rh==='intelligent')vhc=ve;
   else if(rh==='mixte'){vhc=ve*.6;vhp=ve*.4;}
@@ -913,23 +1444,30 @@ function factureBase(f,p){
     return Math.round(f.a+(hcv+vhc)*f.hc+(hpv+vhp)*f.hp);
   }
   if(f.t==='tempo'){
-    const j=f.tj,pp=f.tp,tot=365,fh=8/24,fp=16/24,kj=ct/tot;
+    const j=f.tj,pp=f.tp,tot=365,fh=8/24,fp=16/24,kj=ctB/tot;
     const cF=j.b*kj*(fh*pp.bh+fp*pp.bp)+j.w*kj*(fh*pp.wh+fp*pp.wp)+j.r*kj*(fh*pp.rh+fp*pp.rp);
+    // PAC : part jours rouges (~24%) au tarif rouge, part jours blancs (~33%), reste en bleu
+    const sR=pacShare(j.r,1.8), sW=Math.min(0.9-sR,0.9*j.w*1.3/150), sB=1-sR-sW;
+    const cP=pacE*(sR*pacDay(pp.rh,pp.rp)+sW*pacDay(pp.wh,pp.wp)+sB*pacDay(pp.bh,pp.bp));
     const hm=(j.b*pp.bh+j.w*pp.wh+j.r*pp.rh)/tot;
     const pm=(j.b*pp.bp+j.w*pp.wp+j.r*pp.rp)/tot;
     const cV=rh==='nuit'||rh==='intelligent'?ve*hm:rh==='mixte'?ve*(.6*hm+.4*pm):ve*pm;
-    return Math.round(f.a+cF+cV);
+    return Math.round(f.a+cF+cP+cV);
   }
   if(f.t==='ejp'){
-    const kj=ct/365,cF=f.ej*kj*f.ep+(365-f.ej)*kj*f.en;
-    return Math.round(f.a+cF+ve*f.en);
+    const kj=ctB/365,cF=f.ej*kj*f.ep+(365-f.ej)*kj*f.en;
+    const sP=pacShare(f.ej,1.8);
+    const cP=pacE*(sP*f.ep+(1-sP)*f.en);
+    return Math.round(f.a+cF+cP+ve*f.en);
   }
   if(f.t==='tlike'){
-    const tot=365,fh=8/24,fp=16/24,kj=ct/tot;
+    const tot=365,fh=8/24,fp=16/24,kj=ctB/tot;
     const cF=f.jp*kj*(fh*f.pch+fp*f.php)+f.je*kj*(fh*f.ech+fp*f.ehp);
+    const sP=pacShare(f.jp,1.8);
+    const cP=pacE*(sP*pacDay(f.pch,f.php)+(1-sP)*pacDay(f.ech,f.ehp));
     const hm=(f.jp*f.pch+f.je*f.ech)/tot,pm=(f.jp*f.php+f.je*f.ehp)/tot;
     const cV=rh==='nuit'||rh==='intelligent'?ve*hm:rh==='mixte'?ve*(.6*hm+.4*pm):ve*pm;
-    return Math.round(f.a+cF+cV);
+    return Math.round(f.a+cF+cP+cV);
   }
   if(f.t==='drive') return Math.round(f.a+ct*f.kb+f.df*12);
   return 0;
@@ -980,20 +1518,29 @@ function getP(){
   const cve=parseFloat(document.getElementById('cve').value);
   const km=parseInt(document.getElementById('kmj').value);
   const ve=Math.round(cve*km*365/100);
+  // Mode "les deux" : la consommation de la PAC s'ajoute au foyer
+  var pacE=0;
+  if(typeof MODE!=='undefined'&&MODE==='both'){
+    try{ pacE=pacElecEstime(computePac()); }catch(e){ pacE=0; }
+  }
   // Lire carbu, thermo et roi depuis l'admin (catalogue localStorage)
   const adminTarifs=loadCat().tarifs||DEF_CAT.tarifs;
   // Puissance souscrite : compteur actuel vs requis par la borne
   const kvaActuel=parseInt(document.getElementById('kva').value)||6;
-  // Puissance kVA requise = valeur définie dans le panneau admin (champ kva de la borne)
-  const kvaRequis=_sel&&_sel.kva?_sel.kva:kvaActuel;
+  // Puissance kVA requise = palier borne (admin) + pointe PAC en mode "les deux"
+  let kvaRequis=_sel&&_sel.kva?_sel.kva:kvaActuel;
+  if(typeof MODE!=='undefined'&&MODE==='both'){
+    try{ kvaRequis=palierKva(kvaRequis+pacKvaBesoin(computePac())); }catch(e){}
+  }
+  kvaRequis=Math.max(kvaRequis,kvaActuel===3?6:kvaActuel);
   const kvaUpgrade=kvaRequis>kvaActuel; // augmentation d'abonnement nécessaire
   // Surcoût annuel réel basé sur les écarts d'abonnement de tarifs.json (TURPE réglementé)
   const surcoutAbo=kvaUpgrade?surcoutAbonnement(kvaActuel,kvaRequis):0;
   return{
-    ct,hcv,hpv,ve,cve,km,
+    ct:ct+pacE,hcv:hcv+Math.round(pacE*.35),hpv:hpv+Math.round(pacE*.65),ve,cve,km,pacE,
     rh:document.querySelector('input[name="rech"]:checked').value,
     bs:_sel&&_sel.smart?'oui':'non',
-    chauf:document.querySelector('input[name="chauf"]:checked').value,
+    chauf:(typeof MODE!=='undefined'&&MODE==='both')?'pac':document.querySelector('input[name="chauf"]:checked').value,
     ecs:document.querySelector('input[name="ecs"]:checked').value,
     carbu:adminTarifs.carbu||1.75,
     thermo:adminTarifs.thermo||7,
@@ -1228,6 +1775,9 @@ async function majTarifs(){
     const r=await fetch(TARIFS_URL,{cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const t=await r.json();
+    // Prix des énergies (gaz, fioul, bois) + référence élec, mis à jour par GitHub Actions
+    if(t.energies) window._ENERGIES=t.energies;
+    if(t.edf&&t.edf.base&&t.edf.base.kwh) window._ELEC_REF=t.edf.base.kwh;
     const F=TB.f;
     const set=(id,k,v)=>{const x=F.find(f=>f.id===id);if(x&&v!=null)x[k]=v;};
     set('edf_base','kb',t.edf?.base?.kwh); set('edf_base','a',t.edf?.base?.abo_6kva);
@@ -1260,6 +1810,16 @@ async function majTarifs(){
 // Écarts d'abonnement réels par palier kVA (chargés depuis tarifs.json)
 var _ecartsKva={9:18.6,12:44.4};
 // Surcoût annuel d'abonnement pour passer de kvaActuel à kvaRequis
+// Pointe électrique de la PAC au plus froid (COP ≈ 2,2 à −9 °C en chauffage)
+function pacKvaBesoin(c){
+  if(!c||!c.ue)return 0;
+  return c.usage==='froid'?c.ue/3.0:c.ue/2.2;
+}
+function palierKva(besoin){
+  var paliers=[6,9,12,15,18,24,30,36];
+  for(var i=0;i<paliers.length;i++){ if(paliers[i]>=besoin) return paliers[i]; }
+  return 36;
+}
 function surcoutAbonnement(kvaActuel,kvaRequis){
   if(kvaRequis<=kvaActuel)return 0;
   // Écart cumulé depuis 6 kVA (référence des tarifs)
@@ -1277,11 +1837,81 @@ function surcoutAbonnement(kvaActuel,kvaRequis){
 // ═══════════════════════════════════════════════
 // ANALYSE
 // ═══════════════════════════════════════════════
+var CHAUF_LBL={elec:'électrique',gaz:'gaz',fioul:'fioul',bois:'bois / granulés',pac:'PAC existante',autre:'autre'};
+function renderPacStudy(compact){
+  var c=computePac();
+  var modeles=pacModeles(c);
+  if(compact) modeles=modeles.slice(0,1);
+  var lignes=c.rooms.map(function(r){
+    return '<tr><td style="padding:6px 10px;">'+r.nom+'</td><td style="padding:6px 10px;text-align:center;">'+r.surf+' m²</td>'
+      +'<td style="padding:6px 10px;text-align:center;">'+r.bc.toFixed(1).replace('.',',')+' kW</td>'
+      +'<td style="padding:6px 10px;text-align:center;">'+r.bf.toFixed(1).replace('.',',')+' kW</td>'
+      +'<td style="padding:6px 10px;text-align:center;font-weight:700;color:var(--lime);">'+(c.diff==='split'?('Split '+r.ui.toFixed(1).replace('.',',')+' kW'):'Bouche')+'</td></tr>';
+  }).join('');
+  var cards=modeles.map(function(p,i){
+    var px=pacPrix(p,c);
+    return '<div class="card" style="margin-bottom:11px;'+(i===0?'border-color:var(--lime);':'')+'">'
+      +(i===0?'<div style="font-size:10px;font-weight:800;color:var(--lime);letter-spacing:1px;margin-bottom:5px;">★ RECOMMANDÉE</div>':'')
+      +(p._warn?'<div class="al warn" style="margin-bottom:8px;font-size:11px;">⚠️ Puissance légèrement inférieure au besoin calculé — à valider en visite technique.</div>':'')
+      +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">'
+      +'<div><div style="font-weight:800;color:var(--white);">'+p.nom+'</div>'
+      +'<div style="font-size:11.5px;color:var(--muted);margin-top:3px;">'+p.marque+' · '+(c.usage==='froid'?(p.kwF+' kW froid'):(p.kwC+' kW chaud / '+p.kwF+' kW froid'))+' · SCOP '+(p.scop||'—')+' · SEER '+(p.seer||'—')+(p.connect?' · 📱 connectée':'')+' · garantie '+(p.gar||2)+' ans</div>'
+      +'<div style="font-size:11.5px;color:var(--muted);margin-top:3px;">'+(p.desc||'')+'</div></div>'
+      +'<div style="text-align:right;"><div style="font-size:19px;font-weight:900;color:var(--white);">'+Math.round(px.ttc).toLocaleString('fr')+' € <span style="font-size:11px;font-weight:400;">TTC</span></div>'
+      +'<div style="font-size:11px;color:var(--muted);">dont pose '+Math.round(px.pose).toLocaleString('fr')+' € HT · TVA '+px.tva.toFixed(1).replace('.0','')+' %</div></div>'
+      +'</div></div>';
+  }).join('');
+  return '<div style="font-family:\'Cabinet Grotesk\';font-size:17px;font-weight:900;color:var(--white);margin:6px 0 13px;">🔥 '+(compact?'Votre pompe à chaleur':'Votre pompe à chaleur air/air')+'</div>'
+    +'<div class="rhero" style="margin-bottom:16px;"><div style="font-size:12px;color:var(--muted);">Dimensionnement — zone H1 Hauts-de-France (ΔT 28 K, G '+c.G.toFixed(2).replace('.',',')+')</div>'
+    +'<div style="font-size:22px;font-weight:900;color:var(--white);margin:4px 0;">Unité extérieure ≈ '+c.ue.toFixed(1).replace('.',',')+' kW</div>'
+    +'<div style="font-size:13px;color:var(--text);">'+(c.diff==='split'?(c.n+' unité'+(c.n>1?'s':'')+' intérieure'+(c.n>1?'s':'')+' murale'+(c.n>1?'s':'')):('Gainable — '+c.grilles+' bouches de soufflage + 1 reprise'))+' · '+c.surfTot+' m² traités · usage : '+(c.usage==='froid'?'climatisation seule':'chauffage + climatisation')+'</div></div>'
+    +'<div class="card" style="margin-bottom:16px;"><div class="roititl">Pièce par pièce</div><div style="overflow-x:auto;"><table class="ctable"><thead><tr><th>Pièce</th><th>Surface</th><th>Besoin chaud</th><th>Besoin froid</th><th>Équipement</th></tr></thead><tbody>'+lignes+'</tbody></table></div></div>'
+    +cards
+    +'<div class="al info" style="margin-top:6px;">💶 <strong>Aides :</strong> prime CEE (BAR-TH-129) estimée entre 400 et 900 € selon revenus. TVA réduite si logement de plus de 2 ans. Montants confirmés sur le devis final.</div>'
+    +'<div class="al warn" style="margin-top:8px;font-size:11.5px;">⚠️ Pré-dimensionnement indicatif : la puissance définitive est confirmée lors de la <strong>visite technique gratuite</strong> (orientation, vitrages, ventilation, longueurs de liaisons).</div>';
+}
+
+async function lancerAnalysePac(){
+  const nom=document.getElementById('c-nom').value.trim();
+  const email=document.getElementById('c-email').value.trim();
+  if(!nom||!email){alert('Veuillez renseigner votre nom et votre email.');return;}
+  if(!validerPieces())return;
+  go(7);
+  document.getElementById('spin-res').classList.add('on');
+  document.getElementById('results').style.display='none';
+  await majTarifs();
+  await new Promise(r=>setTimeout(r,400));
+  document.getElementById('res-borne-blocks').style.display='none';
+  var rp=document.getElementById('res-pac');
+  rp.style.display='block';
+  var cT=computePac();
+  var tarifBlock='';
+  try{ tarifBlock=renderPacTarifs(cT).html; }catch(e){ console.log('Optimisation tarifaire PAC indisponible:',e); }
+  rp.innerHTML=renderPacStudy()+tarifBlock;
+  document.getElementById('btn-rapport').style.display='none';
+  document.getElementById('spin-res').classList.remove('on');
+  document.getElementById('results').style.display='block';
+  // Enregistrement du lead (même canal que les bornes)
+  try{
+    var c=computePac();
+    fetch(VERCEL_API_URL.replace('/api/send-email','/api/save-lead'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      nom:nom,email:email,tel:document.getElementById('c-tel').value,adresse:document.getElementById('c-adr').value,
+      cp:document.getElementById('c-cp').value,ville:document.getElementById('c-ville').value,
+      type:'PAC',detail:'PAC '+c.diff+' · UE '+c.ue+' kW · '+c.n+' pièces · '+c.surfTot+' m² · usage '+c.usage+' · chauffage '+c.chauf+' · facture '+c.fact+'€/an · éco ~'+c.ecoAn+'€/an'
+    })}).catch(function(){});
+  }catch(e){}
+  var st=document.getElementById('email-status');
+  st.style.display='block';
+  st.innerHTML='<div class="al ok">✅ Votre demande est enregistrée — nous vous recontactons sous 24 h avec le devis détaillé.</div>';
+}
+
 async function lancerAnalyse(){
+  if(MODE==='pac'){return lancerAnalysePac();}
   const nom=document.getElementById('c-nom').value.trim();
   const email=document.getElementById('c-email').value.trim();
   if(!nom||!email){alert('Veuillez renseigner votre nom et votre email.');return;}
   if(!_sel){alert('Veuillez sélectionner une borne (étape 5).');return;}
+  if(MODE==='both'&&!validerPieces())return;
   // Toujours recalculer le devis pour avoir le bon nb de bornes au moment de l'analyse
   _devis=calcDevis();
   // Référence devis unique — partagée entre PDF et Word
@@ -1321,6 +1951,59 @@ async function lancerAnalyse(){
   lov.classList.remove('on');
   document.getElementById('spin-res').classList.remove('on');
   document.getElementById('results').style.display='block';
+  // Blocs borne visibles (au cas où une étude PAC seule a été faite avant)
+  document.getElementById('res-borne-blocks').style.display='';
+  document.getElementById('btn-rapport').style.display='';
+  // Mode "les deux" : économie totale (chauffage + carburant + abonnement) + étude PAC
+  var rpB=document.getElementById('res-pac');
+  var roiTotEl=document.getElementById('res-roi-total');
+  var roiBorneEl=document.getElementById('roicard-borne');
+  var aboScope=document.getElementById('abo-scope');
+  if(MODE==='both'){
+    rpB.style.display='block';
+    if(aboScope)aboScope.style.display='inline';
+    var heroTot='';
+    try{
+      var cPac=computePac();
+      // eF = économie de changement d'offre (conso future identique : foyer + VE + PAC des 2 côtés)
+      // eC = carburant thermique évité, net du coût élec du VE
+      // cPac.ecoAn = chauffage remplacé, net du coût élec de la PAC
+      var grand=Math.round(eF+eC+(cPac.ecoAn||0));
+      var grandLow=Math.round(eF+eC+(cPac.ecoLow||0)), grandHigh=Math.round(eF+eC+(cPac.ecoHigh||0));
+      var investPac=0;
+      try{var mods=pacModeles(cPac);if(mods.length)investPac=pacPrix(mods[0],cPac).ttc;}catch(e){}
+      var investBorne=_devis?_devis.net:0;
+      var invest=investBorne+investPac;
+      if(grand>0){
+        heroTot='<div class="rhero" style="margin-bottom:20px;border-color:var(--lime);background:linear-gradient(135deg,rgba(163,230,53,.08),rgba(56,189,248,.06));">'
+          +'<div style="font-size:12px;color:var(--muted);">💶 Économie totale après installation — vs votre chauffage actuel et votre véhicule thermique</div>'
+          +'<div style="font-size:30px;font-weight:900;color:var(--lime);margin:4px 0;">'+(grandLow!==grandHigh?(grandLow.toLocaleString('fr')+' – '+grandHigh.toLocaleString('fr')):('≈ '+grand.toLocaleString('fr')))+' € / an</div>'
+          +'<div style="font-size:12px;color:var(--text);">Carburant évité, chauffage remplacé et abonnement optimisé confondus</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:6px;">Fourchette selon votre contrat d\'énergie actuel et le rendement saisonnier réel.</div></div>';
+      }
+      // ROI combiné borne + PAC
+      if(roiTotEl){
+        var roiA=grand>0&&invest>0?invest/grand:0;
+        roiTotEl.style.display='block';
+        roiTotEl.innerHTML='<div class="roicard" style="margin:22px 0 4px;"><div class="roititl">📊 Retour sur investissement — PAC + borne confondus</div>'
+          +'<div style="font-size:13px;line-height:1.9;color:var(--text);">'
+          +'Borne de recharge (net après primes) : <strong>'+Math.round(investBorne).toLocaleString('fr')+' €</strong><br>'
+          +'Pompe à chaleur (TTC, pose incluse) : <strong>'+Math.round(investPac).toLocaleString('fr')+' €</strong><br>'
+          +'Investissement total : <strong style="color:var(--white);">'+Math.round(invest).toLocaleString('fr')+' €</strong><br>'
+          +'Économie annuelle : <strong style="color:var(--lime);">'+(grandLow!==grandHigh?(grandLow.toLocaleString('fr')+' – '+grandHigh.toLocaleString('fr')):grand.toLocaleString('fr'))+' €/an</strong>'
+          +(roiA>0?('<br>Amortissement : <strong style="color:var(--lime);">≈ '+roiA.toFixed(1).replace('.',',')+' ans</strong>'):'')
+          +'</div></div>';
+      }
+      if(roiBorneEl)roiBorneEl.style.display='none';
+    }catch(e){console.log('Économie totale indisponible:',e);}
+    rpB.innerHTML=heroTot+renderPacStudy(true);
+  }
+  else{
+    rpB.style.display='none';rpB.innerHTML='';
+    if(roiTotEl){roiTotEl.style.display='none';roiTotEl.innerHTML='';}
+    if(roiBorneEl)roiBorneEl.style.display='';
+    if(aboScope)aboScope.style.display='none';
+  }
   // Hero borne
   const isCoproRes=_params.itype==='particulier_copro';
   const labelPrix=(_devis.adv>0&&isCoproRes)?'Net après prime ADVENIR':'Total TTC';
@@ -1337,7 +2020,7 @@ async function lancerAnalyse(){
   var kvaWarnEl=document.getElementById('res-kva-warn');
   if(_params.kvaUpgrade){
     kvaWarnEl.style.display='block';
-    kvaWarnEl.innerHTML='⚡ <strong>Augmentation d\'abonnement nécessaire</strong><br>Votre compteur actuel ('+_params.kvaActuel+' kVA) est insuffisant pour une borne de '+_sel.kw+' kW. Il faudra passer à <strong>'+_params.kvaRequis+' kVA</strong> minimum. Ce changement se fait simplement auprès de votre fournisseur (sans intervention technique) et représente un surcoût d\'abonnement d\'environ <strong>'+_params.surcoutAbo+' €/an</strong>, déjà intégré aux estimations ci-dessous.';
+    kvaWarnEl.innerHTML='⚡ <strong>Augmentation d\'abonnement nécessaire</strong><br>Votre compteur actuel ('+_params.kvaActuel+' kVA) est insuffisant pour '+(typeof MODE!=='undefined'&&MODE==='both'?('votre borne de '+_sel.kw+' kW <u>et</u> votre pompe à chaleur'):('une borne de '+_sel.kw+' kW'))+'. Il faudra passer à <strong>'+_params.kvaRequis+' kVA</strong>. Ce changement se fait simplement auprès de votre fournisseur (sans intervention technique) et représente un surcoût d\'abonnement d\'environ <strong>'+_params.surcoutAbo+' €/an</strong>, déjà intégré aux estimations ci-dessous.';
   }else{
     kvaWarnEl.style.display='none';
   }
@@ -2590,7 +3273,7 @@ function exportRapport(){
 function openAdm(){
   rdrEntreprise();document.getElementById('adm-overlay').classList.add('on');document.getElementById('adm-login').style.display='block';document.getElementById('adm-panel').style.display='none';document.getElementById('adm-pwd').value='';document.getElementById('adm-err').style.display='none';}
 function closeAdm(){document.getElementById('adm-overlay').classList.remove('on');}
-function chkPwd(){if(document.getElementById('adm-pwd').value===getPwd()){document.getElementById('adm-login').style.display='none';document.getElementById('adm-panel').style.display='block';rdrBornes();rdrTarifs();rdrOpts();}else{document.getElementById('adm-err').style.display='block';}}
+function chkPwd(){if(document.getElementById('adm-pwd').value===getPwd()){document.getElementById('adm-login').style.display='none';document.getElementById('adm-panel').style.display='block';rdrBornes();rdrPacs();rdrTarifs();rdrTarifsPac();rdrOpts();}else{document.getElementById('adm-err').style.display='block';}}
 function chgPwd(){const o=document.getElementById('s-old').value,n=document.getElementById('s-new').value,c=document.getElementById('s-conf').value,m=document.getElementById('s-msg');if(o!==getPwd()){m.style.color='var(--coral)';m.textContent='Mot de passe actuel incorrect.';return;}if(n.length<4){m.style.color='var(--coral)';m.textContent='4 caractères minimum.';return;}if(n!==c){m.style.color='var(--coral)';m.textContent='Les mots de passe ne correspondent pas.';return;}localStorage.setItem(PWD_KEY,n);m.style.color='var(--lime)';m.textContent='✅ Mot de passe modifié.';}
 function rdrEntreprise(){
   var e = ENTREPRISE || {};
@@ -2699,6 +3382,37 @@ function rdrBornes(){
       +'<div><span class="adm-lbl">Description</span><input type="text" data-b="'+i+'" data-k="desc" value="'+b.desc+'"></div></div>';
   });
 }
+function rdrPacs(){
+  const cat=loadCat(),list=document.getElementById('pacs-list');
+  if(!list) return;
+  const pacs=cat.pacs||[];
+  list.innerHTML='';
+  pacs.forEach(function(p,i){
+    list.innerHTML+='<div class="badm"><div class="badm-n">PAC '+(i+1)+'</div><button class="btn-del" onclick="delPac('+i+')">✕</button>'
+      +'<div class="g4" style="margin-bottom:9px;">'
+      +'<div><span class="adm-lbl">Nom</span><input type="text" data-pc="'+i+'" data-k="nom" value="'+(p.nom||'')+'"></div>'
+      +'<div><span class="adm-lbl">Marque</span><input type="text" data-pc="'+i+'" data-k="marque" value="'+(p.marque||'')+'"></div>'
+      +'<div><span class="adm-lbl">Référence</span><input type="text" data-pc="'+i+'" data-k="id" value="'+(p.id||'')+'"></div>'
+      +'<div><span class="adm-lbl">Garantie (ans)</span><input type="number" data-pc="'+i+'" data-k="gar" value="'+(p.gar||2)+'" min="1"></div></div>'
+      +'<div class="g4" style="margin-bottom:9px;">'
+      +'<div><span class="adm-lbl">Diffusion</span><select data-pc="'+i+'" data-k="diff"><option value="split"'+(p.diff==='split'?' selected':'')+'>Splits muraux</option><option value="gainable"'+(p.diff==='gainable'?' selected':'')+'>Gainable</option></select></div>'
+      +'<div><span class="adm-lbl">Puiss. chaud (kW)</span><input type="number" data-pc="'+i+'" data-k="kwC" value="'+(p.kwC||0)+'" step="0.1"></div>'
+      +'<div><span class="adm-lbl">Puiss. froid (kW)</span><input type="number" data-pc="'+i+'" data-k="kwF" value="'+(p.kwF||0)+'" step="0.1"></div>'
+      +'<div><span class="adm-lbl">UI max (multi-split)</span><input type="number" data-pc="'+i+'" data-k="maxUI" value="'+(p.maxUI||1)+'" min="1" max="5"></div></div>'
+      +'<div class="g4" style="margin-bottom:9px;">'
+      +'<div><span class="adm-lbl">Prix UE HT (€)</span><input type="number" data-pc="'+i+'" data-k="phtUE" value="'+(p.phtUE||0)+'" step="10"></div>'
+      +'<div><span class="adm-lbl">Prix / UI HT (€)</span><input type="number" data-pc="'+i+'" data-k="phtUI" value="'+(p.phtUI||0)+'" step="10"></div>'
+      +'<div><span class="adm-lbl">SCOP</span><input type="number" data-pc="'+i+'" data-k="scop" value="'+(p.scop||4)+'" step="0.1"></div>'
+      +'<div><span class="adm-lbl">SEER</span><input type="number" data-pc="'+i+'" data-k="seer" value="'+(p.seer||6.5)+'" step="0.1"></div></div>'
+      +'<div class="g3a" style="margin-bottom:9px;">'
+      +'<div><span class="adm-lbl">Connectée</span><select data-pc="'+i+'" data-k="connect"><option value="true"'+(p.connect?' selected':'')+'>Oui</option><option value="false"'+(!p.connect?' selected':'')+'>Non</option></select></div>'
+      +'<div style="grid-column:span 2;"><span class="adm-lbl">Description</span><input type="text" data-pc="'+i+'" data-k="desc" value="'+(p.desc||'').replace(/"/g,'&quot;')+'"></div></div>'
+      +'</div>';
+  });
+}
+function addPac(){const cat=loadCat();cat.pacs=cat.pacs||[];cat.pacs.push({id:'PAC'+String(cat.pacs.length+1).padStart(2,'0'),nom:'Nouvelle PAC',marque:'',diff:'split',kwC:5.0,kwF:4.5,maxUI:2,connect:true,scop:4.2,seer:7.0,phtUE:1900,phtUI:500,gar:2,desc:''});saveCat(cat);rdrPacs();var el=document.querySelector('#pacs-list .badm:last-child');if(el)el.scrollIntoView({behavior:'smooth'});}
+function delPac(i){if(!confirm('Supprimer cette pompe à chaleur ?'))return;const cat=loadCat();cat.pacs.splice(i,1);saveCat(cat);rdrPacs();}
+function rdrTarifsPac(){const cat=loadCat(),t=cat.tarifs||DEF_CAT.tarifs;var s=function(id,v){var el=document.getElementById(id);if(el)el.value=v;};s('a-pac-pose1',t.pacPose1!=null?t.pacPose1:1290);s('a-pac-posesup',t.pacPoseSup!=null?t.pacPoseSup:590);s('a-pac-posegain',t.pacPoseGain!=null?t.pacPoseGain:3490);s('a-pac-grille',t.pacGrille!=null?t.pacGrille:220);s('a-pac-tva',t.pacTva!=null?t.pacTva:10);}
 function addBorne(){const cat=loadCat(),n=cat.bornes.length+1;cat.bornes.push({id:'B'+String(n).padStart(3,'0'),nom:'Nouvelle borne',marque:'',kw:7.4,phases:'mono',conn:'T2',smart:false,ocpp:false,cable:5,pht:500,pp:350,pro:450,adv:300,gar:2,usage:['particulier_maison'],kmin:0,kmax:100,kva:6,desc:''});saveCat(cat);rdrBornes();document.querySelector('#bornes-list .badm:last-child').scrollIntoView({behavior:'smooth'});}
 function delBorne(i){if(!confirm('Supprimer cette borne ?'))return;const cat=loadCat();cat.bornes.splice(i,1);saveCat(cat);rdrBornes();}
 function rdrTarifs(){const cat=loadCat(),t=cat.tarifs||DEF_CAT.tarifs;document.getElementById('a-pose-part').value=t.pp;document.getElementById('a-pose-pro').value=t.pro;document.getElementById('a-ml').value=t.ml;document.getElementById('a-tableau').value=t.tab;document.getElementById('a-ligne').value=t.lig;document.getElementById('a-disj').value=t.disj;document.getElementById('a-carbu').value=t.carbu||1.75;document.getElementById('a-thermo').value=t.thermo||7;document.getElementById('a-roi').value=t.roi||5;}
@@ -2719,12 +3433,22 @@ function sauver(){
     b.cable=parseInt(b.cable)||0;
   });
   cat.options=(cat.options||[]).map(function(o,i){document.querySelectorAll('[data-o="'+i+'"]').forEach(function(el){if(el.type==='number')o[el.dataset.k]=parseFloat(el.value)||0;else o[el.dataset.k]=el.value;});return o;});
-  cat.tarifs={pp:parseFloat(document.getElementById('a-pose-part').value)||350,pro:parseFloat(document.getElementById('a-pose-pro').value)||450,ml:parseFloat(document.getElementById('a-ml').value)||85,tab:parseFloat(document.getElementById('a-tableau').value)||380,lig:parseFloat(document.getElementById('a-ligne').value)||280,disj:parseFloat(document.getElementById('a-disj').value)||95,carbu:parseFloat(document.getElementById('a-carbu').value)||1.75,thermo:parseFloat(document.getElementById('a-thermo').value)||7,roi:parseInt(document.getElementById('a-roi').value)||5};
+  (cat.pacs||[]).forEach(function(p,i){
+    document.querySelectorAll('[data-pc="'+i+'"]').forEach(function(el){
+      const k=el.dataset.k;
+      if(el.tagName==='SELECT'){if(k==='connect')p[k]=el.value==='true';else p[k]=el.value;}
+      else if(el.type==='number')p[k]=parseFloat(el.value)||0;
+      else p[k]=el.value;
+    });
+    p.maxUI=Math.max(1,parseInt(p.maxUI)||1);
+  });
+  var gv=function(id,d){var el=document.getElementById(id);return el?(parseFloat(el.value)||d):d;};
+  cat.tarifs={pp:parseFloat(document.getElementById('a-pose-part').value)||350,pro:parseFloat(document.getElementById('a-pose-pro').value)||450,ml:parseFloat(document.getElementById('a-ml').value)||85,tab:parseFloat(document.getElementById('a-tableau').value)||380,lig:parseFloat(document.getElementById('a-ligne').value)||280,disj:parseFloat(document.getElementById('a-disj').value)||95,carbu:parseFloat(document.getElementById('a-carbu').value)||1.75,thermo:parseFloat(document.getElementById('a-thermo').value)||7,roi:parseInt(document.getElementById('a-roi').value)||5,pacPose1:gv('a-pac-pose1',1290),pacPoseSup:gv('a-pac-posesup',590),pacPoseGain:gv('a-pac-posegain',3490),pacGrille:gv('a-pac-grille',220),pacTva:gv('a-pac-tva',10)};
   saveCat(cat);
   const t=document.getElementById('toast');t.classList.add('on');setTimeout(function(){t.classList.remove('on');},2500);
 }
 function exportCat(){const cat=loadCat();const blob=new Blob([JSON.stringify(cat,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='catalogue.json';document.body.appendChild(a);a.click();document.body.removeChild(a);}
-function resetCat(){if(!confirm('Réinitialiser le catalogue ?'))return;saveCat(JSON.parse(JSON.stringify(DEF_CAT)));rdrBornes();rdrTarifs();rdrOpts();alert('Catalogue réinitialisé.');}
+function resetCat(){if(!confirm('Réinitialiser le catalogue ?'))return;saveCat(JSON.parse(JSON.stringify(DEF_CAT)));rdrBornes();rdrPacs();rdrTarifs();rdrTarifsPac();rdrOpts();alert('Catalogue réinitialisé.');}
 
 // ═══════════════════════════════════════════════
 // INIT

@@ -138,6 +138,50 @@ def fetch_tarifs(current: dict) -> dict:
 
     return new_tarifs
 
+ENERGIES_PROMPT = """Recherche sur le web les prix moyens TTC actuels des énergies de chauffage résidentiel en France (sources : prix-repère gaz CRE, fioulmarket/fioulreduc, propellet/prix des granulés, ONF/prix du bois bûche).
+
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ni après, sans balises markdown, au format exact :
+{
+  "gaz_kwh": 0.000,
+  "fioul_kwh": 0.000,
+  "granules_kwh": 0.000,
+  "buches_kwh": 0.000
+}
+
+Règles de conversion :
+- gaz_kwh : prix repère moyen CRE du kWh PCS pour un client chauffage (classe B1), TTC
+- fioul_kwh : prix moyen du litre TTC divisé par 9,96 kWh/L (PCI)
+- granules_kwh : prix moyen de la tonne en vrac TTC divisé par 4600 kWh/t
+- buches_kwh : prix moyen du stère de bois sec TTC divisé par 1700 kWh/stère
+Arrondis à 3 décimales."""
+
+
+def fetch_energies() -> dict:
+    """Prix des énergies de chauffage — mise à jour automatique annuelle/hebdo."""
+    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    print("🔥 Récupération des prix des énergies de chauffage...")
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=1200,
+        tools=[{"type": "web_search_20250305", "name": "web_search"}],
+        messages=[{"role": "user", "content": ENERGIES_PROMPT}]
+    )
+    text_blocks = [b.text for b in response.content if hasattr(b, "text")]
+    raw = "\n".join(text_blocks).strip().replace("```json", "").replace("```", "").strip()
+    data = json.loads(raw)
+
+    # Garde-fous : fourchettes plausibles (€/kWh TTC)
+    bounds = {"gaz_kwh": (0.06, 0.22), "fioul_kwh": (0.07, 0.25),
+              "granules_kwh": (0.05, 0.18), "buches_kwh": (0.025, 0.12)}
+    for k, (lo, hi) in bounds.items():
+        v = data.get(k)
+        if not isinstance(v, (int, float)) or not (lo <= v <= hi):
+            raise ValueError(f"Prix {k} incohérent : {v} (attendu entre {lo} et {hi})")
+
+    data["date_maj"] = datetime.now().strftime("%Y-%m-%d")
+    return data
+
+
 def completer_abonnements(tarifs: dict) -> dict:
     """Filet de sécurité : complète tout abo_9kva/abo_12kva manquant
     via l'écart réglementé (TURPE) observé chez EDF, identique pour tous les fournisseurs."""
@@ -193,6 +237,18 @@ def main():
             print(f"📊 EDF Base : {old_edf} → {new_edf} €/kWh")
         else:
             print(f"📊 EDF Base : inchangé ({new_edf} €/kWh)")
+
+        # Prix des énergies de chauffage (gaz, fioul, bois) — pour la fourchette
+        # d'économies PAC du configurateur. En cas d'échec : valeurs précédentes conservées.
+        try:
+            new_tarifs["energies"] = fetch_energies()
+            print(f"🔥 Énergies : gaz {new_tarifs['energies']['gaz_kwh']} — "
+                  f"fioul {new_tarifs['energies']['fioul_kwh']} — "
+                  f"granulés {new_tarifs['energies']['granules_kwh']} €/kWh")
+        except Exception as e:
+            print(f"⚠️  Prix énergies non mis à jour ({e}) — valeurs précédentes conservées")
+            if "energies" in current:
+                new_tarifs["energies"] = current["energies"]
 
         save_tarifs(TARIFS_FILE, new_tarifs)
         print("✨ Mise à jour réussie !")
