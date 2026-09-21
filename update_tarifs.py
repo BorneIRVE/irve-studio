@@ -30,6 +30,13 @@ from pathlib import Path
 TARIFS_FILE = Path(__file__).parent / "tarifs.json"
 MODEL = "claude-sonnet-4-6"
 MAX_RECHERCHES = 8      # plafond de recherches web (principal levier de coût)
+# Chaque recherche injecte des pages entières dans la consommation : on limite
+# aux sites qui publient réellement ces tarifs, pour éviter les pages inutiles.
+SITES = [
+    "kelwatt.fr", "selectra.info", "hellowatt.fr", "jechange.fr",
+    "fournisseurs-electricite.com", "cre.fr", "edf.fr", "octopusenergy.fr",
+    "fioulreduc.com", "propellet.fr",
+]
 MAX_TOKENS = 6000       # plafond de sortie : non facturé s'il n'est pas atteint
 
 # Champs demandés à l'IA : uniquement ce qui évolue d'une année sur l'autre.
@@ -100,26 +107,43 @@ def gabarit_json() -> str:
 PROMPT = f"""Trouve les tarifs TTC en vigueur en France pour les particuliers (puissance 6 kVA sauf si le champ indique 9 ou 12 kVA), puis les prix des énergies de chauffage.
 Sources à privilégier : une page comparative récente (kelwatt.fr ou selectra.info) pour les fournisseurs alternatifs, cre.fr pour les tarifs réglementés EDF et le prix repère du gaz.
 Énergies de chauffage, en €/kWh TTC : gaz = prix repère CRE chauffage ; fioul = prix du litre ÷ 9,96 ; granulés = prix de la tonne en vrac ÷ 4600 ; bûches = prix du stère sec ÷ 1700.
-Réponds UNIQUEMENT avec ce JSON compact, sans espaces, sans retour à la ligne ni texte autour, en remplaçant chaque 0 : prix du kWh en € avec 4 décimales, abonnements en €/an, forfait_ve en €/mois. Mets null si une valeur est introuvable, ne l'invente pas.
+Réponds UNIQUEMENT avec ce JSON compact, sans espaces, sans retour à la ligne ni texte autour, en remplaçant chaque 0 : prix du kWh en € avec 4 décimales, abonnements en €/an, forfait_ve en €/mois. Mets null si une valeur est introuvable, ne l'invente pas. Ne commente pas ta recherche : le JSON doit être la seule chose que tu écris.
 {gabarit_json()}"""
 
 
 # ── Utilitaires ───────────────────────────────────────────────────────────────
 def extract_json(raw: str) -> dict:
-    """Isole le premier objet { … } équilibré, même si du texte l'entoure."""
-    raw = raw.strip()
-    start = raw.find("{")
-    if start == -1:
-        raise ValueError(f"Aucun '{{' trouvé dans la réponse : {raw[:200]!r}")
-    depth = 0
-    for i in range(start, len(raw)):
-        if raw[i] == "{":
-            depth += 1
-        elif raw[i] == "}":
-            depth -= 1
-            if depth == 0:
-                return json.loads(raw[start:i + 1])
-    raise ValueError(f"JSON non équilibré : {raw[start:start + 200]!r}")
+    """Parcourt toute la réponse et renvoie l'objet JSON qui contient la clé
+    "edf". L'IA ajoute parfois des remarques avant ou APRÈS le JSON malgré la
+    consigne : on ne suppose donc ni sa position, ni qu'il est seul."""
+    candidats = []
+    i = 0
+    while True:
+        start = raw.find("{", i)
+        if start == -1:
+            break
+        depth, fin = 0, None
+        for j in range(start, len(raw)):
+            if raw[j] == "{":
+                depth += 1
+            elif raw[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    fin = j
+                    break
+        if fin is None:
+            break
+        try:
+            obj = json.loads(raw[start:fin + 1])
+            if isinstance(obj, dict):
+                candidats.append(obj)
+            i = fin + 1          # objet valide : on saute tout son contenu
+        except json.JSONDecodeError:
+            i = start + 1        # faux départ : on essaie l'accolade suivante
+    for obj in candidats:
+        if "edf" in obj:
+            return obj
+    raise ValueError(f"Aucun JSON contenant 'edf' dans la réponse : {raw[:300]!r}")
 
 
 def load_current(path: Path) -> dict:
@@ -146,7 +170,8 @@ def fetch_valeurs() -> dict:
     response = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
-        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": MAX_RECHERCHES}],
+        tools=[{"type": "web_search_20250305", "name": "web_search",
+                "max_uses": MAX_RECHERCHES, "allowed_domains": SITES}],
         messages=[{"role": "user", "content": PROMPT}],
     )
 
@@ -162,7 +187,13 @@ def fetch_valeurs() -> dict:
     blocs = [b.text for b in response.content if getattr(b, "type", "") == "text" and b.text.strip()]
     if not blocs:
         raise ValueError(f"Aucun texte dans la réponse (stop_reason={response.stop_reason})")
-    return extract_json(blocs[-1])
+    texte = "\n".join(blocs)
+    data = extract_json(texte)
+    # Remarques éventuelles de l'IA (valeurs non trouvées…) : utiles dans le log
+    remarques = texte[texte.rfind("}") + 1:].strip()
+    if remarques:
+        print(f"💬 Remarque de l'IA : {remarques[:400]}")
+    return data
 
 
 # ── Fusion champ par champ ────────────────────────────────────────────────────
