@@ -1,13 +1,17 @@
-name: Mise à jour des tarifs énergie
+name: Mise à jour annuelle des tarifs énergie
 
 on:
   schedule:
-    - cron: '0 6 * * 1'
-  workflow_dispatch:
+    # Une fois par an, le 15 février à 7 h (heure de Paris) :
+    # après la révision des tarifs réglementés du 1er février,
+    # le temps que les fournisseurs alternatifs et les comparateurs s'alignent.
+    - cron: '0 6 15 2 *'
+  workflow_dispatch:   # lancement manuel possible à tout moment
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
@@ -35,7 +39,7 @@ jobs:
             echo "Aucun changement de tarifs."
           else
             git add tarifs.json
-            git commit -m "Mise à jour automatique des tarifs energie"
+            git commit -m "Mise à jour annuelle des tarifs énergie"
             git push
             echo "tarifs.json mis à jour."
           fi
