@@ -89,6 +89,7 @@ input[type=range]{-webkit-appearance:none;width:100%;height:5px;background:rgba(
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--lime);cursor:pointer;}
 .rv{font-family:'Cabinet Grotesk',sans-serif;font-size:18px;font-weight:800;color:var(--lime);}
 .al{padding:10px 13px;border-radius:var(--rs);font-size:12.5px;display:flex;gap:8px;align-items:flex-start;margin-top:9px;line-height:1.55;}
+.al-ico{flex-shrink:0;}
 .al.warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);color:var(--amber);}
 .al.info{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25);color:var(--sky);}
 .al.ok{background:rgba(200,241,53,.08);border:1px solid rgba(200,241,53,.25);color:var(--lime);}
@@ -590,7 +591,6 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
   <!-- PPAC1 LOGEMENT -->
   <div class="panel" id="ppac1">
     <div class="shead"><div class="sstep" id="ppac1-step">Étape PAC</div><div class="stitle">Votre logement</div><div class="ssub">L'année de construction et l'isolation déterminent les déperditions thermiques, donc la puissance nécessaire.</div></div>
-    <div class="al info" style="margin-bottom:16px;">📍 Étude calibrée pour les <strong>Hauts-de-France</strong> (zone climatique H1, température extérieure de base <strong>−9 °C</strong>).</div>
     <div class="g2">
       <div class="card">
         <div class="fld">
@@ -665,7 +665,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
             <label class="ch"><input type="radio" name="pac-diff" value="gainable"><div class="chi"><span class="ico">🌀</span><span class="lbl">Gainable</span><span class="sub">Invisible, grilles au plafond</span></div></label>
             <label class="ch"><input type="radio" name="pac-diff" value="conseil" checked><div class="chi"><span class="ico">🤝</span><span class="lbl">Conseillez-moi</span></div></label>
           </div>
-          <div class="al info" style="margin-top:10px;font-size:11.5px;">ℹ️ Le <strong>gainable</strong> exige des combles ou faux plafonds accessibles pour passer les gaines.</div>
+          <div class="al info" style="margin-top:10px;font-size:11.5px;"><span class="al-ico">ℹ️</span><span>Le <strong>gainable</strong> exige des combles ou faux plafonds accessibles pour passer les gaines.</span></div>
         </div>
       </div>
       <div class="card">
@@ -924,7 +924,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
             <div><span class="adm-lbl">TVA PAC air/air (%)</span><input type="number" id="a-pac-tva" step="0.1"></div>
             <div></div>
           </div>
-          <div class="al info" style="margin-top:10px;font-size:11px;">ℹ️ TVA 10 % si logement achevé depuis plus de 2 ans (air/air). Les PAC air/air sont éligibles aux <strong>primes CEE</strong> (BAR-TH-129) mais pas à MaPrimeRénov'.</div>
+          <div class="al info" style="margin-top:10px;font-size:11px;">ℹ️ TVA 10 % si logement achevé depuis plus de 2 ans (air/air). Les PAC air/air sont éligibles aux <strong>primes CEE</strong> mais pas à MaPrimeRénov'.</div>
         </div>
         <div style="display:flex;justify-content:flex-end;"><button class="btn-save" onclick="sauver()">💾 Sauvegarder</button></div>
       </div>
@@ -1311,7 +1311,7 @@ function pacPreview(){
   el.style.display='block';
   el.innerHTML='<div style="font-size:12px;color:var(--muted);">Estimation des déperditions</div>'
     +'<div style="font-size:20px;font-weight:900;color:var(--white);">'+c.totDim.toFixed(1).replace('.',',')+' kW <span style="font-size:12px;font-weight:400;color:var(--muted);">pour '+c.surfTot+' m² sélectionnés</span></div>'
-    +'<div style="font-size:11.5px;color:var(--muted);margin-top:4px;">Coefficient G = '+c.G.toFixed(2).replace('.',',')+' W/m³·K · ΔT = 28 K (zone H1)</div>';
+    +'';
 }
 function pacDim(){
   var el=document.getElementById('pac-dim'); if(!el) return; /* pré-dimensionnement retiré : résultats après coordonnées */
@@ -1414,7 +1414,7 @@ function renderPacTarifs(c){
   var totalEco=(c.ecoAn||0)+ecoAbo;
   return {ecoAbo:ecoAbo,topNom:top.n,html:
     '<div style="font-family:\'Cabinet Grotesk\';font-size:17px;font-weight:900;color:var(--white);margin:22px 0 13px;">⚡ Optimisation de votre abonnement</div>'
-    +(p.kvaUpgrade?('<div class="al warn" style="margin-bottom:14px;">⚡ <strong>Augmentation d\'abonnement conseillée : '+p.kvaActuel+' → '+p.kvaRequis+' kVA</strong><br>La pointe de la pompe à chaleur au plus froid s\'ajoute aux usages du foyer. Ce changement se fait auprès de votre fournisseur, sans travaux. Surcoût d\'environ <strong>'+p.surcoutAbo+' €/an</strong>, déjà intégré à toutes les factures ci-dessous.</div>'):'')
+    +(p.kvaUpgrade?('<div class="al warn" style="margin-bottom:14px;"><span class="al-ico">⚡</span><span><strong>Augmentation d\'abonnement conseillée : '+p.kvaActuel+' → '+p.kvaRequis+' kVA</strong><br>La pointe de la pompe à chaleur au plus froid s\'ajoute aux usages du foyer. Ce changement se fait auprès de votre fournisseur, sans travaux. Surcoût d\'environ <strong>'+p.surcoutAbo+' €/an</strong>, déjà intégré à toutes les factures ci-dessous.</span></div>'):'')
     +'<div class="rhero" style="margin-bottom:14px;">'
     +'<div style="font-size:12px;color:var(--muted);">Consommation projetée : '+p.foyer.toLocaleString('fr')+' kWh foyer + <strong>'+p.pacE.toLocaleString('fr')+' kWh PAC</strong>'+(p.ecsE>0?' + '+p.ecsE.toLocaleString('fr')+' kWh eau chaude':'')+(p.solOffset>0?' − <strong style="color:var(--lime);">'+p.solOffset.toLocaleString('fr')+' kWh solaires autoconsommés</strong>':'')+' = '+p.ct.toLocaleString('fr')+' kWh facturés/an'+(p.kvaUpgrade?' · abonnement '+p.kvaRequis+' kVA':'')+'</div>'
     +(p.solOffset>0?'<div style="font-size:11px;color:var(--muted);margin-top:4px;">☀️ '+(p.solType==='sto'?'~70 %':'~35 %')+' de vos '+p.solProd.toLocaleString('fr')+' kWh produits sont autoconsommés ('+(p.solType==='sto'?'avec batterie':'sans batterie')+'). Surplus vendu non compté (estimation prudente).</div>':'')
@@ -1986,7 +1986,7 @@ function renderPacStudy(compact){
     +'<div style="font-size:13px;color:var(--text);">'+(c.diff==='split'?(c.n+' unité'+(c.n>1?'s':'')+' intérieure'+(c.n>1?'s':'')+' murale'+(c.n>1?'s':'')):('Gainable — '+c.grilles+' bouches de soufflage + 1 reprise'))+' · '+c.surfTot+' m² traités · usage : '+(c.usage==='froid'?'climatisation seule':'chauffage + climatisation')+'</div></div>'
     +'<div class="card" style="margin-bottom:16px;"><div class="roititl">Pièce par pièce</div><div style="overflow-x:auto;"><table class="ctable"><thead><tr><th>Pièce</th><th>Surface</th><th>Besoin chaud</th><th>Besoin froid</th><th>Équipement</th></tr></thead><tbody>'+lignes+'</tbody></table></div></div>'
     +cards
-    +'<div class="al info" style="margin-top:6px;">💶 <strong>Aides :</strong> prime CEE (BAR-TH-129) estimée entre 400 et 900 € selon revenus. TVA réduite si logement de plus de 2 ans. Montants confirmés sur le devis final.</div>'
+    +'<div class="al info" style="margin-top:6px;">💶 <strong>Aides :</strong> prime CEE estimée entre 400 et 900 € selon revenus. TVA réduite si logement de plus de 2 ans. Montants confirmés sur le devis final.</div>'
     +'<div class="al warn" style="margin-top:8px;font-size:11.5px;">⚠️ Pré-dimensionnement indicatif : la puissance définitive est confirmée lors de la <strong>visite technique gratuite</strong> (orientation, vitrages, ventilation, longueurs de liaisons).</div>';
 }
 
@@ -2329,7 +2329,8 @@ async function envoyerEmail(nom, email, top, roiAns, c100){
       throw new Error(result.error || 'HTTP '+resp.status);
     }
 
-    statusEl.innerHTML = '<div class="al ok">Votre étude a été envoyée à <strong>'+email+'</strong>.<br>Pensez à vérifier vos spams si vous ne voyez pas l\'e-mail.</div>';
+    statusEl.style.display = 'none';
+    statusEl.innerHTML = '';
 
     // Dépôt automatique de l'ÉTUDE sur Google Drive (suivi interne, non visible client)
     try{
