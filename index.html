@@ -1221,7 +1221,14 @@ html{scroll-behavior:smooth;}
     <a href="#" style="display:flex;align-items:center;text-decoration:none;">
       <img src="aerohm-logo.png" alt="AEROHM — Votre énergie, notre savoir-faire" style="height:46px;width:auto;display:block;" />
     </a>
-    <p style="font-size:12px;color:rgba(255,255,255,.35);margin:0;">© 2026 AEROHM — Certifié RGE QualiChargie · IRVE</p>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+      <div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-end;">
+        <a href="mentions-legales.html" style="font-size:12px;color:rgba(255,255,255,.55);text-decoration:none;">Mentions légales</a>
+        <a href="confidentialite.html" style="font-size:12px;color:rgba(255,255,255,.55);text-decoration:none;">Confidentialité</a>
+        <a href="cookies.html" style="font-size:12px;color:rgba(255,255,255,.55);text-decoration:none;">Cookies</a>
+      </div>
+      <p style="font-size:12px;color:rgba(255,255,255,.35);margin:0;">© 2026 AEROHM — Certifié RGE QualiPAC · QualiChargie · IRVE</p>
+    </div>
   </div>
 </footer>
 <script>
@@ -2496,6 +2503,19 @@ requestAnimationFrame(loop);
   if (reduce) render(CYCLE * 0.7);           // image nuit figée + câbles statiques
   else        requestAnimationFrame(render); // cycle jour/nuit animé
 })();
+</script>
+<!-- Bandeau d'information cookies (non bloquant : aucun traceur soumis à consentement) -->
+<div id="cookie-note" style="display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:560px;margin:0 auto;background:rgba(18,26,46,.97);backdrop-filter:blur(14px);border:1px solid var(--border2);border-radius:16px;padding:18px 20px;box-shadow:0 20px 50px -20px rgba(0,0,0,.8);">
+  <p style="font-size:13px;color:var(--text);line-height:1.6;margin:0 0 12px;">🍪 Ce site n'utilise que des fichiers techniques nécessaires à son fonctionnement — aucun cookie publicitaire ni de suivi. <a href="cookies.html" style="color:var(--electric);">En savoir plus</a>.</p>
+  <div style="display:flex;justify-content:flex-end;">
+    <button onclick="acceptCookieNote()" style="background:var(--green-bright);color:#0a0e1a;border:none;border-radius:9px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">J'ai compris</button>
+  </div>
+</div>
+<script>
+(function(){
+  try{ if(!localStorage.getItem('aerohm_cookie_note')){ var el=document.getElementById('cookie-note'); if(el)el.style.display='block'; } }catch(e){}
+})();
+function acceptCookieNote(){ try{localStorage.setItem('aerohm_cookie_note','1');}catch(e){} var el=document.getElementById('cookie-note'); if(el)el.style.display='none'; }
 </script>
 </body>
 </html>
