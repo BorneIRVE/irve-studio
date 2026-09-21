@@ -15,6 +15,28 @@ from pathlib import Path
 TARIFS_FILE = Path(__file__).parent / "tarifs.json"
 MODEL = "claude-sonnet-4-6"
 
+def extract_json(raw: str) -> dict:
+    """Extrait un objet JSON d'une réponse qui peut contenir du texte
+    avant/après (l'outil web_search pousse souvent Claude à commenter sa
+    recherche malgré la consigne 'JSON uniquement'). On isole le premier
+    bloc { ... } équilibré plutôt que de supposer que raw EST du JSON pur."""
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1] if raw.count("```") >= 2 else raw
+        raw = raw.replace("json", "", 1).strip() if raw.lower().startswith("json") else raw
+    start = raw.find("{")
+    if start == -1:
+        raise ValueError(f"Aucun '{{' trouvé dans la réponse : {raw[:200]!r}")
+    depth = 0
+    for i in range(start, len(raw)):
+        if raw[i] == "{":
+            depth += 1
+        elif raw[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return json.loads(raw[start:i + 1])
+    raise ValueError(f"JSON non équilibré (accolade manquante) : {raw[start:start+200]!r}")
+
 PROMPT = """
 Tu es un expert en tarifs d'électricité en France. Recherche sur le web les tarifs 
 actuellement en vigueur pour les fournisseurs d'électricité français listés ci-dessous,
@@ -110,17 +132,20 @@ def fetch_tarifs(current: dict) -> dict:
         messages=[{"role": "user", "content": PROMPT}]
     )
 
-    # Extraire le texte de la réponse
+    # Extraire le texte de la réponse — on ne garde que le DERNIER bloc de
+    # texte (la réponse finale, après la recherche web). Les blocs de texte
+    # précédents sont souvent des commentaires de Claude sur sa recherche
+    # ("Je vais chercher...") malgré la consigne de répondre en JSON pur ;
+    # les concaténer tous cassait le parsing JSON.
     text_blocks = [b.text for b in response.content if hasattr(b, "text")]
-    raw = "\n".join(text_blocks).strip()
-
-    # Nettoyer les balises markdown si présentes
-    raw = raw.replace("```json", "").replace("```", "").strip()
+    if not text_blocks:
+        raise ValueError("Aucun bloc de texte dans la réponse de l'API")
+    raw = text_blocks[-1].strip()
 
     print(f"📥 Réponse reçue ({len(raw)} caractères)")
 
-    # Parser le JSON
-    new_tarifs = json.loads(raw)
+    # Parser le JSON (extraction robuste : tolère un préambule/postambule résiduel)
+    new_tarifs = extract_json(raw)
 
     # Validation minimale : vérifier que les clés principales sont présentes
     required_keys = ["edf", "engie", "totalenergies", "ohm", "octopus"]
@@ -167,8 +192,10 @@ def fetch_energies() -> dict:
         messages=[{"role": "user", "content": ENERGIES_PROMPT}]
     )
     text_blocks = [b.text for b in response.content if hasattr(b, "text")]
-    raw = "\n".join(text_blocks).strip().replace("```json", "").replace("```", "").strip()
-    data = json.loads(raw)
+    if not text_blocks:
+        raise ValueError("Aucun bloc de texte dans la réponse de l'API")
+    raw = text_blocks[-1].strip()
+    data = extract_json(raw)
 
     # Garde-fous : fourchettes plausibles (€/kWh TTC)
     bounds = {"gaz_kwh": (0.06, 0.22), "fioul_kwh": (0.07, 0.25),
