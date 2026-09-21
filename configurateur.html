@@ -821,7 +821,7 @@ input[type=checkbox]{width:auto;accent-color:var(--lime);}
       </div>
       <div class="card">
         <div class="fld"><label>Message complémentaire</label><textarea id="c-msg" placeholder="Informations complémentaires…"></textarea></div>
-        <div class="al info" style="margin-top:12px;">📧 Vous recevrez votre étude tarifaire personnalisée par email. Il s'agit d'une <strong>simulation</strong> : un devis détaillé vous sera adressé sous 24h après notre prise de contact.</div>
+        <div class="al info" style="margin-top:12px;"><span class="al-ico">📧</span><span>Vous recevrez votre étude tarifaire personnalisée par email. Il s'agit d'une <strong>simulation</strong> : un devis détaillé vous sera adressé sous 24h après notre prise de contact.</span></div>
         <div class="al ok" style="margin-top:8px;">🔒 Données utilisées uniquement pour votre étude (RGPD).</div>
       </div>
     </div>
@@ -1981,7 +1981,7 @@ function renderPacStudy(compact){
       +'</div></div>';
   }).join('');
   return '<div style="font-family:\'Cabinet Grotesk\';font-size:17px;font-weight:900;color:var(--white);margin:6px 0 13px;">🔥 '+(compact?'Votre pompe à chaleur':'Votre pompe à chaleur air/air')+'</div>'
-    +'<div class="rhero" style="margin-bottom:16px;"><div style="font-size:12px;color:var(--muted);">Dimensionnement — zone H1 Hauts-de-France (ΔT 28 K, G '+c.G.toFixed(2).replace('.',',')+')</div>'
+    +'<div class="rhero" style="margin-bottom:16px;">'
     +'<div style="font-size:22px;font-weight:900;color:var(--white);margin:4px 0;">Unité extérieure ≈ '+c.ue.toFixed(1).replace('.',',')+' kW</div>'
     +'<div style="font-size:13px;color:var(--text);">'+(c.diff==='split'?(c.n+' unité'+(c.n>1?'s':'')+' intérieure'+(c.n>1?'s':'')+' murale'+(c.n>1?'s':'')):('Gainable — '+c.grilles+' bouches de soufflage + 1 reprise'))+' · '+c.surfTot+' m² traités · usage : '+(c.usage==='froid'?'climatisation seule':'chauffage + climatisation')+'</div></div>'
     +'<div class="card" style="margin-bottom:16px;"><div class="roititl">Pièce par pièce</div><div style="overflow-x:auto;"><table class="ctable"><thead><tr><th>Pièce</th><th>Surface</th><th>Besoin chaud</th><th>Besoin froid</th><th>Équipement</th></tr></thead><tbody>'+lignes+'</tbody></table></div></div>'
