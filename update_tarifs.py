@@ -1,29 +1,113 @@
 #!/usr/bin/env python3
 """
-update_tarifs.py
-Mis à jour automatique des tarifs électricité France via Anthropic API + web search.
-Exécuté par GitHub Actions 2x/an (1er février et 1er août) + le 1er de chaque mois.
+update_tarifs.py — Mise à jour ANNUELLE des tarifs énergie (AEROHM)
+
+Exécuté une fois par an par GitHub Actions, mi-février, après la révision
+annuelle des tarifs réglementés d'électricité du 1er février (et l'alignement
+des fournisseurs alternatifs dans les jours qui suivent).
+
+Optimisation des tokens :
+  - UN seul appel API (électricité + énergies de chauffage) ;
+  - recherches web plafonnées (max_uses) : c'est le poste le plus coûteux ;
+  - l'IA ne renvoie QUE les valeurs qui évoluent, en JSON compact ;
+  - les valeurs fixes (jours Tempo/EJP, métadonnées) sont conservées ;
+  - les abonnements 9 et 12 kVA sont calculés ici à partir de l'écart
+    réglementé (TURPE) observé chez EDF, au lieu d'être demandés offre par offre.
+Robustesse :
+  - fusion champ par champ dans le tarifs.json existant : une valeur absente
+    ou aberrante conserve l'ancienne au lieu de faire échouer la mise à jour ;
+  - la structure du fichier ne change jamais (le configurateur n'est pas impacté).
 """
 
 import os
 import json
+import copy
 import anthropic
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 TARIFS_FILE = Path(__file__).parent / "tarifs.json"
 MODEL = "claude-sonnet-4-6"
+MAX_RECHERCHES = 8      # plafond de recherches web (principal levier de coût)
+MAX_TOKENS = 6000       # plafond de sortie : non facturé s'il n'est pas atteint
 
+# Champs demandés à l'IA : uniquement ce qui évolue d'une année sur l'autre.
+# Grilles 6/9/12 kVA complètes seulement pour EDF (base, HC/HP, Tempo) :
+# elles servent à calculer l'écart réglementé appliqué à toutes les autres offres.
+DEMANDE = {
+    "edf": {
+        "base": ["kwh", "abo_6kva", "abo_9kva", "abo_12kva"],
+        "hchp": ["kwh_hc", "kwh_hp", "abo_6kva", "abo_9kva", "abo_12kva"],
+        "tempo": ["abo_6kva", "abo_9kva", "abo_12kva", "bleu_hc", "bleu_hp",
+                  "blanc_hc", "blanc_hp", "rouge_hc", "rouge_hp"],
+        "ejp": ["abo_6kva", "kwh_normal", "kwh_pointe"],
+        "zen_fixe": ["kwh", "abo_6kva"],
+    },
+    "engie": {"base": ["kwh", "abo_6kva"], "hchp": ["kwh_hc", "kwh_hp", "abo_6kva"]},
+    "totalenergies": {
+        "heures_eco_base": ["kwh", "abo_6kva"],
+        "heures_eco_hchp": ["kwh_hc", "kwh_hp", "abo_6kva"],
+        "heures_eco_plus": ["abo_6kva", "eco_hc", "eco_hp", "peak_hc", "peak_hp"],
+        "fixe_2ans": ["kwh", "abo_6kva"],
+    },
+    "ohm": {"base": ["kwh", "abo_6kva"], "hchp": ["kwh_hc", "kwh_hp", "abo_6kva"]},
+    "mint": {"base": ["kwh", "abo_6kva"], "hchp": ["kwh_hc", "kwh_hp", "abo_6kva"]},
+    "primeo": {"confort_plus": ["kwh", "abo_6kva"]},
+    "octopus": {
+        "go": ["kwh_hc", "kwh_hp", "abo_6kva"],
+        "intelligent": ["kwh_hc", "kwh_hp", "abo_6kva", "bonus_ve"],
+        "drive_pack": ["kwh", "abo_6kva", "forfait_ve"],
+    },
+    "ekwateur": {"hchp": ["kwh_hc", "kwh_hp", "abo_6kva"]},
+    "ilek": {"base": ["kwh", "abo_6kva"]},
+    "eni": {"agile": ["abo_6kva", "eco_hc", "eco_hp", "peak_hc", "peak_hp"]},
+    "energies": ["gaz_kwh", "fioul_kwh", "granules_kwh", "buches_kwh"],
+}
+
+# Bornes de cohérence (TTC). Hors bornes → valeur rejetée, ancienne conservée.
+def bornes(champ: str):
+    if champ.startswith("abo_"):
+        return (60, 500)
+    if champ in ("rouge_hc", "rouge_hp", "kwh_pointe", "peak_hc", "peak_hp"):
+        return (0.15, 1.20)
+    if champ == "bonus_ve":
+        return (0.0, 0.30)
+    if champ == "forfait_ve":
+        return (0.0, 100.0)
+    if champ == "gaz_kwh":
+        return (0.06, 0.22)
+    if champ == "fioul_kwh":
+        return (0.07, 0.25)
+    if champ == "granules_kwh":
+        return (0.05, 0.18)
+    if champ == "buches_kwh":
+        return (0.025, 0.12)
+    return (0.08, 0.45)   # prix du kWh électricité (base, HC, HP, bleu, blanc, éco…)
+
+
+def gabarit_json() -> str:
+    """Gabarit compact envoyé à l'IA (0 = valeur à remplir)."""
+    g = {}
+    for fourn, offres in DEMANDE.items():
+        if isinstance(offres, list):
+            g[fourn] = {c: 0 for c in offres}
+        else:
+            g[fourn] = {o: {c: 0 for c in champs} for o, champs in offres.items()}
+    return json.dumps(g, separators=(",", ":"))
+
+
+PROMPT = f"""Trouve les tarifs TTC en vigueur en France pour les particuliers (puissance 6 kVA sauf si le champ indique 9 ou 12 kVA), puis les prix des énergies de chauffage.
+Sources à privilégier : une page comparative récente (kelwatt.fr ou selectra.info) pour les fournisseurs alternatifs, cre.fr pour les tarifs réglementés EDF et le prix repère du gaz.
+Énergies de chauffage, en €/kWh TTC : gaz = prix repère CRE chauffage ; fioul = prix du litre ÷ 9,96 ; granulés = prix de la tonne en vrac ÷ 4600 ; bûches = prix du stère sec ÷ 1700.
+Réponds UNIQUEMENT avec ce JSON compact, sans espaces, sans retour à la ligne ni texte autour, en remplaçant chaque 0 : prix du kWh en € avec 4 décimales, abonnements en €/an, forfait_ve en €/mois. Mets null si une valeur est introuvable, ne l'invente pas.
+{gabarit_json()}"""
+
+
+# ── Utilitaires ───────────────────────────────────────────────────────────────
 def extract_json(raw: str) -> dict:
-    """Extrait un objet JSON d'une réponse qui peut contenir du texte
-    avant/après (l'outil web_search pousse souvent Claude à commenter sa
-    recherche malgré la consigne 'JSON uniquement'). On isole le premier
-    bloc { ... } équilibré plutôt que de supposer que raw EST du JSON pur."""
+    """Isole le premier objet { … } équilibré, même si du texte l'entoure."""
     raw = raw.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1] if raw.count("```") >= 2 else raw
-        raw = raw.replace("json", "", 1).strip() if raw.lower().startswith("json") else raw
     start = raw.find("{")
     if start == -1:
         raise ValueError(f"Aucun '{{' trouvé dans la réponse : {raw[:200]!r}")
@@ -35,263 +119,171 @@ def extract_json(raw: str) -> dict:
             depth -= 1
             if depth == 0:
                 return json.loads(raw[start:i + 1])
-    raise ValueError(f"JSON non équilibré (accolade manquante) : {raw[start:start+200]!r}")
+    raise ValueError(f"JSON non équilibré : {raw[start:start + 200]!r}")
 
-PROMPT = """
-Tu es un expert en tarifs d'électricité en France. Recherche sur le web les tarifs 
-actuellement en vigueur pour les fournisseurs d'électricité français listés ci-dessous,
-puis retourne UNIQUEMENT un objet JSON valide (sans markdown, sans texte autour).
-
-Sources prioritaires à consulter :
-- fournisseurs-electricite.com
-- kelwatt.fr  
-- jechange.fr
-- hellowatt.fr
-- les sites officiels des fournisseurs (octopusenergy.fr, etc.)
-
-JSON attendu (respecte exactement cette structure, toutes les valeurs en float €/kWh ou €/an) :
-
-IMPORTANT : pour CHAQUE offre, renseigne les abonnements annuels aux 3 puissances 6, 9 et 12 kVA
-(abo_6kva, abo_9kva, abo_12kva). L'écart de prix entre paliers de puissance correspond à la part
-réseau réglementée (TURPE), quasi identique chez tous les fournisseurs. Si tu ne trouves pas la valeur
-9 ou 12 kVA exacte d'un fournisseur, applique au tarif 6 kVA de CE fournisseur le même écart que celui
-observé chez EDF (différence abo_9kva − abo_6kva et abo_12kva − abo_6kva d'EDF).
-
-{
-  "meta": {
-    "date_maj": "YYYY-MM-DD",
-    "source": "Mis à jour automatiquement via GitHub Actions + Anthropic API",
-    "prochaine_revision_cre": "YYYY-MM-DD"
-  },
-  "edf": {
-    "base": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX },
-    "hchp": { "kwh_hc": X.XXXX, "kwh_hp": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX },
-    "tempo": {
-      "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX,
-      "bleu_hc": X.XXXX, "bleu_hp": X.XXXX,
-      "blanc_hc": X.XXXX, "blanc_hp": X.XXXX,
-      "rouge_hc": X.XXXX, "rouge_hp": X.XXXX,
-      "jours_rouge": 22, "jours_blanc": 43, "jours_bleu": 300
-    },
-    "ejp": { "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX, "kwh_normal": X.XXXX, "kwh_pointe": X.XXXX, "jours_pointe": 22 },
-    "zen_fixe": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX }
-  },
-  "engie": {
-    "base": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX },
-    "hchp": { "kwh_hc": X.XXXX, "kwh_hp": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX }
-  },
-  "totalenergies": {
-    "heures_eco_base": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX },
-    "heures_eco_hchp": { "kwh_hc": X.XXXX, "kwh_hp": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX },
-    "heures_eco_plus": { "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX, "eco_hc": X.XXXX, "eco_hp": X.XXXX, "peak_hc": X.XXXX, "peak_hp": X.XXXX, "jours_peak": 20 },
-    "fixe_2ans": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX }
-  },
-  "ohm": {
-    "base": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX },
-    "hchp": { "kwh_hc": X.XXXX, "kwh_hp": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX }
-  },
-  "mint": {
-    "base": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX },
-    "hchp": { "kwh_hc": X.XXXX, "kwh_hp": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX }
-  },
-  "primeo": {
-    "confort_plus": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX }
-  },
-  "octopus": {
-    "go": { "kwh_hc": X.XXXX, "kwh_hp": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX },
-    "intelligent": { "kwh_hc": X.XXXX, "kwh_hp": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX, "bonus_ve": 0.12 },
-    "drive_pack": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX, "forfait_ve": XX.XX }
-  },
-  "ekwateur": {
-    "hchp": { "kwh_hc": X.XXXX, "kwh_hp": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX }
-  },
-  "ilek": {
-    "base": { "kwh": X.XXXX, "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX }
-  },
-  "eni": {
-    "agile": { "abo_6kva": XXX.XX, "abo_9kva": XXX.XX, "abo_12kva": XXX.XX, "eco_hc": X.XXXX, "eco_hp": X.XXXX, "peak_hc": X.XXXX, "peak_hp": X.XXXX, "jours_peak": 22 }
-  }
-}
-
-Si tu ne trouves pas un tarif précis, conserve la valeur existante du fichier actuel.
-Réponds UNIQUEMENT avec le JSON. Aucun texte avant ou après.
-"""
 
 def load_current(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def fetch_tarifs(current: dict) -> dict:
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-
-    print("📡 Appel Anthropic API avec web search...")
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=2000,
-        tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=[{"role": "user", "content": PROMPT}]
-    )
-
-    # Extraire le texte de la réponse — on ne garde que le DERNIER bloc de
-    # texte (la réponse finale, après la recherche web). Les blocs de texte
-    # précédents sont souvent des commentaires de Claude sur sa recherche
-    # ("Je vais chercher...") malgré la consigne de répondre en JSON pur ;
-    # les concaténer tous cassait le parsing JSON.
-    text_blocks = [b.text for b in response.content if hasattr(b, "text")]
-    if not text_blocks:
-        raise ValueError("Aucun bloc de texte dans la réponse de l'API")
-    raw = text_blocks[-1].strip()
-
-    print(f"📥 Réponse reçue ({len(raw)} caractères)")
-
-    # Parser le JSON (extraction robuste : tolère un préambule/postambule résiduel)
-    new_tarifs = extract_json(raw)
-
-    # Validation minimale : vérifier que les clés principales sont présentes
-    required_keys = ["edf", "engie", "totalenergies", "ohm", "octopus"]
-    for key in required_keys:
-        if key not in new_tarifs:
-            raise ValueError(f"Clé manquante dans la réponse : {key}")
-
-    # Vérification de cohérence : le kWh EDF Base doit être entre 0.15 et 0.30
-    edf_kwh = new_tarifs.get("edf", {}).get("base", {}).get("kwh", 0)
-    if not (0.15 <= edf_kwh <= 0.30):
-        raise ValueError(f"kWh EDF base incohérent : {edf_kwh} (attendu entre 0.15 et 0.30)")
-
-    # Mettre à jour la date
-    new_tarifs["meta"]["date_maj"] = datetime.now().strftime("%Y-%m-%d")
-
-    return new_tarifs
-
-ENERGIES_PROMPT = """Recherche sur le web les prix moyens TTC actuels des énergies de chauffage résidentiel en France (sources : prix-repère gaz CRE, fioulmarket/fioulreduc, propellet/prix des granulés, ONF/prix du bois bûche).
-
-Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ni après, sans balises markdown, au format exact :
-{
-  "gaz_kwh": 0.000,
-  "fioul_kwh": 0.000,
-  "granules_kwh": 0.000,
-  "buches_kwh": 0.000
-}
-
-Règles de conversion :
-- gaz_kwh : prix repère moyen CRE du kWh PCS pour un client chauffage (classe B1), TTC
-- fioul_kwh : prix moyen du litre TTC divisé par 9,96 kWh/L (PCI)
-- granules_kwh : prix moyen de la tonne en vrac TTC divisé par 4600 kWh/t
-- buches_kwh : prix moyen du stère de bois sec TTC divisé par 1700 kWh/stère
-Arrondis à 3 décimales."""
-
-
-def fetch_energies() -> dict:
-    """Prix des énergies de chauffage — mise à jour automatique annuelle/hebdo."""
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    print("🔥 Récupération des prix des énergies de chauffage...")
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=1200,
-        tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=[{"role": "user", "content": ENERGIES_PROMPT}]
-    )
-    text_blocks = [b.text for b in response.content if hasattr(b, "text")]
-    if not text_blocks:
-        raise ValueError("Aucun bloc de texte dans la réponse de l'API")
-    raw = text_blocks[-1].strip()
-    data = extract_json(raw)
-
-    # Garde-fous : fourchettes plausibles (€/kWh TTC)
-    bounds = {"gaz_kwh": (0.06, 0.22), "fioul_kwh": (0.07, 0.25),
-              "granules_kwh": (0.05, 0.18), "buches_kwh": (0.025, 0.12)}
-    for k, (lo, hi) in bounds.items():
-        v = data.get(k)
-        if not isinstance(v, (int, float)) or not (lo <= v <= hi):
-            raise ValueError(f"Prix {k} incohérent : {v} (attendu entre {lo} et {hi})")
-
-    data["date_maj"] = datetime.now().strftime("%Y-%m-%d")
-    return data
-
-
-def completer_abonnements(tarifs: dict) -> dict:
-    """Filet de sécurité : complète tout abo_9kva/abo_12kva manquant
-    via l'écart réglementé (TURPE) observé chez EDF, identique pour tous les fournisseurs."""
-    edf_base = tarifs.get("edf", {}).get("base", {})
-    a6 = edf_base.get("abo_6kva")
-    a9 = edf_base.get("abo_9kva")
-    a12 = edf_base.get("abo_12kva")
-    # Écarts réglementés de référence (fallback si EDF incomplet : valeurs TURPE usuelles)
-    ecart_9 = round(a9 - a6, 2) if (a6 and a9) else 18.6
-    ecart_12 = round(a12 - a6, 2) if (a6 and a12) else 44.4
-    print(f"📐 Écarts kVA de référence : 6→9 = +{ecart_9} €/an, 6→12 = +{ecart_12} €/an")
-
-    completes = 0
-    for fourn, offres in tarifs.items():
-        if fourn == "meta" or not isinstance(offres, dict):
-            continue
-        for nom_offre, offre in offres.items():
-            if not isinstance(offre, dict) or "abo_6kva" not in offre:
-                continue
-            base6 = offre["abo_6kva"]
-            if "abo_9kva" not in offre or not offre["abo_9kva"]:
-                offre["abo_9kva"] = round(base6 + ecart_9, 2)
-                completes += 1
-            if "abo_12kva" not in offre or not offre["abo_12kva"]:
-                offre["abo_12kva"] = round(base6 + ecart_12, 2)
-                completes += 1
-    if completes:
-        print(f"🔧 {completes} abonnement(s) 9/12 kVA complété(s) via l'écart réglementé")
-    return tarifs
 
 def save_tarifs(path: Path, data: dict):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"✅ tarifs.json mis à jour : {path}")
+    print(f"✅ tarifs.json enregistré : {path}")
 
+
+def prochaine_revision(today: date) -> str:
+    """Prochaine révision annuelle des tarifs réglementés : 1er février."""
+    annee = today.year if today < date(today.year, 2, 1) else today.year + 1
+    return f"{annee}-02-01"
+
+
+# ── Appel API unique ──────────────────────────────────────────────────────────
+def fetch_valeurs() -> dict:
+    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    print(f"📡 Appel API unique (recherches web plafonnées à {MAX_RECHERCHES})...")
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=MAX_TOKENS,
+        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": MAX_RECHERCHES}],
+        messages=[{"role": "user", "content": PROMPT}],
+    )
+
+    u = response.usage
+    tool_use = getattr(u, "server_tool_use", None)
+    nb_rech = getattr(tool_use, "web_search_requests", "?") if tool_use else "?"
+    print(f"📊 Consommation : {u.input_tokens} tokens en entrée · {u.output_tokens} en sortie · "
+          f"{nb_rech} recherche(s) web · stop_reason={response.stop_reason}")
+
+    if response.stop_reason == "max_tokens":
+        raise ValueError("Réponse tronquée : plafond MAX_TOKENS atteint")
+
+    blocs = [b.text for b in response.content if getattr(b, "type", "") == "text" and b.text.strip()]
+    if not blocs:
+        raise ValueError(f"Aucun texte dans la réponse (stop_reason={response.stop_reason})")
+    return extract_json(blocs[-1])
+
+
+# ── Fusion champ par champ ────────────────────────────────────────────────────
+def fusionner(current: dict, recu: dict) -> tuple[dict, list, list]:
+    tarifs = copy.deepcopy(current)
+    changes, rejets = [], []
+
+    def appliquer(cible: dict, champ: str, val, chemin: str):
+        if val is None:
+            rejets.append(f"{chemin} (introuvable)")
+            return
+        if not isinstance(val, (int, float)):
+            rejets.append(f"{chemin} (non numérique : {val!r})")
+            return
+        lo, hi = bornes(champ)
+        if not (lo <= val <= hi):
+            rejets.append(f"{chemin} (hors bornes : {val})")
+            return
+        ancien = cible.get(champ)
+        dec = 2 if (champ.startswith("abo_") or champ == "forfait_ve") else 4
+        cible[champ] = round(float(val), dec)
+        if ancien != cible[champ]:
+            changes.append(f"{chemin} : {ancien} → {cible[champ]}")
+
+    for fourn, offres in DEMANDE.items():
+        bloc_recu = recu.get(fourn) or {}
+        if isinstance(offres, list):                       # énergies de chauffage
+            cible = tarifs.setdefault(fourn, {})
+            for champ in offres:
+                appliquer(cible, champ, bloc_recu.get(champ), f"{fourn}.{champ}")
+            continue
+        for offre, champs in offres.items():
+            cible = tarifs.setdefault(fourn, {}).setdefault(offre, {})
+            valeurs = bloc_recu.get(offre) or {}
+            for champ in champs:
+                appliquer(cible, champ, valeurs.get(champ), f"{fourn}.{offre}.{champ}")
+    return tarifs, changes, rejets
+
+
+def calculer_paliers_kva(tarifs: dict) -> int:
+    """Abonnements 9/12 kVA des offres non-EDF = abonnement 6 kVA + écart
+    réglementé (TURPE) observé chez EDF pour le même type d'option."""
+    def ecarts(offre: dict, defaut9: float, defaut12: float):
+        a6, a9, a12 = offre.get("abo_6kva"), offre.get("abo_9kva"), offre.get("abo_12kva")
+        e9 = round(a9 - a6, 2) if (a6 and a9) else defaut9
+        e12 = round(a12 - a6, 2) if (a6 and a12) else defaut12
+        return e9, e12
+
+    edf = tarifs.get("edf", {})
+    ref = {
+        "base": ecarts(edf.get("base", {}), 18.6, 44.4),
+        "hchp": ecarts(edf.get("hchp", {}), 21.0, 48.0),
+        "pointe": ecarts(edf.get("tempo", {}), 22.0, 50.0),
+    }
+    print("📐 Écarts kVA de référence (EDF) : "
+          + " · ".join(f"{k} +{v[0]}/+{v[1]} €/an" for k, v in ref.items()))
+
+    grilles_edf = {("edf", "base"), ("edf", "hchp"), ("edf", "tempo")}
+    n = 0
+    for fourn, offres in tarifs.items():
+        if fourn in ("meta", "energies") or not isinstance(offres, dict):
+            continue
+        for nom, offre in offres.items():
+            if not isinstance(offre, dict) or "abo_6kva" not in offre:
+                continue
+            if (fourn, nom) in grilles_edf:
+                continue
+            if any(k in offre for k in ("rouge_hp", "peak_hp", "kwh_pointe")):
+                cat = "pointe"
+            elif "kwh_hc" in offre:
+                cat = "hchp"
+            else:
+                cat = "base"
+            e9, e12 = ref[cat]
+            offre["abo_9kva"] = round(offre["abo_6kva"] + e9, 2)
+            offre["abo_12kva"] = round(offre["abo_6kva"] + e12, 2)
+            n += 1
+    return n
+
+
+# ── Programme principal ───────────────────────────────────────────────────────
 def main():
-    print(f"🔄 Mise à jour des tarifs - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-
-    # Charger les tarifs actuels (fallback si l'API échoue)
+    print(f"🔄 Mise à jour annuelle des tarifs — {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     current = load_current(TARIFS_FILE)
-    print(f"📂 Tarifs actuels chargés (date : {current['meta']['date_maj']})")
+    print(f"📂 Tarifs actuels chargés (date : {current.get('meta', {}).get('date_maj', '?')})")
 
     try:
-        new_tarifs = fetch_tarifs(current)
+        recu = fetch_valeurs()
+        tarifs, changes, rejets = fusionner(current, recu)
 
-        # Filet de sécurité : compléter les abonnements 9/12 kVA manquants
-        new_tarifs = completer_abonnements(new_tarifs)
+        # Garde-fou principal : sans tarif EDF Base valide, on n'écrit rien.
+        edf_kwh = recu.get("edf", {}).get("base", {}).get("kwh")
+        if not isinstance(edf_kwh, (int, float)) or not (0.15 <= edf_kwh <= 0.30):
+            raise ValueError(f"kWh EDF Base invalide ou absent : {edf_kwh}")
 
-        # Comparer quelques valeurs clés pour log
-        old_edf = current["edf"]["base"]["kwh"]
-        new_edf = new_tarifs["edf"]["base"]["kwh"]
-        if old_edf != new_edf:
-            print(f"📊 EDF Base : {old_edf} → {new_edf} €/kWh")
-        else:
-            print(f"📊 EDF Base : inchangé ({new_edf} €/kWh)")
+        n = calculer_paliers_kva(tarifs)
+        print(f"🔧 {n} offre(s) : abonnements 9/12 kVA recalculés")
 
-        # Prix des énergies de chauffage (gaz, fioul, bois) — pour la fourchette
-        # d'économies PAC du configurateur. En cas d'échec : valeurs précédentes conservées.
-        try:
-            new_tarifs["energies"] = fetch_energies()
-            print(f"🔥 Énergies : gaz {new_tarifs['energies']['gaz_kwh']} — "
-                  f"fioul {new_tarifs['energies']['fioul_kwh']} — "
-                  f"granulés {new_tarifs['energies']['granules_kwh']} €/kWh")
-        except Exception as e:
-            print(f"⚠️  Prix énergies non mis à jour ({e}) — valeurs précédentes conservées")
-            if "energies" in current:
-                new_tarifs["energies"] = current["energies"]
+        today = date.today()
+        tarifs.setdefault("meta", {})
+        tarifs["meta"]["date_maj"] = today.isoformat()
+        tarifs["meta"]["source"] = "Mise à jour annuelle automatique (GitHub Actions + Anthropic API)"
+        tarifs["meta"]["prochaine_revision_cre"] = prochaine_revision(today)
+        tarifs.setdefault("energies", {})["date_maj"] = today.isoformat()
 
-        save_tarifs(TARIFS_FILE, new_tarifs)
+        print(f"📝 {len(changes)} valeur(s) modifiée(s)")
+        for c in changes:
+            print(f"   • {c}")
+        if rejets:
+            print(f"⚠️  {len(rejets)} valeur(s) conservée(s) à l'identique :")
+            for r in rejets:
+                print(f"   • {r}")
+
+        save_tarifs(TARIFS_FILE, tarifs)
         print("✨ Mise à jour réussie !")
 
-    except json.JSONDecodeError as e:
-        print(f"❌ Erreur JSON : {e}")
-        print("⚠️  Tarifs inchangés (conservation des valeurs actuelles)")
-        raise SystemExit(1)
-    except ValueError as e:
-        print(f"❌ Validation échouée : {e}")
-        print("⚠️  Tarifs inchangés (conservation des valeurs actuelles)")
-        raise SystemExit(1)
     except Exception as e:
-        print(f"❌ Erreur inattendue : {e}")
-        print("⚠️  Tarifs inchangés (conservation des valeurs actuelles)")
+        print(f"❌ Échec : {e}")
+        print("⚠️  tarifs.json inchangé (valeurs précédentes conservées)")
         raise SystemExit(1)
+
 
 if __name__ == "__main__":
     main()
